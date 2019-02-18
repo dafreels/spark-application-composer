@@ -80,7 +80,7 @@ function createStep(name, x, y, metadata) {
  * @returns {number} Number of links for the element and port.
  */
 function getConnectedLinks(cell, portId) {
-    return _.filter(graph.getConnectedLinks(cell), function(link) {
+    return _.filter(graph.getConnectedLinks(cell), function (link) {
         var source = link.get('source') || {};
         var target = link.get('target') || {};
         return source.id === cell.id && source.port === portId ||
@@ -99,22 +99,23 @@ function handleLinkEvent(linkView) {
 
 var graph;
 var paper;
-var currentSteps = {};
 
 function generatePipelineJson() {
     var steps = {};
     var ids = [];
     var nextStepIds = [];
-    _.forOwn(currentSteps, function(value) {
+    _.forOwn(currentSteps, function (value) {
         var pipelineStepMetaData = value.attributes.metaData.pipelineStepMetaData;
         var stepMeta = value.attributes.metaData.stepMetaData;
-        var step = {
-            id: pipelineStepMetaData.id,
-            stepId: stepMeta.id
-        };
+        var step = stepMeta;
+        step.stepId = stepMeta.id;
+        step.id = pipelineStepMetaData.id;
+        step.params = [];
         ids.push(step.id);
         // Get the links for this step
-        var links = _.filter(graph.getConnectedLinks(value), function(l) { return l.get('source').id === value.id;});
+        var links = _.filter(graph.getConnectedLinks(value), function (l) {
+            return l.get('source').id === value.id;
+        });
         // Find the next step id
         if (links.length === 1) {
             step.nextStepId = currentSteps[links[0].get('target').id].attributes.metaData.pipelineStepMetaData.id;
@@ -125,19 +126,41 @@ function generatePipelineJson() {
 
     // Order the steps in the array to force the first non-branch step to the top
     // Find the first step
-    var initialSteps = _.filter(ids, function(id) { return nextStepIds.indexOf(id) === -1; });
+    var initialSteps = _.filter(ids, function (id) {
+        return nextStepIds.indexOf(id) === -1;
+    });
     var pipelineSteps = [steps[initialSteps[0]]];
     // Build out the remainder of the array
     var nextStepId = steps[initialSteps[0]].nextStepId;
     do {
         pipelineSteps.push(steps[nextStepId]);
         nextStepId = steps[nextStepId].nextStepId;
-    } while(nextStepId);
+    } while (nextStepId);
 
     // TODO Get the pipeline name and id
     console.log(JSON.stringify({
         steps: pipelineSteps
     }, null, 4));
+}
+
+/**
+ * Given two models, create a link between them.
+ * @param source The source model
+ * @param target The target model
+ */
+function createLink(source, target) {
+    var link = new joint.dia.Link({
+        attrs: {'.marker-target': {d: 'M 10 0 L 0 5 L 10 10 z'}},
+        source: {
+            id: source.id,
+            port: 'out'
+        },
+        target: {
+            id: target.id,
+            port: 'in'
+        }
+    });
+    graph.addCell(link);
 }
 
 function createDesignerPanel() {
@@ -149,10 +172,10 @@ function createDesignerPanel() {
         height: 800,
         gridSize: 1,
         defaultLink: new joint.dia.Link({
-            attrs: { '.marker-target': { d: 'M 10 0 L 0 5 L 10 10 z' } }
+            attrs: {'.marker-target': {d: 'M 10 0 L 0 5 L 10 10 z'}}
         }),
         allowLink: handleLinkEvent,
-        validateConnection: function(cellViewS, magnetS, cellViewT, magnetT, end, linkView) {
+        validateConnection: function (cellViewS, magnetS, cellViewT, magnetT, end, linkView) {
             if (getConnectedLinks(cellViewT.model, V(magnetT).attr('port')) > 0) return false;
             // Prevent linking from input ports.
             if (magnetS && magnetS.getAttribute('port-group') === 'in') return false;
@@ -161,9 +184,9 @@ function createDesignerPanel() {
             // Prevent linking to input ports.
             return magnetT && magnetT.getAttribute('port-group') === 'in';
         },
-        validateMagnet: function(cellView, magnet) {
-            if(getConnectedLinks(cellView.model, V(magnet).attr('port')) > 0) return false;
-            if(magnet.getAttribute('magnet') !== 'passive') return true;
+        validateMagnet: function (cellView, magnet) {
+            if (getConnectedLinks(cellView.model, V(magnet).attr('port')) > 0) return false;
+            if (magnet.getAttribute('magnet') !== 'passive') return true;
 
         }
     });

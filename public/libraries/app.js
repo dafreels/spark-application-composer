@@ -1,5 +1,7 @@
 var dropStep = null;
 var selectedPipeline = 'none';
+var currentSteps = {};
+var diagramStepToStepMetaLookup = {};
 
 function allowDrop(ev) {
     ev.preventDefault();
@@ -63,23 +65,57 @@ function loadForms() {
 
 function clearPipelineDesigner() {
     graph.clear();
+    currentSteps = {};
+    diagramStepToStepMetaLookup = {};
     clearPropertiesPanel();
 }
 
-function loadPipeline(event, data) {
+function verifyLoadPipeline(event, data) {
     if (data.item.value !== 'none') {
         console.log(pipelineLookup[data.item.value].name);
     }
     showClearDesignerDialog();
+}
+
+function loadPipeline() {
+    var pipelineId = $("#pipelines").val();
+    if (pipelineId !== 'none') {
+        var pipeline = pipelineLookup[pipelineId];
+        var x = 50;
+        var y = 50;
+        var gstep;
+        var stepIdLookup = {};
+        // Add each step to the designer
+        _.forEach(pipeline.steps, function(step) {
+            // Add the steps to the designer
+            gstep = addStepToDesigner(step.id, step.displayName, x, y, step.stepId);
+            gstep.attributes.metaData.pipelineStepMetaData = step;
+            y += 100;
+            stepIdLookup[step.id] = step.stepId;
+        });
+        // Create the links between steps
+        _.forEach(pipeline.steps, function(step) {
+            if (step.nextStepId) {
+                createLink(diagramStepToStepMetaLookup[step.stepId],
+                    diagramStepToStepMetaLookup[stepIdLookup[step.nextStepId]]);
+            }
+        });
+
+        loadPropertiesPanel(diagramStepToStepMetaLookup[pipeline.steps[0].stepId].attributes.metaData);
+    }
     /*
      * TODO:
-     *  If there is a diagram on the designer and changes have been made, prompt the user
-     *  Iterate pipeline
-     *  Add step to canvas
-     *  add links to elements
-     *  select first element
      *  fit canvas content
      */
+}
+
+function addStepToDesigner(id, name, x, y, stepId) {
+    var step = createStep(name, x, y, stepLookup[stepId]).addTo(graph);
+    step.attributes.metaData.pipelineStepMetaData.id = id;
+    loadPropertiesPanel(step.attributes.metaData);
+    currentSteps[step.id] = step;
+    diagramStepToStepMetaLookup[stepId] = step;
+    return step;
 }
 
 /**
@@ -123,7 +159,7 @@ $(document).ready(function () {
     loadForms();
 
     $("#pipelines").selectmenu({
-        change: loadPipeline
+        change: verifyLoadPipeline
     });
 
     clearDesignerDialog = $("#dialog-confirm").dialog({
@@ -135,6 +171,7 @@ $(document).ready(function () {
         buttons: {
             "Clear": function () {
                 clearPipelineDesigner();
+                loadPipeline();
                 $(this).dialog('close');
             },
             Cancel: function () {
@@ -156,10 +193,7 @@ $(document).ready(function () {
         buttons: {
             "Add Step": function() {
                 var idField = $('#add-step-id');
-                var step = createStep(dropStep.name, dropStep.x, dropStep.y, dropStep.stepMetaData).addTo(graph);
-                step.attributes.metaData.pipelineStepMetaData.id = idField.val();
-                loadPropertiesPanel(step.attributes.metaData);
-                currentSteps[step.id] = step;
+                addStepToDesigner(idField.val(), dropStep.name, dropStep.x, dropStep.y, dropStep.stepMetaData.id);
                 idField.val('');
                 $(this).dialog('close');
             },
