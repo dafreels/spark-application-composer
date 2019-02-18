@@ -1,0 +1,34 @@
+{
+    "middleware": {
+        "json": {
+            "enabled": true,
+            "priority": 30,
+            "route": "/api*",
+            "module": {
+                "name": "body-parser",
+                "method": "json",
+                "arguments": [
+                    {
+                        "limit": "2mb"
+                    }
+                ]
+            }
+        },
+        "static": {
+            "module": {
+                "arguments": [
+                    "path:./.build"
+                ]
+            }
+        },
+        "router": {
+            "module": {
+                "arguments": [
+                    {
+                        "directory": "path:./controllers"
+                    }
+                ]
+            }
+        }
+    }
+}

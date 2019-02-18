@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" type="text/css" href="css/joint.css"/>
+    <link rel="stylesheet" type="text/css" href="css/app.css"/>
+    <link rel="stylesheet" href="css/jquery-ui.css">
+    <link rel="stylesheet" href="css/jquery-ui.theme.css">
+    <!-- dependencies -->
+    <script src="libraries/jquery-3.3.1.js"></script>
+    <script src="libraries/jquery.fittext.js"></script>
+    <script src="libraries/jquery-ui.js"></script>
+    <script src="libraries/lodash/3.10.1/lodash.js"></script>
+    <script src="libraries/backbone/1.3.3/backbone.js"></script>
+    <script src="libraries/joint/2.1.0/joint.js"></script>
+    <script src="libraries/services.js"></script>
+    <script src="libraries/app.js"></script>
+    <script src="libraries/pipeline-designer.js"></script>
+    <title>Application Manager</title>
+</head>
+<body>
+<div id="tabs">
+    <ul>
+        <li><a href="#tabs-1">Application Editor</a></li>
+        <li><a href="#tabs-2">Pipeline Designer</a></li>
+    </ul>
+    <div id="tabs-1">Under Construction</div>
+    <div id="tabs-2">
+        <div>
+            <div>
+                <div class="top-pipeline-name">
+                    <div class="form-group">
+                        <label id="pipeline-label">Pipeline:</label><span id="pipelineName"></span>
+                    </div>
+                </div>
+                <div class="top-buttons">
+                    <button id="save-button" class="ui-button ui-widget ui-corner-all">Save</button>
+                    <button class="ui-button ui-widget ui-corner-all">New</button>
+                    <button class="ui-button ui-widget ui-corner-all">Reset</button>
+                </div>
+            </div>
+            <!-- TODO Add buttons to add a new pipeline and save changes -->
+            <div class="left">
+                <div class="panel">
+                    <div class="panel-heading"><span>Pipelines</span></div>
+                    <div class="panel-body">
+                        <div>
+                            <div class="form-group">
+                                <select name="pipelines" id="pipelines"></select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel">
+                    <div class="panel-heading"><span>Steps</span></div>
+                    <div id="step-panel" class="panel-body step-panel"></div>
+                </div>
+                <div id="step-properties" class="panel">
+                    <div class="panel-heading"><span>Step Data</span></div>
+                    <div class="panel-body">
+                        <div>
+                            <div class="form-group">
+                                <label>Id:</label><div id="pipelineStepId"></div>
+                            </div>
+                            <div class="form-group">
+                                <label>Step Id:</label><div id="stepId"></div>
+                            </div>
+                            <div class="form-group">
+                                <label>Name:</label><div id="displayName"></div>
+                            </div>
+                            <div class="form-group">
+                                <label>Description:</label><div id="description"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <!--<div id="step-properties-panel"></div>-->
+                </div>
+            </div>
+            <!-- TODO Add a slider to allow zoom on canvas -->
+            <div class="right">
+                <div id="pipeline-designer" class="joint-paper joint-theme-default" ondrop="drop(event)"
+                     ondragover="allowDrop(event)"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Modal dialog -->
+<div id="dialog-confirm" title="Clear Pipeline Designer?">
+    <p><span class="ui-icon ui-icon-alert" style="float:left; margin:12px 12px 20px 0;">
+    </span>These items will be permanently deleted and cannot be recovered. Are you sure?</p>
+</div>
+<!-- Add step dialog -->
+<div id="dialog-step-form" title="Add Step">
+    <p class="validateTips">Enter a unique id for this step.</p>
+    <form id="add-step-form">
+        <fieldset>
+            <label for="add-step-id">Name</label>
+            <input type="text" name="name" id="add-step-id" value="" class="text ui-widget-content ui-corner-all">
+        </fieldset>
+    </form>
+</div>
+</body>
+</html>
