@@ -34,7 +34,7 @@ function createStep(name, x, y, metadata) {
                 xAlignment: 'middle',
                 fontSize: 15,
                 fill: '#2779aa',
-                text: joint.util.breakText(name, stepSize)
+                text: joint.util.breakText(name, stepSize, { 'font-size': 12 }, { ellipsis: true })
             }
         },
         inPorts: ['in'],
@@ -46,11 +46,17 @@ function createStep(name, x, y, metadata) {
                         name: 'top'
                     },
                     attrs: {
+                        '.port-label': {
+                            text: 'port1'
+                        },
                         '.port-body': {
                             fill: 'ivory',
                             magnet: 'passive',
-                            r: 10
+                            r: 4
                         }
+                    },
+                    label: {
+                        markup: '<none/>'
                     }
                 },
                 'out': {
@@ -60,8 +66,11 @@ function createStep(name, x, y, metadata) {
                     attrs: {
                         '.port-body': {
                             fill: 'ivory',
-                            r: 12
+                            r: 4
                         }
+                    },
+                    label: {
+                        markup: '<none/>'
                     }
                 }
             }
@@ -97,9 +106,16 @@ function handleLinkEvent(linkView) {
     return linkView.targetMagnet !== null;
 }
 
+function isDesignerPopulated() {
+    return graph.getCells().length > 0;
+}
+
 var graph;
 var paper;
 
+/**
+ * Generates a pipeline as JSON using the elements on the designer.
+ */
 function generatePipelineJson() {
     var steps = {};
     var ids = [];
@@ -110,7 +126,8 @@ function generatePipelineJson() {
         var step = stepMeta;
         step.stepId = stepMeta.id;
         step.id = pipelineStepMetaData.id;
-        step.params = [];
+        step.executeIfEmpty = pipelineStepMetaData.executeIfEmpty;
+        step.params = pipelineStepMetaData.params;
         ids.push(step.id);
         // Get the links for this step
         var links = _.filter(graph.getConnectedLinks(value), function (l) {
@@ -132,15 +149,18 @@ function generatePipelineJson() {
     var pipelineSteps = [steps[initialSteps[0]]];
     // Build out the remainder of the array
     var nextStepId = steps[initialSteps[0]].nextStepId;
-    do {
-        pipelineSteps.push(steps[nextStepId]);
-        nextStepId = steps[nextStepId].nextStepId;
-    } while (nextStepId);
+    if (nextStepId) {
+        do {
+            pipelineSteps.push(steps[nextStepId]);
+            nextStepId = steps[nextStepId].nextStepId;
+        } while (nextStepId);
+    }
 
-    // TODO Get the pipeline name and id
-    console.log(JSON.stringify({
+    return {
+        id: currentPipeline.id,
+        name: currentPipeline.name,
         steps: pipelineSteps
-    }, null, 4));
+    };
 }
 
 /**
@@ -163,6 +183,9 @@ function createLink(source, target) {
     graph.addCell(link);
 }
 
+/**
+ * Initialize the pipeline designer drawing canvas
+ */
 function createDesignerPanel() {
     graph = new joint.dia.Graph;
 
@@ -170,12 +193,13 @@ function createDesignerPanel() {
         el: $('#pipeline-designer'),
         model: graph,
         height: 800,
+        width: $('.right').width,
         gridSize: 1,
         defaultLink: new joint.dia.Link({
             attrs: {'.marker-target': {d: 'M 10 0 L 0 5 L 10 10 z'}}
         }),
         allowLink: handleLinkEvent,
-        validateConnection: function (cellViewS, magnetS, cellViewT, magnetT, end, linkView) {
+        validateConnection: function (cellViewS, magnetS, cellViewT, magnetT) {
             if (getConnectedLinks(cellViewT.model, V(magnetT).attr('port')) > 0) return false;
             // Prevent linking from input ports.
             if (magnetS && magnetS.getAttribute('port-group') === 'in') return false;

@@ -1,6 +1,8 @@
 var stepLookup = {}; // TODO move this to a model?
 var pipelineLookup = {}; // TODO move this to a model?
 
+// TODO These calls need to take a callback function that updates the UI
+
 function loadSteps() {
     $.getJSON('/api/v1/pipeline-steps')
         .done(function(data) {

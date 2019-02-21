@@ -8,10 +8,10 @@
     <!-- dependencies -->
     <script src="libraries/jquery-3.3.1.js"></script>
     <script src="libraries/jquery.fittext.js"></script>
-    <script src="libraries/jquery-ui.js"></script>
     <script src="libraries/lodash/3.10.1/lodash.js"></script>
     <script src="libraries/backbone/1.3.3/backbone.js"></script>
     <script src="libraries/joint/2.1.0/joint.js"></script>
+    <script src="libraries/jquery-ui.js"></script>
     <script src="libraries/services.js"></script>
     <script src="libraries/app.js"></script>
     <script src="libraries/pipeline-designer.js"></script>
@@ -26,16 +26,16 @@
     <div id="tabs-1">Under Construction</div>
     <div id="tabs-2">
         <div>
-            <div>
+            <div style="height: 10%; width:100%; margin-bottom: 10px;">
                 <div class="top-pipeline-name">
-                    <div class="form-group">
+                    <!--<div class="form-group">-->
                         <label id="pipeline-label">Pipeline:</label><span id="pipelineName"></span>
-                    </div>
+                    <!--</div>-->
                 </div>
                 <div class="top-buttons">
                     <button id="save-button" class="ui-button ui-widget ui-corner-all">Save</button>
-                    <button class="ui-button ui-widget ui-corner-all">New</button>
-                    <button class="ui-button ui-widget ui-corner-all">Reset</button>
+                    <button id="new-button" class="ui-button ui-widget ui-corner-all">New</button>
+                    <button id="reset-button" class="ui-button ui-widget ui-corner-all">Reset</button>
                 </div>
             </div>
             <!-- TODO Add buttons to add a new pipeline and save changes -->
@@ -57,7 +57,7 @@
                 <div id="step-properties" class="panel">
                     <div class="panel-heading"><span>Step Data</span></div>
                     <div class="panel-body">
-                        <div>
+                        <div id="step-form">
                             <div class="form-group">
                                 <label>Id:</label><div id="pipelineStepId"></div>
                             </div>
@@ -70,14 +70,19 @@
                             <div class="form-group">
                                 <label>Description:</label><div id="description"></div>
                             </div>
+                            <div class="form-group">
+                                <label>Type:</label><div id="type"></div>
+                            </div>
                         </div>
                     </div>
-                    <!--<div id="step-properties-panel"></div>-->
+                    <div id="step-parameters-form" class="panel-body">
+                        <div></div>
+                    </div>
                 </div>
             </div>
             <!-- TODO Add a slider to allow zoom on canvas -->
             <div class="right">
-                <div id="pipeline-designer" class="joint-paper joint-theme-default" ondrop="drop(event)"
+                <div id="pipeline-designer" class="joint-paper joint-theme-default" style="width: 100%" ondrop="drop(event)"
                      ondragover="allowDrop(event)"></div>
             </div>
         </div>
@@ -95,6 +100,16 @@
         <fieldset>
             <label for="add-step-id">Name</label>
             <input type="text" name="name" id="add-step-id" value="" class="text ui-widget-content ui-corner-all">
+        </fieldset>
+    </form>
+</div>
+<!-- Add pipeline dialog -->
+<div id="dialog-pipeline-form" title="Add Pipeline">
+    <p class="validateTips">Enter a name for this pipeline.</p>
+    <form id="add-pipeline-form">
+        <fieldset>
+            <label for="add-pipeline-id">Name</label>
+            <input type="text" name="name" id="add-pipeline-id" value="" class="text ui-widget-content ui-corner-all">
         </fieldset>
     </form>
 </div>

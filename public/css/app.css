@@ -3,7 +3,7 @@ body {
 }
 
 #pipeline-designer {
-    background: #FFF;
+    background: #3baae3;
     width: auto;
     display: inline-flex;
     box-shadow: 0 3px 5px rgba(0, 0, 0, 0.3);
@@ -20,10 +20,16 @@ body {
 
 .top-buttons {
     text-align: right;
+    display: inline-block;
+    width: 50%;
 }
 
 .top-pipeline-name {
     text-align: left;
+    display: inline-block;
+    float: left;
+    width: 50%;
+    transform: translateY(35%);
 }
 
 .left {
@@ -72,8 +78,7 @@ body {
 }
 
 .form-group label {
-    display: inline-block;
-    width: 70px;
+    width: 40%;
 }
 
 .form-group input {
@@ -87,14 +92,35 @@ body {
 .form-group span.ui-selectmenu-button.ui-button {
     width: 90%;
 }
+.dynamic-form span.ui-selectmenu-button.ui-button {
+    width: 20%;
+    margin-left: 8px;
+}
+
+.dynamic-form input {
+    margin-left: 10px;
+    width: 40%;
+}
+
+.dynamic-form label {
+    width: 20%;
+    display: inline-block;
+}
 
 .form-group div {
     background: #e4f1fb;
     color: #333333;
     padding: 5px;
     border-radius: 10px;
+    white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
+}
+
+.form-group div:hover {
+    text-overflow: clip;
+    white-space: normal;
+    word-break: keep-all;
 }
 
 .step-panel {
