@@ -7,16 +7,23 @@
     "scripts": {
         "test": "grunt test",
         "build": "grunt build",
-        "all": "npm run build && npm run test"
+        "all": "npm run build && npm run test",
+        "watch": "nodemon server.js"
     },
     "dependencies": {
+        "ajv": "^6.9.1",
+        "bluebird": "^3.5.3",
+        "body-parser": "^1.18.3",
         "construx": "^1.0.0",
         "construx-copier": "^1.0.0",
         "construx-dustjs": "^1.1.0",
         "construx-less": "^1.0.0",
         "eslint": "^1.10.3",
         "express": "^4.12.2",
-        "kraken-js": "^2.0.0"
+        "fs": "0.0.1-security",
+        "kraken-js": "^2.0.0",
+        "mongodb": "^3.1.13",
+        "uuid": "^3.3.2"
     },
     "devDependencies": {
         "grunt": "^0.4.5",
@@ -31,6 +38,7 @@
         "grunt-makara-amdify": "^1.0.1",
         "grunt-mocha-cli": "^1.14.0",
         "mocha": "^1.18.0",
+        "nodemon": "^1.18.10",
         "supertest": "^0.9.0"
     }
 }
