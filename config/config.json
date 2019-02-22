@@ -17,7 +17,7 @@
         "static": {
             "module": {
                 "arguments": [
-                    "path:./.build"
+                    "path:./public"
                 ]
             }
         },
@@ -46,8 +46,6 @@
         }
     },
     "storage": {
-        "type": "file",
-        "server": "localhost",
-        "database": "pipeline"
+        "type": "file"
     }
 }

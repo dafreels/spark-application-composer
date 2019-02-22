@@ -1,5 +1,5 @@
 {
-    "name": "spd-application-builder",
+    "name": "spark-application-composer",
     "version": "0.1.0",
     "description": "Allows the management of applications built for the Spark Pipeline Driver project.",
     "author": "David Freels Sr",
@@ -8,7 +8,9 @@
         "test": "grunt test",
         "build": "grunt build",
         "all": "npm run build && npm run test",
-        "watch": "nodemon server.js"
+        "watch": "nodemon server.js",
+        "mongo": "NODE_ENV=mongo node server.js",
+        "watch-mongo": "NODE_ENV=mongo nodemon server.js"
     },
     "dependencies": {
         "ajv": "^6.9.1",
