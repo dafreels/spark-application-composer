@@ -22,15 +22,25 @@
     <ul>
         <li><a href="#tabs-1">Application Editor</a></li>
         <li><a href="#tabs-2">Pipeline Designer</a></li>
+        <li><a href="#tabs-3">Step Editor</a></li>
     </ul>
-    <div id="tabs-1">Under Construction</div>
+    <div id="tabs-1">
+        <div style="height: 10%; width:100%; margin-bottom: 10px;">
+            <div class="top-name">
+                <label id="application-label">Application:</label><span id="applicationName"></span>
+            </div>
+            <div class="top-buttons">
+                <button id="save-application-button" class="ui-button ui-widget ui-corner-all">Save</button>
+                <button id="new-application-button" class="ui-button ui-widget ui-corner-all">New</button>
+                <button id="reset-application-button" class="ui-button ui-widget ui-corner-all">Reset</button>
+            </div>
+        </div>
+    </div>
     <div id="tabs-2">
         <div>
             <div style="height: 10%; width:100%; margin-bottom: 10px;">
-                <div class="top-pipeline-name">
-                    <!--<div class="form-group">-->
-                        <label id="pipeline-label">Pipeline:</label><span id="pipelineName"></span>
-                    <!--</div>-->
+                <div class="top-name">
+                    <label id="pipeline-label">Pipeline:</label><span id="pipelineName"></span>
                 </div>
                 <div class="top-buttons">
                     <button id="save-button" class="ui-button ui-widget ui-corner-all">Save</button>
@@ -59,19 +69,24 @@
                     <div class="panel-body">
                         <div id="step-form">
                             <div class="form-group">
-                                <label>Id:</label><div id="pipelineStepId"></div>
+                                <label>Id:</label>
+                                <div id="pipelineStepId"></div>
                             </div>
                             <div class="form-group">
-                                <label>Step Id:</label><div id="stepId"></div>
+                                <label>Step Id:</label>
+                                <div id="stepId"></div>
                             </div>
                             <div class="form-group">
-                                <label>Name:</label><div id="displayName"></div>
+                                <label>Name:</label>
+                                <div id="displayName"></div>
                             </div>
                             <div class="form-group">
-                                <label>Description:</label><div id="description"></div>
+                                <label>Description:</label>
+                                <div id="description"></div>
                             </div>
                             <div class="form-group">
-                                <label>Type:</label><div id="type"></div>
+                                <label>Type:</label>
+                                <div id="type"></div>
                             </div>
                         </div>
                     </div>
@@ -82,8 +97,48 @@
             </div>
             <!-- TODO Add a slider to allow zoom on canvas -->
             <div class="right">
-                <div id="pipeline-designer" class="joint-paper joint-theme-default" style="width: 100%" ondrop="drop(event)"
+                <div id="pipeline-designer" class="joint-paper joint-theme-default" style="width: 100%"
+                     ondrop="drop(event)"
                      ondragover="allowDrop(event)"></div>
+            </div>
+        </div>
+    </div>
+    <div id="tabs-3">
+        <div style="height: 10%; width:100%; margin-bottom: 10px;">
+            <div class="top-buttons" style="width: 100%">
+                <button id="save-step-button" class="ui-button ui-widget ui-corner-all">Save</button>
+                <button id="new-step-button" class="ui-button ui-widget ui-corner-all">New</button>
+                <button id="reset-step-button" class="ui-button ui-widget ui-corner-all">Reset</button>
+            </div>
+        </div>
+        <div class="left" style="overflow: auto">
+            <div class="panel">
+                <div class="panel-heading"><span>Steps</span></div>
+                <div id="step-selector-panel" class="panel-body step-selector-panel">
+                    <ol id="step-selector" style="width: 90%"></ol>
+                </div>
+            </div>
+        </div>
+        <div class="right">
+            <div id="edit-step-form" class="panel panel-body">
+                <div class="step-form">
+                    <label>Id:</label>
+                    <div id="edit-stepId"></div>
+                </div>
+                <div class="step-form">
+                    <label>Name:</label><input id="edit-displayName"/>
+                </div>
+                <div class="step-form">
+                    <label>Description:</label><input id="edit-description"/>
+                </div>
+                <div id="branch-type" class="edit-step">
+                    <fieldset>
+                        <label for="pipelineRadio">Pipeline</label>
+                        <input type="radio" name="stepTypeRadio" id="pipelineRadio">
+                        <label for="branchRadio">Branch</label>
+                        <input type="radio" name="stepTypeRadio" id="branchRadio">
+                    </fieldset>
+                </div>
             </div>
         </div>
     </div>

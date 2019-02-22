@@ -314,19 +314,53 @@ function handleSave() {
     var pipelineJson = generatePipelineJson();
     console.log(JSON.stringify(pipelineJson, null, 4));
     // TODO Run validation of configured steps against step metadata
-    _.forEach(pipelineJson.steps, function(step) {
+    // _.forEach(pipelineJson.steps, function(step) {
+    // });
+    savePipeline(pipelineJson);
+}
+
+function handleStepSelection() {
+    $('.ui-selected', this).each(function() {
+        // console.log($(this).text());
+        // console.log($(this).attr('id'));
+        var stepId = $(this).attr('id');
+        var currentStep = stepLookup[stepId];
+        $('#edit-stepId').text(stepId);
+        $('#edit-displayName').val(currentStep.displayName);
+        $('#edit-description').val(currentStep.description);
     });
 }
 
 $(document).ready(function () {
     $('#tabs').tabs();
     createDesignerPanel();
-    loadSteps();
-    loadPipelines();
+    var stepsContainer = $('#step-panel');
+    var stepSelector = $('#step-selector');
+    loadSteps(function(step) {
+        // Build out the pipeline designer step control
+        $('<div id="' + step.id + '" class="step" draggable="true" ondragstart="drag(event)">' + step.displayName + '</div>')
+            .appendTo(stepsContainer);
+        $('div #' + step.id).fitText(1.50);
+        // Build out the step editor control
+        $('<li id="' + step.id + '" class="ui-widget-content">' + step.displayName + '</li>').appendTo(stepSelector);
+        $('li #' + step.id).fitText(1.50);
+    });
+    stepSelector.selectable({
+        stop: handleStepSelection
+    });
+    $("#pipelines").append($("<option />").val('none').text(''));
+    loadPipelines(function(pipeline) {
+        $("#pipelines").append($("<option />").val(pipeline.id).text(pipeline.name));
+    });
 
     $("#pipelines").selectmenu({
         change: verifyLoadPipeline
     });
+
+    $('#branch-type input').checkboxradio({
+        icon: false
+    });
+    $('#branch-type fieldset').controlgroup();
 
     clearDesignerDialog = $("#dialog-confirm").dialog({
         autoOpen: false,

@@ -18,13 +18,46 @@ body {
     font-weight: bold;
 }
 
+#step-selector .ui-selecting {
+    background: #FECA40;
+}
+
+#step-selector .ui-selected {
+    background: #F39814;
+    color: white;
+}
+
+#step-selector {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    width: 60%;
+}
+
+#step-selector li {
+    border-radius: 4px;
+    background: #e4f1fb;
+    color: #2779aa;
+    padding: 10px;
+    text-align: center;
+    height: 25px;
+    /*width: 90%;*/
+    border: 1px solid gray;
+    margin: 5px;
+}
+
+.step-selector-panel {
+    height: 300px;
+    overflow: auto;
+}
+
 .top-buttons {
     text-align: right;
     display: inline-block;
     width: 50%;
 }
 
-.top-pipeline-name {
+.top-name {
     text-align: left;
     display: inline-block;
     float: left;
@@ -46,7 +79,7 @@ body {
 .panel {
     margin: 10px;
     border-radius: 4px;
-    box-shadow: 2px 2px 3px rgba(0,0,0,0.2);
+    box-shadow: 2px 2px 3px rgba(0, 0, 0, 0.2);
     font-size: 11px;
     border-left: 1px solid #eee;
     border-bottom: 1px solid #eee;
@@ -92,6 +125,7 @@ body {
 .form-group span.ui-selectmenu-button.ui-button {
     width: 90%;
 }
+
 .dynamic-form span.ui-selectmenu-button.ui-button {
     width: 20%;
     margin-left: 8px;
@@ -138,6 +172,35 @@ body {
     width: 90%;
     border: 1px solid gray;
     margin: 5px;
+}
+
+.step-form {
+    display: inline-flex;
+    width: 100%;
+    margin-bottom: 8px;
+}
+
+.step-form label {
+    width: 25%;
+    text-align: left;
+    font-size: 20px;
+}
+
+.step-form input {
+    width: 70%;
+    text-align: left;
+}
+
+.step-form div {
+    background: #e4f1fb;
+    color: #333333;
+    padding: 5px;
+    border-radius: 10px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    width: 70%;
+    text-align: left;
 }
 
 
