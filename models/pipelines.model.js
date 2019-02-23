@@ -4,17 +4,18 @@ const BaseModel = require('../lib/base.model');
 
 
 class PipelinesModel extends BaseModel {
+    constructor() {
+        super('pipelines', schema);
+    }
     // override getValidator to add dependent schemas
     getValidator(schema) {
         const ajv = new Ajv({ allErrors: true, extendRefs: true });
         return ajv
-            .addSchema(require('../schemas/pipeline-steps.json'))
+            .addSchema(require('../schemas/steps.json'))
             .compile(schema);
     }
 
     // custom model logic goes here
 }
 
-var model = new PipelinesModel('pipelines', schema);
-
-module.exports = model;
+module.exports = PipelinesModel;

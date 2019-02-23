@@ -20,7 +20,7 @@
                 "steps": {
                     "type": "array",
                     "items": {
-                        "$ref": "pipeline-steps.json#/definitions/pipeline-steps"
+                        "$ref": "steps.json#/definitions/steps"
                     }
                 }
             }
