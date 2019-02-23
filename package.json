@@ -24,6 +24,7 @@
         "express": "^4.12.2",
         "fs": "0.0.1-security",
         "kraken-js": "^2.0.0",
+        "mingo": "^2.2.11",
         "mongodb": "^3.1.13",
         "uuid": "^3.3.2"
     },
