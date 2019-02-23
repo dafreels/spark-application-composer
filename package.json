@@ -29,6 +29,7 @@
         "uuid": "^3.3.2"
     },
     "devDependencies": {
+        "babel-eslint": "^10.0.1",
         "grunt": "^0.4.5",
         "grunt-cli": "^0.1.13",
         "grunt-config-dir": "^0.3.2",
