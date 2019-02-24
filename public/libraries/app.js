@@ -33,16 +33,24 @@ function initializeCodeEditorDialog() {
         }
     });
 
+    $('#codeEditorSyntax').selectmenu({
+        change: function() {
+            editor.session.setMode('ace/mode/' + $(this).val());
+        }
+    });
+
     editor = ace.edit('code-editor');
-    editor.setTheme('ace/theme/clouds');
+    editor.setTheme('ace/theme/iplastic');
 }
 
 function showCodeEditorDialog(code, mode) {
-    if (mode) {
-        editor.session.setMode(mode);
-    } else {
-        editor.session.setMode('ace/mode/javascript');
+    if (!mode) {
+        mode = 'ace/mode/javascript';
     }
+    var select = $('#codeEditorSyntax');
+    select.val(mode.substring(mode.lastIndexOf('/')));
+    select.selectmenu('refresh');
+    editor.session.setMode(mode);
     editor.setValue(code);
     codeEditorDialog.dialog("open");
 }
