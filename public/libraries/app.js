@@ -35,6 +35,7 @@ function drop(ev) {
 }
 
 var clearDesignerDialog;
+var pipelineErrorDialog;
 var addStepDialog;
 var addPipelineDialog;
 
@@ -313,30 +314,52 @@ function handleClear() {
 function handleSave() {
     var pipelineJson = generatePipelineJson();
     console.log(JSON.stringify(pipelineJson, null, 4));
-    // TODO Run validation of configured steps against step metadata
-    // _.forEach(pipelineJson.steps, function(step) {
-    // });
-    savePipeline(pipelineJson);
-}
-
-function handleStepSelection() {
-    $('.ui-selected', this).each(function() {
-        // console.log($(this).text());
-        // console.log($(this).attr('id'));
-        var stepId = $(this).attr('id');
-        var currentStep = stepLookup[stepId];
-        $('#edit-stepId').text(stepId);
-        $('#edit-displayName').val(currentStep.displayName);
-        $('#edit-description').val(currentStep.description);
+    // Run validation of configured steps against step metadata
+    var errors = [];
+    var error;
+    var currentStep;
+    // TODO Combine this for loop with the code on line 338
+    // TODO Clean up the ugly dialog
+    _.forEach(pipelineJson.steps, function(step) {
+        currentStep = stepLookup[step.stepId];
+        error = null;
+        _.forEach(currentStep.params, function(param) {
+            if (param.required && !_.find(step.params, function(p) { return  p.name === param.name})) {
+                if (!error) {
+                    error = {
+                        id: step.id,
+                        fields: []
+                    };
+                    errors.push(error);
+                }
+                error.fields.push(param.name);
+            }
+        });
     });
+    if (errors.length > 0) {
+        // Set the errors on the div
+        var errorDiv = $('#dialog-pipeline-error-field');
+        errorDiv.empty();
+        _.forEach(errors, function(error) {
+            $('<h3>' + error.id + '</h3>').appendTo(errorDiv);
+            var list = $('<ul>');
+            _.forEach(error.fields, function(f) { $('<li>' + f + '</li>').appendTo(list); });
+            $('</ul>').appendTo(list);
+            list.appendTo(errorDiv);
+        });
+        pipelineErrorDialog.dialog("open");
+    } else {
+        savePipeline(pipelineJson);
+    }
 }
 
-$(document).ready(function () {
-    $('#tabs').tabs();
-    createDesignerPanel();
+
+function loadStepsUI() {
     var stepsContainer = $('#step-panel');
     var stepSelector = $('#step-selector');
-    loadSteps(function(step) {
+    stepsContainer.empty();
+    stepSelector.empty();
+    loadSteps(function (step) {
         // Build out the pipeline designer step control
         $('<div id="' + step.id + '" class="step" draggable="true" ondragstart="drag(event)">' + step.displayName + '</div>')
             .appendTo(stepsContainer);
@@ -346,8 +369,17 @@ $(document).ready(function () {
         $('li #' + step.id).fitText(1.50);
     });
     stepSelector.selectable({
-        stop: handleStepSelection
+        stop: handleStepSelection,
+        selected: function (event, ui) {
+            $(ui.selected).addClass("ui-selected").siblings().removeClass("ui-selected");
+        }
     });
+}
+
+$(document).ready(function () {
+    $('#tabs').tabs();
+    createDesignerPanel();
+    loadStepsUI();
     $("#pipelines").append($("<option />").val('none').text(''));
     loadPipelines(function(pipeline) {
         $("#pipelines").append($("<option />").val(pipeline.id).text(pipeline.name));
@@ -356,11 +388,6 @@ $(document).ready(function () {
     $("#pipelines").selectmenu({
         change: verifyLoadPipeline
     });
-
-    $('#branch-type input').checkboxradio({
-        icon: false
-    });
-    $('#branch-type fieldset').controlgroup();
 
     clearDesignerDialog = $("#dialog-confirm").dialog({
         autoOpen: false,
@@ -371,6 +398,7 @@ $(document).ready(function () {
         buttons: {
             'Clear': handleClear,
             Cancel: function () {
+                // TODO Need to functionalize this so it can have different behaviors
                 // Set the select back to the original value
                 if (selectedPipeline) {
                     var select = $('#pipelines');
@@ -379,6 +407,19 @@ $(document).ready(function () {
                     selectedPipeline = 'none';
                 }
                 $(this).dialog('close');
+            }
+        }
+    });
+
+    pipelineErrorDialog = $("#dialog-pipeline-error").dialog({
+        autoOpen: false,
+        resizable: false,
+        height: "auto",
+        width: 400,
+        modal: true,
+        buttons: {
+            Ok: function() {
+                $( this ).dialog( "close" );
             }
         }
     });
@@ -427,7 +468,10 @@ $(document).ready(function () {
         }
     });
 
+    // Pipeline Designer
     $('#save-button').click(handleSave);
     $('#new-button').click(handleNew);
     $('#reset-button').click(handleReset);
+
+    initializeStepsEditor();
 });

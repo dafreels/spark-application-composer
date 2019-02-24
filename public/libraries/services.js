@@ -2,10 +2,11 @@ var stepLookup = {}; // TODO move this to a model?
 var pipelineLookup = {}; // TODO move this to a model?
 
 function loadSteps(render) {
-    $.getJSON('/api/v1/pipeline-steps')
+    $.getJSON('/api/v1/steps')
         .done(function(data) {
             _.forEach(data.steps, function(step) {
                 render(step);
+                delete step._id;
                 stepLookup[step.id] = step;
             });
         });
@@ -23,4 +24,20 @@ function loadPipelines(render) {
 
 function savePipeline(pipelineJson) {
     // TODO Add service call to 'api/v1/pipelines' here
+}
+
+function saveStep(step, callback) {
+    let type = 'POST';
+    let url = '/api/v1/steps/';
+    if (step.id) {
+        type = 'PUT';
+        url = '/api/v1/steps/' + step.id;
+    }
+    $.ajax({
+        type: type,
+        url: url,
+        contentType: "application/json",
+        data: JSON.stringify(step),
+        success: callback
+    });
 }

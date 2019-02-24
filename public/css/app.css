@@ -63,6 +63,7 @@ body {
     float: left;
     width: 50%;
     transform: translateY(35%);
+    font-weight: bold;
 }
 
 .left {
@@ -203,4 +204,21 @@ body {
     text-align: left;
 }
 
+.step-form fieldset {
+    width: 30%;
+}
 
+.step-parameters-name {
+    text-align: left;
+    display: inline-block;
+    float: left;
+    width: 50%;
+    transform: translateY(25%);
+    font-weight: bold;
+    font-size: 15px;
+}
+
+#edit-step-parameters span.ui-selectmenu-button.ui-button {
+    width: 15%;
+    margin-left: 8px;
+}

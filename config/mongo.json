@@ -2,6 +2,6 @@
     "storage": {
         "type": "mongodb",
         "server": "localhost",
-        "database": "pipeline"
+        "database": "sparkApplicationComposer"
     }
 }
