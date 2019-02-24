@@ -6,6 +6,7 @@
     <link rel="stylesheet" href="css/jquery-ui.css">
     <link rel="stylesheet" href="css/jquery-ui.theme.css">
     <!-- dependencies -->
+    <script src="libraries/aceeditor/1.4.3/ace.js" type="text/javascript" charset="utf-8"></script>
     <script src="libraries/jquery-3.3.1.js"></script>
     <script src="libraries/jquery.fittext.js"></script>
     <script src="libraries/lodash/4.17.11/lodash.js"></script>
@@ -107,6 +108,7 @@
     <div id="tabs-3">
         <div style="height: 10%; width:100%; margin-bottom: 10px;">
             <div class="top-buttons" style="width: 100%">
+                <button id="bulk-step-button" class="ui-button ui-widget ui-corner-all">Add Bulk</button>
                 <button id="save-step-button" class="ui-button ui-widget ui-corner-all">Save</button>
                 <button id="new-step-button" class="ui-button ui-widget ui-corner-all">New</button>
                 <button id="reset-step-button" class="ui-button ui-widget ui-corner-all">Reset</button>
@@ -191,6 +193,10 @@
     <p><span class="ui-icon ui-icon-alert" style="float:left; margin:12px 12px 20px 0;">
     </span>There were errors with the pipeline. The following parameters are required:</p>
     <div id="dialog-pipeline-error-field"></div>
+</div>
+<!-- Code Editor Dialog -->
+<div id="dialog-editor" title="Edit Code">
+    <div id="code-editor"></div>
 </div>
 </body>
 </html>

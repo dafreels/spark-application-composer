@@ -5,13 +5,63 @@ var diagramStepToStepMetaLookup = {};
 var stepForms = {};
 var currentPipeline;
 var controlCharacters = ['!', '@', '#'];
-var clearFunction;
+var clearDialogClearFunction;
+var cancelClearDialogFunction;
 
 var parameterTypeOptions = '<option value="static">Static</option>' +
     '<option value="global">Global</option>' +
     '<option value="step">Step Response</option>' +
     '<option value="secondary">Secondary Step Response</option>' +
     '<option value="script">Script</option>';
+
+// Code editor section
+var editor;
+var codeEditorDialog;
+var codeEditorSaveFunction;
+var codeEditorCancelFunction;
+
+function initializeCodeEditorDialog() {
+    codeEditorDialog = $("#dialog-editor").dialog({
+        autoOpen: false,
+        resizable: false,
+        height: 500,
+        width: 800,
+        modal: true,
+        buttons: {
+            'Save': handleCodeEditorSave,
+            Cancel: handleCodeEditorCancel
+        }
+    });
+
+    editor = ace.edit('code-editor');
+    editor.setTheme('ace/theme/clouds');
+}
+
+function showCodeEditorDialog(code, mode) {
+    if (mode) {
+        editor.session.setMode(mode);
+    } else {
+        editor.session.setMode('ace/mode/javascript');
+    }
+    editor.setValue(code);
+    codeEditorDialog.dialog("open");
+}
+
+function handleCodeEditorSave() {
+    if (codeEditorSaveFunction) {
+        codeEditorSaveFunction(editor.getValue());
+    }
+    $(this).dialog('close');
+}
+
+function handleCodeEditorCancel() {
+    if (codeEditorCancelFunction) {
+        codeEditorCancelFunction();
+    }
+    $(this).dialog('close');
+}
+
+// End code editor section
 
 function allowDrop(ev) {
     ev.preventDefault();
@@ -55,7 +105,7 @@ function clearPipelineDesigner() {
 
 function verifyLoadPipeline() {
     if (currentPipeline || isDesignerPopulated()) {
-        clearFunction = loadPipeline;
+        clearDialogClearFunction = loadPipeline;
         showClearDesignerDialog();
     } else {
         loadPipeline();
@@ -278,7 +328,7 @@ function showClearDesignerDialog() {
 
 function handleNew() {
     if (currentPipeline || isDesignerPopulated()) {
-        clearFunction = function() {
+        clearDialogClearFunction = function() {
             var select = $('#pipelines');
             select.val('none');
             select.selectmenu('refresh');
@@ -293,7 +343,7 @@ function handleNew() {
 
 function handleReset() {
     if (currentPipeline || isDesignerPopulated()) {
-        clearFunction = function() {
+        clearDialogClearFunction = function() {
             var select = $('#pipelines');
             select.val('none');
             select.selectmenu('refresh');
@@ -305,9 +355,17 @@ function handleReset() {
     }
 }
 
-function handleClear() {
-    clearPipelineDesigner();
-    clearFunction();
+function handleClearDialogClear() {
+    if (clearDialogClearFunction) {
+        clearDialogClearFunction();
+    }
+    $(this).dialog('close');
+}
+
+function handleClearDialogCancel() {
+    if (cancelClearDialogFunction) {
+        cancelClearDialogFunction();
+    }
     $(this).dialog('close');
 }
 
@@ -376,6 +434,17 @@ function loadStepsUI() {
     });
 }
 
+function cancelClearPipelines() {
+    // Set the select back to the original value
+    if (selectedPipeline) {
+        var select = $('#pipelines');
+        select.val(selectedPipeline);
+        select.selectmenu('refresh');
+        selectedPipeline = 'none';
+    }
+    $(this).dialog('close');
+}
+
 $(document).ready(function () {
     $('#tabs').tabs();
     createDesignerPanel();
@@ -389,6 +458,7 @@ $(document).ready(function () {
         change: verifyLoadPipeline
     });
 
+    // TODO Replace with ClearFormDialog
     clearDesignerDialog = $("#dialog-confirm").dialog({
         autoOpen: false,
         resizable: false,
@@ -396,20 +466,12 @@ $(document).ready(function () {
         width: 400,
         modal: true,
         buttons: {
-            'Clear': handleClear,
-            Cancel: function () {
-                // TODO Need to functionalize this so it can have different behaviors
-                // Set the select back to the original value
-                if (selectedPipeline) {
-                    var select = $('#pipelines');
-                    select.val(selectedPipeline);
-                    select.selectmenu('refresh');
-                    selectedPipeline = 'none';
-                }
-                $(this).dialog('close');
-            }
+            'Clear': handleClearDialogClear,
+            Cancel: handleClearDialogCancel
         }
     });
+
+    initializeCodeEditorDialog();
 
     pipelineErrorDialog = $("#dialog-pipeline-error").dialog({
         autoOpen: false,

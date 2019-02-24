@@ -26,6 +26,18 @@ function savePipeline(pipelineJson) {
     // TODO Add service call to 'api/v1/pipelines' here
 }
 
+function saveBulkSteps(steps, callback) {
+    if (_.isArray(JSON.parse(steps))) {
+        $.ajax({
+            type: 'POST',
+            url: '/api/v1/steps/',
+            contentType: "application/json",
+            data: steps,
+            success: callback
+        });
+    }
+}
+
 function saveStep(step, callback) {
     let type = 'POST';
     let url = '/api/v1/steps/';

@@ -1,3 +1,4 @@
+var currentEditorStepId;
 
 function initializeStepsEditor() {
     $('#branch-type input').checkboxradio({
@@ -9,14 +10,34 @@ function initializeStepsEditor() {
     $('#reset-step-button').click(handleResetStep);
     $('#save-step-button').click(saveStepChanges);
     $('#add-step-parameter-button').click(addParameter);
+    $('#bulk-step-button').click(handleBulkAdd);
+}
+
+function handleBulkAdd() {
+    codeEditorSaveFunction = function(code) {
+        saveBulkSteps(code, function() {
+            currentEditorStepId = null;
+            loadStepsUI();
+            clearStepForm(true);
+        });
+    };
+    editScript('[]', 'ace/mode/json');
+}
+
+function editScript(code, mode) {
+    showCodeEditorDialog(code, mode);
 }
 
 function saveStepChanges() {
     if (stepNeedsSave()) {
         const step = generateStepJson();
         saveStep(step, function() {
+            currentEditorStepId = null;
             loadStepsUI();
-            clearStepForm();
+            // Find an select the newly created step
+            var selector = $('#step-selector');
+            selector.find('li:' + step.displayName).addClass('ui-selected');
+            populateStepForm(selector);
         });
     }
 }
@@ -36,9 +57,14 @@ function addParameter() {
  */
 function handleStepSelection() {
     if (stepNeedsSave()) {
-        clearFunction = function() {
+        clearDialogClearFunction = function() {
             clearStepForm(false);
             populateStepForm(this);
+            currentEditorStepId = $('#edit-stepId').text();
+        };
+        cancelClearDialogFunction = function() {
+            $('#step-selector .ui-selected').removeClass('ui-selected');
+            $('#step-selector').children('#' + currentEditorStepId).addClass('ui-selected');
         };
         showClearDesignerDialog();
     } else {
@@ -51,9 +77,9 @@ function handleStepSelection() {
  */
 function populateStepForm(el) {
     $('.ui-selected', el).each(function() {
-        var stepId = $(this).attr('id');
-        var currentStep = stepLookup[stepId];
-        $('#edit-stepId').text(stepId);
+        currentEditorStepId = $(this).attr('id');
+        var currentStep = stepLookup[currentEditorStepId];
+        $('#edit-stepId').text(currentEditorStepId);
         $('#edit-displayName').val(currentStep.displayName);
         $('#edit-description').val(currentStep.description);
         $('#edit-engineMeta').val(currentStep.engineMeta.spark);
@@ -161,7 +187,11 @@ function generateStepJson() {
  */
 function handleNewStep() {
     if (stepNeedsSave()) {
-        clearFunction = function() { clearStepForm(true); };
+        clearDialogClearFunction = function() { clearStepForm(true); };
+        cancelClearDialogFunction = function() {
+            $('#step-selector .ui-selected').removeClass('ui-selected');
+            $('#step-selector').children('#' + currentEditorStepId).addClass('ui-selected');
+        };
         showClearDesignerDialog();
     } else {
         clearStepForm(true);
@@ -173,7 +203,11 @@ function handleNewStep() {
  */
 function handleResetStep() {
     if (stepNeedsSave()) {
-        clearFunction = function() { clearStepForm(true); };
+        clearDialogClearFunction = function() { clearStepForm(true); };
+        cancelClearDialogFunction = function() {
+            $('#step-selector .ui-selected').removeClass('ui-selected');
+            $('#step-selector').children('#' + currentEditorStepId).addClass('ui-selected');
+        };
         showClearDesignerDialog();
     } else {
         clearStepForm(true);
@@ -184,6 +218,7 @@ function handleResetStep() {
  * Reset the editor form to a clean state.
  */
 function clearStepForm(clearSelection) {
+    currentEditorStepId = null;
     $('#edit-stepId').empty();
     $('#edit-displayName').val('');
     $('#edit-description').val('');
