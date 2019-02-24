@@ -8,11 +8,12 @@
     <!-- dependencies -->
     <script src="libraries/jquery-3.3.1.js"></script>
     <script src="libraries/jquery.fittext.js"></script>
-    <script src="libraries/lodash/3.10.1/lodash.js"></script>
+    <script src="libraries/lodash/4.17.11/lodash.js"></script>
     <script src="libraries/backbone/1.3.3/backbone.js"></script>
     <script src="libraries/joint/2.1.0/joint.js"></script>
     <script src="libraries/jquery-ui.js"></script>
     <script src="libraries/services.js"></script>
+    <script src="libraries/steps-editor.js"></script>
     <script src="libraries/app.js"></script>
     <script src="libraries/pipeline-designer.js"></script>
     <title>Application Manager</title>
@@ -131,20 +132,37 @@
                 <div class="step-form">
                     <label>Description:</label><input id="edit-description"/>
                 </div>
-                <div id="branch-type" class="edit-step">
-                    <fieldset>
+                <div class="step-form">
+                    <label>Engine Meta:</label><input id="edit-engineMeta"/>
+                </div>
+                <div id="branch-type" class="step-form">
+                    <label>Type:</label>
+                    <div>
                         <label for="pipelineRadio">Pipeline</label>
-                        <input type="radio" name="stepTypeRadio" id="pipelineRadio">
+                        <input type="radio" name="stepTypeRadio" value="Pipeline" id="pipelineRadio">
                         <label for="branchRadio">Branch</label>
-                        <input type="radio" name="stepTypeRadio" id="branchRadio">
-                    </fieldset>
+                        <input type="radio" name="stepTypeRadio" value="branch" id="branchRadio">
+                    </div>
+                </div>
+                <!-- Dynamic parameters panel -->
+                <div>
+                    <div style="height: 10%; width:100%; margin-bottom: 10px;">
+                        <div class="step-parameters-name"><label>Parameters</label></div>
+                        <div class="top-buttons">
+                            <button id="add-step-parameter-button" class="ui-button ui-widget ui-corner-all ui-button-icon-only"
+                                    title="Add Parameter">
+                                <span class="ui-icon ui-icon-plus"></span>Add Parameter
+                            </button>
+                        </div>
+                    </div>
+                    <div id="edit-step-parameters"></div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 <!-- Modal dialog -->
-<div id="dialog-confirm" title="Clear Pipeline Designer?">
+<div id="dialog-confirm" title="Clear Form?">
     <p><span class="ui-icon ui-icon-alert" style="float:left; margin:12px 12px 20px 0;">
     </span>These items will be permanently deleted and cannot be recovered. Are you sure?</p>
 </div>
@@ -167,6 +185,12 @@
             <input type="text" name="name" id="add-pipeline-id" value="" class="text ui-widget-content ui-corner-all">
         </fieldset>
     </form>
+</div>
+<!-- Pipeline save errors dialog -->
+<div id="dialog-pipeline-error" title="Clear Pipeline Designer?">
+    <p><span class="ui-icon ui-icon-alert" style="float:left; margin:12px 12px 20px 0;">
+    </span>There were errors with the pipeline. The following parameters are required:</p>
+    <div id="dialog-pipeline-error-field"></div>
 </div>
 </body>
 </html>
