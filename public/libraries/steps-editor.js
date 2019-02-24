@@ -113,6 +113,9 @@ function createParameterForm() {
     button.appendTo(formDiv);
     $('<span class="ui-icon ui-icon-minus"></span>').appendTo(button);
     $('</button>').appendTo(formDiv);
+    button.click(function() {
+        formDiv.remove();
+    });
     $('</div>').appendTo(formDiv);
     formDiv.attr('cbId', checkbox.attr('id'));
     return formDiv;
