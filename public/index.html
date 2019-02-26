@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="css/jquery-ui.theme.css">
     <!-- dependencies -->
     <script src="libraries/aceeditor/1.4.3/ace.js" type="text/javascript" charset="utf-8"></script>
+    <script src="libraries/aceeditor/1.4.3/ext-beautify.js" type="text/javascript" charset="utf-8"></script>
     <script src="libraries/jquery-3.3.1.js"></script>
     <script src="libraries/jquery.fittext.js"></script>
     <script src="libraries/lodash/4.17.11/lodash.js"></script>
@@ -14,9 +15,15 @@
     <script src="libraries/joint/2.1.0/joint.js"></script>
     <script src="libraries/jquery-ui.js"></script>
     <script src="libraries/services.js"></script>
+    <script src="libraries/add-step-dialog.js"></script>
+    <script src="libraries/alert-dialog.js"></script>
+    <script src="libraries/clear-form-dialog.js"></script>
+    <script src="libraries/code-editor-dialog.js"></script>
+    <script src="libraries/new-pipeline-dialog.js"></script>
+    <script src="libraries/validation-error-dialog.js"></script>
     <script src="libraries/steps-editor.js"></script>
-    <script src="libraries/app.js"></script>
     <script src="libraries/pipeline-designer.js"></script>
+    <script src="libraries/app.js"></script>
     <title>Application Manager</title>
 </head>
 <body>
@@ -100,8 +107,8 @@
             <!-- TODO Add a slider to allow zoom on canvas -->
             <div class="right">
                 <div id="pipeline-designer" class="joint-paper joint-theme-default" style="width: 100%"
-                     ondrop="drop(event)"
-                     ondragover="allowDrop(event)"></div>
+                     ondrop="dropStep(event)"
+                     ondragover="allowStepDrop(event)"></div>
             </div>
         </div>
     </div>
@@ -118,7 +125,7 @@
             <div class="panel">
                 <div class="panel-heading"><span>Steps</span></div>
                 <div id="step-selector-panel" class="panel-body step-selector-panel">
-                    <ol id="step-selector" style="width: 90%"></ol>
+                    <ol id="step-selector" style="width: 100%"></ol>
                 </div>
             </div>
         </div>
@@ -145,6 +152,14 @@
                         <label for="branchRadio">Branch</label>
                         <input type="radio" name="stepTypeRadio" value="branch" id="branchRadio">
                     </div>
+                </div>
+                <div class="step-form">
+                    <label>Modified Date:</label>
+                    <div id="step-modifiedDate"></div>
+                </div>
+                <div class="step-form">
+                    <label>Creation Date:</label>
+                    <div id="step-creationDate"></div>
                 </div>
                 <!-- Dynamic parameters panel -->
                 <div>
@@ -188,11 +203,16 @@
         </fieldset>
     </form>
 </div>
-<!-- Pipeline save errors dialog -->
-<div id="dialog-pipeline-error" title="Clear Pipeline Designer?">
+<!-- validation save errors dialog -->
+<div id="dialog-validation-error" title="Validation Error!">
     <p><span class="ui-icon ui-icon-alert" style="float:left; margin:12px 12px 20px 0;">
-    </span>There were errors with the pipeline. The following parameters are required:</p>
-    <div id="dialog-pipeline-error-field"></div>
+    </span>There were errors with the changes. The following parameters are required:</p>
+    <div id="dialog-validation-error-field"></div>
+</div>
+<!-- alert dialog -->
+<div id="dialog-alert" title="Error!">
+    <span class="ui-icon ui-icon-alert" style="float:left; margin:12px 12px 20px 0;"></span>
+    <span id="dialog-alert-field" style="float:left; margin:12px 12px 20px 0;"></span>
 </div>
 <!-- Code Editor Dialog -->
 <div id="dialog-editor" title="Edit Code">

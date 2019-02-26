@@ -50,6 +50,9 @@ function saveStep(step, callback) {
         url: url,
         contentType: "application/json",
         data: JSON.stringify(step),
-        success: callback
+        success: callback,
+        error: function(jqXHR, status, errorThrown) {
+            console.log(status + ' --> ' + errorThrown);
+        }
     });
 }

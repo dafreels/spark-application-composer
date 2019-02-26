@@ -26,7 +26,8 @@
                 "type": {
                     "type": "string",
                     "enum": [
-                        "Pipeline"
+                        "Pipeline",
+                        "branch"
                     ]
                 },
                 "nextStepId": {
@@ -50,7 +51,8 @@
                                     "boolean",
                                     "script",
                                     "string",
-                                    "text"
+                                    "text",
+                                    "result"
                                 ]
                             },
                             "name": {

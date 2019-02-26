@@ -11,6 +11,8 @@ function initializeStepsEditor() {
     $('#save-step-button').click(saveStepChanges);
     $('#add-step-parameter-button').click(addParameter);
     $('#bulk-step-button').click(handleBulkAdd);
+
+    $('#edit-displayName').focus();
 }
 
 function handleBulkAdd() {
@@ -31,14 +33,41 @@ function editScript(code, mode) {
 function saveStepChanges() {
     if (stepNeedsSave()) {
         const step = generateStepJson();
-        saveStep(step, function() {
-            currentEditorStepId = null;
-            loadStepsUI();
-            // Find an select the newly created step
-            var selector = $('#step-selector');
-            selector.find('li:' + step.displayName).addClass('ui-selected');
-            populateStepForm(selector);
-        });
+        if (step.id && step.id.trim().length === 0) {
+            delete step.id;
+        }
+        // Ensure the step type has been set
+        if (!step.type) {
+            showValidationErrorDialog([
+                {
+                    header: 'Type',
+                    messages: ['Type must be selected!']
+                }
+            ]);
+        } else if (step.type === 'branch' && !_.find(step.params, (p => p.type === 'result'))) {
+            // Validate the branch step to ensure that at least 1 result parameter exists
+            showValidationErrorDialog([
+                {
+                    header: 'Parameters',
+                    messages: ['At least one parameter of type Branch Result is required when step type is Branch!']
+                }
+            ]);
+        } else {
+            saveStep(step, function () {
+                currentEditorStepId = null;
+                loadStepsUI();
+                clearStepForm(true);
+                // Find an select the newly created step
+                const selector = $('#step-selector');
+                // TODO This doesn't always work, which could have something to do with async operations
+                selector.children('li').each(function() {
+                    if ($(this).text() === step.displayName) {
+                        $(this).addClass('ui-selected');
+                    }
+                });
+                populateStepForm(selector);
+            });
+        }
     }
 }
 
@@ -57,17 +86,18 @@ function addParameter() {
  */
 function handleStepSelection() {
     if (stepNeedsSave()) {
-        clearDialogClearFunction = function() {
+        clearFormDialogClearFunction = function() {
             clearStepForm(false);
             populateStepForm(this);
             currentEditorStepId = $('#edit-stepId').text();
         };
-        cancelClearDialogFunction = function() {
+        clearDialogCancelFunction = function() {
             $('#step-selector .ui-selected').removeClass('ui-selected');
             $('#step-selector').children('#' + currentEditorStepId).addClass('ui-selected');
         };
-        showClearDesignerDialog();
+        showClearFormDialog();
     } else {
+        clearStepForm(false);
         populateStepForm(this);
     }
 }
@@ -78,17 +108,19 @@ function handleStepSelection() {
 function populateStepForm(el) {
     $('.ui-selected', el).each(function() {
         currentEditorStepId = $(this).attr('id');
-        var currentStep = stepLookup[currentEditorStepId];
+        const currentStep = stepLookup[currentEditorStepId];
         $('#edit-stepId').text(currentEditorStepId);
         $('#edit-displayName').val(currentStep.displayName);
         $('#edit-description').val(currentStep.description);
         $('#edit-engineMeta').val(currentStep.engineMeta.spark);
-        $('#' + currentStep.type.toLowerCase() + 'Radio').attr("checked","checked").change();
+        $('#step-creationDate').text(currentStep.creationDate);
+        $('#step-modifiedDate').text(currentStep.modifiedDate);
+        $('#' + currentStep.type.toLowerCase() + 'Radio').attr('checked', true).change();
         // Build the parameters panel
         var parametersDiv = $('#edit-step-parameters');
         parametersDiv.empty();
         var formDiv;
-        _.forEach(currentStep.params, function(param) {
+        _.forEach(currentStep.params, (param) => {
             formDiv = createParameterForm();
             formDiv.appendTo(parametersDiv);
             // Decorate the components
@@ -105,8 +137,6 @@ function populateStepForm(el) {
                 checkbox.attr("checked","checked").change();
             }
         });
-        // TODO Add special handling for branch steps since params are used to represent stepIds based on conditions
-        // TODO Create a dialog that allows code editing when script is the type
     });
 }
 
@@ -125,6 +155,7 @@ function createParameterForm() {
     $('<option value="boolean">Boolean</option>').appendTo(select);
     $('<option value="integer">Integer</option>').appendTo(select);
     $('<option value="script">Script</option>').appendTo(select);
+    $('<option value="result">Branch Result</option>').appendTo(select);
     // Options
     $('</select>').appendTo(formDiv);
     var checkboxLabel = $('<label style="width: 100px; height: 15px; margin: 0 8px 0 8px;">Required</label>');
@@ -134,7 +165,21 @@ function createParameterForm() {
     checkboxLabel.appendTo(formDiv);
     checkbox.appendTo(formDiv);
     $('<label>Default Value:</label>').appendTo(formDiv);
-    $('<input name="stepParamDefaultValue" type="text"/>').appendTo(formDiv);
+    var defaultValueInput = $('<input name="stepParamDefaultValue" type="text"/>');
+    defaultValueInput.appendTo(formDiv);
+    defaultValueInput.focusin(function() {
+        codeEditorCloseFunction = function() {
+            $('#add-step-parameter-button').focus();
+            defaultValueInput.prop('disabled', false);
+        };
+        codeEditorSaveFunction = function(value) {
+            defaultValueInput.val(value);
+        };
+        if (select.val() === 'script') {
+            showCodeEditorDialog($(this).val(), 'scala');
+            $(this).prop('disabled', true);
+        }
+    });
     var button = $('<button class="ui-button ui-widget ui-corner-all ui-button-icon-only" title="Remove Parameter">');
     button.appendTo(formDiv);
     $('<span class="ui-icon ui-icon-minus"></span>').appendTo(button);
@@ -153,14 +198,16 @@ function createParameterForm() {
  */
 function generateStepJson() {
     var step = {
-        id: $('#edit-stepId').text(),
+        id: setStringValue($('#edit-stepId').text()),
         displayName: $('#edit-displayName').val(),
         description: $('#edit-description').val(),
         type: $('input[name=stepTypeRadio]:checked').val(),
         engineMeta: {
             spark: $('#edit-engineMeta').val()
         },
-        params: []
+        params: [],
+        creationDate: setStringValue($('#step-creationDate').text()),
+        modifiedDate: setStringValue($('#step-modifiedDate').text())
     };
 
     // Gather parameters
@@ -187,12 +234,12 @@ function generateStepJson() {
  */
 function handleNewStep() {
     if (stepNeedsSave()) {
-        clearDialogClearFunction = function() { clearStepForm(true); };
-        cancelClearDialogFunction = function() {
+        clearFormDialogClearFunction = function() { clearStepForm(true); };
+        clearDialogCancelFunction = function() {
             $('#step-selector .ui-selected').removeClass('ui-selected');
             $('#step-selector').children('#' + currentEditorStepId).addClass('ui-selected');
         };
-        showClearDesignerDialog();
+        showClearFormDialog();
     } else {
         clearStepForm(true);
     }
@@ -203,12 +250,12 @@ function handleNewStep() {
  */
 function handleResetStep() {
     if (stepNeedsSave()) {
-        clearDialogClearFunction = function() { clearStepForm(true); };
-        cancelClearDialogFunction = function() {
+        clearFormDialogClearFunction = function() { clearStepForm(true); };
+        clearDialogCancelFunction = function() {
             $('#step-selector .ui-selected').removeClass('ui-selected');
             $('#step-selector').children('#' + currentEditorStepId).addClass('ui-selected');
         };
-        showClearDesignerDialog();
+        showClearFormDialog();
     } else {
         clearStepForm(true);
     }
@@ -223,7 +270,10 @@ function clearStepForm(clearSelection) {
     $('#edit-displayName').val('');
     $('#edit-description').val('');
     $('#edit-engineMeta').val('');
-    $('#pipelineRadio').attr("checked","checked").change();
+    $('#step-creationDate').text('');
+    $('#step-modifiedDate').text('');
+    $('#pipelineRadio').attr('checked', false).change();
+    $('#branchRadio').attr('checked', false).change();
     if (clearSelection) {
         $('#step-selector .ui-selected').removeClass('ui-selected');
     }
@@ -237,7 +287,8 @@ function clearStepForm(clearSelection) {
 function stepNeedsSave() {
     var step = generateStepJson();
     if (step.id) {
-        return !_.isEqual(step, stepLookup[step.id]);
+        // Compare the objects
+        return getObjectDiff(step, stepLookup[step.id]).length > 0;
     }
     var changed = !_.isEmpty(step.engineMeta.spark);
     _.forEach(_.keys(step).filter(p => p !== 'engineMeta' && p !== 'type'), function(property) {
@@ -246,4 +297,26 @@ function stepNeedsSave() {
         }
     });
     return changed;
+}
+
+/**
+ * Helper function to perform a deep comparison
+ * @param obj1 First object to be compared
+ * @param obj2 Second object to be compared
+ * @returns {string[]}
+ */
+function getObjectDiff(obj1, obj2) {
+    return Object.keys(obj1).reduce((result, key) => {
+        if (!obj2.hasOwnProperty(key)) {
+            result.push(key);
+        } else if (_.isEqual(obj1[key], obj2[key])) {
+            const resultKeyIndex = result.indexOf(key);
+            result.splice(resultKeyIndex, 1);
+        }
+        return result;
+    }, Object.keys(obj2));
+}
+
+function setStringValue(val) {
+    return val && val.trim().length > 0 ? val : undefined;
 }
