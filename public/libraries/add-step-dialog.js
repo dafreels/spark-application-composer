@@ -10,7 +10,7 @@ function initializeAddStepDialog() {
             "Add Step": function () {
                 var idField = $('#add-step-id');
                 // TODO Make sure the id isn't already being used in the pipeline
-                addStepToDesigner(idField.val(), draggingStep.name, draggingStep.x, draggingStep.y, draggingStep.stepMetaData.id);
+                addStepToDesigner(idField.val(), draggingStep.name, draggingStep.x, draggingStep.y, draggingStep.stepMetaDataId);
                 idField.val('');
                 draggingStep = null;
                 $(this).dialog('close');

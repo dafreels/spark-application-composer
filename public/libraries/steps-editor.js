@@ -108,7 +108,7 @@ function handleStepSelection() {
 function populateStepForm(el) {
     $('.ui-selected', el).each(function() {
         currentEditorStepId = $(this).attr('id');
-        const currentStep = stepLookup[currentEditorStepId];
+        const currentStep = getStep(currentEditorStepId);
         $('#edit-stepId').text(currentEditorStepId);
         $('#edit-displayName').val(currentStep.displayName);
         $('#edit-description').val(currentStep.description);
@@ -288,7 +288,7 @@ function stepNeedsSave() {
     var step = generateStepJson();
     if (step.id) {
         // Compare the objects
-        return getObjectDiff(step, stepLookup[step.id]).length > 0;
+        return getObjectDiff(step, getStep(step.id)).length > 0;
     }
     var changed = !_.isEmpty(step.engineMeta.spark);
     _.forEach(_.keys(step).filter(p => p !== 'engineMeta' && p !== 'type'), function(property) {

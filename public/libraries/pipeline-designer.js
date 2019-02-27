@@ -20,12 +20,11 @@ let draggingStep;
  */
 function initializePipelineDesigner() {
     graph = new joint.dia.Graph;
-
     paper = new joint.dia.Paper({
         el: $('#pipeline-designer'),
         model: graph,
         height: 800,
-        width: $('.right').width,
+        width: '100%',
         gridSize: 1,
         defaultLink: new joint.dia.Link({
             attrs: {'.marker-target': {d: 'M 10 0 L 0 5 L 10 10 z'}}
@@ -67,12 +66,11 @@ function drag(ev) {
 function dropStep(ev) {
     ev.preventDefault();
     if (currentPipeline) {
-        const stepLookupElement = stepLookup[ev.dataTransfer.getData("id")];
         draggingStep = {
             name: ev.dataTransfer.getData("text"),
             x: ev.offsetX,
             y: ev.offsetY,
-            stepMetaData: stepLookupElement
+            stepMetaDataId: ev.dataTransfer.getData("id")
         };
         showAddStepDialog();
     } else {
@@ -119,10 +117,11 @@ function cancelClearPipelines() {
 function handleReset() {
     if (currentPipeline || isDesignerPopulated()) {
         clearFormDialogClearFunction = function() {
-            var select = $('#pipelines');
+            const select = $('#pipelines');
             select.val('none');
             select.selectmenu('refresh');
             $('#pipelineName').text('');
+            clearPipelineDesigner();
         };
         showClearFormDialog();
     } else {
@@ -137,16 +136,15 @@ function handleReset() {
  * @param x The x coordiantes on the canvas
  * @param y The y coordinates on the canvas
  * @param stepId The id of the step metadata
+ * @param loadProperties Determines whether the loadProperties function should be called after the step has been added to the designer
  * @returns {*}
  */
-function addStepToDesigner(id, name, x, y, stepId) {
-    const step = createStep(name, x, y, stepLookup[stepId]).addTo(graph);
+function addStepToDesigner(id, name, x, y, stepId, loadProperties = true) {
+    const step = createStep(name, x, y, getStep(stepId)).addTo(graph);
     step.attributes.metaData.pipelineStepMetaData.id = id;
-    if (!step.attributes.metaData.pipelineStepMetaData.params) {
-        step.attributes.metaData.pipelineStepMetaData.params = [];
+    if (loadProperties) {
+        loadPropertiesPanel(step.attributes.metaData);
     }
-    currentPipeline.steps.push(step.attributes.metaData.pipelineStepMetaData);
-    loadPropertiesPanel(step.attributes.metaData);
     currentSteps[step.id] = step;
     diagramStepToStepMetaLookup[id] = step;
     return step;
@@ -157,6 +155,8 @@ function addStepToDesigner(id, name, x, y, stepId) {
  */
 function clearPipelineDesigner() {
     graph.clear();
+    currentPipeline = null;
+    draggingStep = null;
     currentSteps = {};
     diagramStepToStepMetaLookup = {};
     clearPropertiesPanel();
@@ -168,8 +168,8 @@ function clearPropertiesPanel() {
     $('#description').text('');
     $('#step-parameters-form div').remove();
     const selectedPipelineId = $('#pipelines').val();
-    if (pipelineLookup[selectedPipelineId]) {
-        $('#pipelineName').text(pipelineLookup[selectedPipelineId].name);
+    if (isValidPipelineId(selectedPipelineId)) {
+        $('#pipelineName').text(getPipelineName(selectedPipelineId).name);
     }
 }
 
@@ -231,7 +231,7 @@ function createStep(name, x, y, metadata) {
                         '.port-body': {
                             fill: 'ivory',
                             magnet: 'passive',
-                            r: 4
+                            r: 6
                         }
                     },
                     label: {
@@ -259,7 +259,9 @@ function createStep(name, x, y, metadata) {
         },
         metaData: {
             stepMetaData: metadata,
-            pipelineStepMetaData: {}
+            pipelineStepMetaData: {
+                params: []
+            }
         }
     });
 }
@@ -296,47 +298,91 @@ function isDesignerPopulated() {
 }
 
 /**
+ * Helper function to return the special character for parameter values.
+ * @param selectVal The value from the select.
+ * @returns {string}
+ */
+function getLeadCharacter(selectVal) {
+    let leadCharacter = '';
+    switch(selectVal) {
+        case 'global':
+            leadCharacter = '!';
+            break;
+        case 'step':
+            leadCharacter = '@';
+            break;
+        case 'secondary':
+            leadCharacter = '#';
+            break;
+    }
+    return leadCharacter;
+}
+
+/**
  * Generates a pipeline as JSON using the elements on the designer.
  */
-function generatePipelineJson() {
-    var steps = {};
-    var ids = [];
-    var nextStepIds = [];
+function generatePipeline() {
+    const steps = {};
+    const ids = [];
+    const nextStepIds = [];
+    let pipelineStepMetaData;
+    let stepMeta;
+    let step;
+    let links;
+    // Create the steps array
     _.forOwn(currentSteps, function (value) {
-        var pipelineStepMetaData = value.attributes.metaData.pipelineStepMetaData;
-        var stepMeta = value.attributes.metaData.stepMetaData;
-        var step = stepMeta;
+        pipelineStepMetaData = value.attributes.metaData.pipelineStepMetaData;
+        stepMeta = value.attributes.metaData.stepMetaData;
+        step = _.assign({}, stepMeta);
         step.stepId = stepMeta.id;
         step.id = pipelineStepMetaData.id;
         step.executeIfEmpty = pipelineStepMetaData.executeIfEmpty;
-        step.params = pipelineStepMetaData.params;
+        step.params = []; // pipelineStepMetaData.params;
+        // Initialize the parameters
+        let pipelineParam;
+        _.forEach(stepMeta.params, (param) => {
+            pipelineParam = _.find(pipelineStepMetaData.params, (p) => p.name === param.name) || {};
+            step.params.push(_.merge(pipelineParam, param));
+        });
         ids.push(step.id);
         // Get the links for this step
-        var links = _.filter(graph.getConnectedLinks(value), function (l) {
+        links = _.filter(graph.getConnectedLinks(value), function (l) {
             return l.get('source').id === value.id;
         });
         // Find the next step id
-        if (links.length === 1) {
+        if (step.type !== 'branch' && links.length === 1) {
             step.nextStepId = currentSteps[links[0].get('target').id].attributes.metaData.pipelineStepMetaData.id;
             nextStepIds.push(step.nextStepId);
+        } else if (step.type === 'branch') {
+            let port;
+            let param;
+            _.forEach(links, function(link) {
+                port = link.get('source').port;
+                param = _.find(step.params, function(p) { return p.name === port }) || {};
+                param.value = currentSteps[link.get('target').id].attributes.metaData.pipelineStepMetaData.id;
+                nextStepIds.push(param.value);
+            });
         }
         steps[step.id] = step;
     });
 
     // Order the steps in the array to force the first non-branch step to the top
     // Find the first step
-    var initialSteps = _.filter(ids, function (id) {
+    const initialSteps = _.filter(ids, function (id) {
         return nextStepIds.indexOf(id) === -1;
     });
-    var pipelineSteps = [steps[initialSteps[0]]];
+    const pipelineSteps = [steps[initialSteps[0]]];
     // Build out the remainder of the array
-    var nextStepId = steps[initialSteps[0]].nextStepId;
-    if (nextStepId) {
-        do {
-            pipelineSteps.push(steps[nextStepId]);
-            nextStepId = steps[nextStepId].nextStepId;
-        } while (nextStepId);
-    }
+    let stepIds = getNextStepIds(pipelineSteps[0]);
+    let nextIds;
+    do {
+        nextIds = [];
+        _.forEach(stepIds, function(id) {
+            pipelineSteps.push(steps[id]);
+            nextIds = _.union(nextIds, getNextStepIds(steps[id]))
+        });
+        stepIds = nextIds;
+    } while(stepIds && stepIds.length > 0);
 
     return {
         id: currentPipeline.id,
@@ -346,16 +392,34 @@ function generatePipelineJson() {
 }
 
 /**
+ * Helper function used to determine what the next step id(s) should be.
+ * @param step
+ * @returns {*}
+ */
+function getNextStepIds(step) {
+    if (step.nextStepId && step.nextStepId.trim().length > 0) {
+        return [step.nextStepId];
+    }
+    const ids = [];
+    _.forEach(step.params, function(param) {
+       if (param.type === 'result') {
+           return ids.push(param.value);
+       }
+    });
+    return ids;
+}
+
+/**
  * Given two models, create a link between them.
  * @param source The source model
  * @param target The target model
  */
-function createLink(source, target) {
-    var link = new joint.dia.Link({
+function createLink(source, target, port) {
+    const link = new joint.dia.Link({
         attrs: {'.marker-target': {d: 'M 10 0 L 0 5 L 10 10 z'}},
         source: {
             id: source.id,
-            port: 'out'
+            port: port || 'out'
         },
         target: {
             id: target.id,
@@ -365,6 +429,70 @@ function createLink(source, target) {
     graph.addCell(link);
 }
 
+/**
+ * Loads the selected pipeline to the designer canvas
+ */
+function loadPipeline() {
+    const pipelineId = $("#pipelines").val();
+    if (pipelineId !== 'none') {
+        currentPipeline = getPipeline(pipelineId);
+        $('#pipelineName').text(currentPipeline.name);
+        const centerX = Math.round($('#pipeline-designer').width() / 2);
+        const x = centerX - Math.round(stepSize.width / 2);
+        let y = 50;
+        let gstep;
+        let stepIdLookup = {}; // Only used to track the steps we have added to the designer canvas
+        let pipelineStep;
+        let childParams;
+        let childX;
+        // Add each step to the designer
+        _.forEach(currentPipeline.steps, function (step) {
+            if (!stepIdLookup[step.id]) {
+                // Add the steps to the designer
+                gstep = addStepToDesigner(step.id, step.displayName, x, y, step.stepId, false);
+                gstep.attributes.metaData.pipelineStepMetaData = step;
+                y += 100;
+                stepIdLookup[step.id] = step.stepId;
+                if (step.type === 'branch') {
+                    childParams = _.filter(step.params, p => p.type === 'result');
+                    // place the children side by side
+                    childX = centerX - Math.round(((childParams.length * stepSize.width) + (childParams.length * 10)) / 2);
+                    _.forEach(childParams, (param) => {
+                        pipelineStep = getPipelineStep(currentPipeline.id, param.value);
+                        gstep = addStepToDesigner(pipelineStep.id, pipelineStep.displayName, childX, y, pipelineStep.stepId, false);
+                        gstep.attributes.metaData.pipelineStepMetaData = pipelineStep;
+                        stepIdLookup[pipelineStep.id] = pipelineStep.stepId;
+                        childX += (stepSize.width + 10);
+                    });
+                    y += 100;
+                }
+            }
+        });
+        // Create the links between steps
+        _.forEach(currentPipeline.steps, (step) => {
+            if (step.nextStepId) {
+                createLink(diagramStepToStepMetaLookup[step.id],
+                    diagramStepToStepMetaLookup[step.nextStepId]);
+            } else if (step.type === 'branch') {
+                _.forEach(_.filter(step.params, p => p.type === 'result'), (param) => {
+                    createLink(diagramStepToStepMetaLookup[step.id],
+                        diagramStepToStepMetaLookup[param.value], param.name);
+                });
+            }
+        });
+
+        loadPropertiesPanel(diagramStepToStepMetaLookup[currentPipeline.steps[0].id].attributes.metaData);
+    }
+    /*
+     * TODO:
+     *  fit canvas content
+     */
+}
+
+/**
+ * Responsible for populating the step editor form when the user selects a step on the designer canvas
+ * @param metaData The metadata from the selected step.
+ */
 function loadPropertiesPanel(metaData) {
     const stepMetaData = metaData.stepMetaData;
     const pipelineMetaData = metaData.pipelineStepMetaData;
@@ -394,7 +522,7 @@ function loadPropertiesPanel(metaData) {
         stepForms[stepMetaData.id] = stepForm;
     }
     // Clear the old form
-    $('#step-parameters-form').empty();
+    $('#step-parameters-form div').remove();
     // Add the new form
     $('#step-parameters-form').append('<div id="' + stepMetaData.id + 'DynamicForm" class="dynamic-form">' + stepForm + '</div>');
     // Setup the form
@@ -417,8 +545,17 @@ function loadPropertiesPanel(metaData) {
     });
     // Initialize the parameters form with existing values
     let select;
-    _.forEach(pipelineMetaData.params, function (param) {
-        value = param.value;
+    let defaultValue;
+    let pipelineStepParam;
+    _.forEach(stepMetaData.params, function (param) {
+        defaultValue = param.defaultValue;
+        value = defaultValue;
+        // Get the pipeline step parameter
+        pipelineStepParam = _.find(pipelineMetaData.params, function(p) { return p.name === param.name; });
+        if (pipelineStepParam) {
+            value = pipelineStepParam.value || defaultValue;
+            pipelineStepParam.value = value;
+        }
         // Handle script versus param.type
         type = getType(value, param.type === 'script' ? 'script' : 'static');
         if (type !== 'static' && type !== 'script') {
@@ -498,17 +635,18 @@ function handleTypeSelectChange(evt, ui) {
 }
 
 function handleSave() {
-    const pipelineJson = generatePipelineJson();
-    console.log(JSON.stringify(pipelineJson, null, 4));
+    const pipeline = generatePipeline();
     // Run validation of configured steps against step metadata
     const errors = [];
     let error;
     let currentStep;
-    _.forEach(pipelineJson.steps, function(step) {
-        currentStep = stepLookup[step.stepId];
+    let stepParam;
+    _.forEach(pipeline.steps, function(step) {
+        currentStep = getStep(step.stepId);
         error = null;
         _.forEach(currentStep.params, function(param) {
-            if (param.required && !_.find(step.params, function(p) { return  p.name === param.name})) {
+            stepParam = _.find(step.params, function(p) { return  p.name === param.name});
+            if (param.required && (!stepParam || !stepParam.value)) {
                 if (!error) {
                     error = {
                         header: step.id,
@@ -523,6 +661,37 @@ function handleSave() {
     if (errors.length > 0) {
         showValidationErrorDialog(errors);
     } else {
-        savePipeline(pipelineJson);
+        // TODO Handle exceptions
+        savePipeline(pipeline, function() {
+            // Load the pipelines
+            const select = $('#pipelines');
+            select.empty();
+            select.append($("<option />").val('none').text(''));
+            loadPipelines(handleLoadPipelines);
+            // Reselect the just saved pipeline
+            const possibleMatches = $("#pipelines option").filter(function () { return $(this).text() === 'Test' });
+            // Should have only matched one
+            select.val($(possibleMatches[0]).val());
+            select.selectmenu('refresh');
+        });
+    }
+}
+
+function handleLoadPipelines(pipelines) {
+    // TODO Move pipelines into a model
+    _.forEach(pipelines, function(pipeline) {
+        $("#pipelines").append($("<option />").val(pipeline.id).text(pipeline.name));
+    });
+}
+
+/**
+ * Loads the selected pipeline to the designer canvas
+ */
+function verifyLoadPipeline() {
+    if (currentPipeline || isDesignerPopulated()) {
+        clearFormDialogClearFunction = loadPipeline;
+        showClearFormDialog();
+    } else {
+        loadPipeline();
     }
 }

@@ -1,29 +1,39 @@
-var stepLookup = {}; // TODO move this to a model?
-var pipelineLookup = {}; // TODO move this to a model?
 
-function loadSteps(render) {
+function loadSteps(callback) {
     $.getJSON('/api/v1/steps')
         .done(function(data) {
+            const steps = [];
             _.forEach(data.steps, function(step) {
-                render(step);
                 delete step._id;
-                stepLookup[step.id] = step;
+                steps.push(step);
             });
+            initializeSteps(steps);
+            callback(data.steps);
         });
 }
 
-function loadPipelines(render) {
+function loadPipelines(callback) {
     $.getJSON('/api/v1/pipelines')
         .done(function(data) {
-            $.each(data.pipelines, function(){
-                render(this);
-                pipelineLookup[this.id] = this;
-            });
+            initializePipelines(data.pipelines);
+            callback(data.pipelines);
         });
 }
 
-function savePipeline(pipelineJson) {
-    // TODO Add service call to 'api/v1/pipelines' here
+function savePipeline(pipeline, callback) {
+    let type = 'POST';
+    let url = '/api/v1/pipelines/';
+    if (pipeline.id) {
+        type = 'PUT';
+        url = '/api/v1/pipelines/' + pipeline.id;
+    }
+    $.ajax({
+        type: type,
+        url: url,
+        contentType: "application/json",
+        data: JSON.stringify(pipeline),
+        success: callback
+    });
 }
 
 function saveBulkSteps(steps, callback) {
@@ -50,9 +60,6 @@ function saveStep(step, callback) {
         url: url,
         contentType: "application/json",
         data: JSON.stringify(step),
-        success: callback,
-        error: function(jqXHR, status, errorThrown) {
-            console.log(status + ' --> ' + errorThrown);
-        }
+        success: callback
     });
 }

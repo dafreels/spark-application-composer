@@ -186,9 +186,9 @@ body {
     margin: 5px;
 }
 
-.step div[stepType="branch"] {
-    background: #F39814;
-    color: white;
+.step.branch {
+    background: #2779aa;
+    color: #e4f1fb;
 }
 
 .step-form {
