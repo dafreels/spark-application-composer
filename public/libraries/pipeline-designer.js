@@ -3,7 +3,6 @@ const stepSize = {
     height: 50
 };
 const controlCharacters = ['!', '@', '#'];
-const stepForms = {};
 
 let graph;
 let paper;
@@ -49,6 +48,9 @@ function initializePipelineDesigner() {
     });
 
     paper.on('cell:pointerclick', handleElementSelect);
+    paper.on('cell:mouseover', handleElementMouseOver);
+    paper.on('cell:mouseout', handleElementMouseOut);
+    paper.on('close:button:pointerdown', handleElementRemove);
 
     // Pipeline Designer
     $('#save-button').click(handleSave);
@@ -91,6 +93,72 @@ function handleElementSelect(evt) {
     currentHighlightedElement = evt;
     evt.highlight();
     loadPropertiesPanel(evt.model.attributes.metaData);
+}
+
+/**
+ * Removes an element and any links from the designer canvas.
+ * @param evt The element to remove
+ */
+function handleElementRemove(evt) {
+    const id = evt.model.attributes.metaData.pipelineStepMetaData.id;
+    const canvasElement = diagramStepToStepMetaLookup[id];
+    _.forEach(graph.getConnectedLinks(canvasElement), link => link.remove());
+    canvasElement.remove();
+    delete currentSteps[canvasElement.id];
+    delete diagramStepToStepMetaLookup[id];
+}
+
+/**
+ * Helper function that displays the close button when the mouse pointer is over the cell
+ * @param evt The underlying cell
+ */
+function handleElementMouseOver(evt) {
+    const close = getCloseElements(evt);
+    if (close.populated) {
+        close.closeButton.setAttribute('visibility', 'visible');
+        close.closeLabel.setAttribute('visibility', 'visible');
+    }
+}
+
+/**
+ * Helper function that hides the close button when the mouse pointer leaves the cell
+ * @param evt The underlying cell
+ */
+function handleElementMouseOut(evt) {
+    const close = getCloseElements(evt);
+    if (close.populated) {
+        close.closeButton.setAttribute('visibility', 'hidden');
+        close.closeLabel.setAttribute('visibility', 'hidden');
+    }
+}
+
+/**
+ * Utility function to locate the 'close button elements'
+ */
+function getCloseElements(evt) {
+    const elements = {
+        populated: false
+    };
+    for (let i = 0; i < evt.el.children.length; i++) {
+        if (evt.el.children[i].attributes && evt.el.children[i].attributes['joint-selector']) {
+            if (evt.el.children[i].attributes['joint-selector'].value === 'link') {
+                switch(evt.el.children[i].children[0].attributes['joint-selector'].value) {
+                    case 'closeButton':
+                        elements.populated = true;
+                        elements.closeButton = evt.el.children[i].children[0];
+                        elements.closeLabel = evt.el.children[i].children[1];
+                        break;
+                    case 'closeLabel':
+                        elements.populated = true;
+                        elements.closeButton = evt.el.children[i].children[1];
+                        elements.closeLabel = evt.el.children[i].children[0];
+                        break;
+                }
+            }
+        }
+    }
+
+    return elements;
 }
 
 function handleNew() {
@@ -187,113 +255,6 @@ function clearPropertiesPanel() {
     }
 }
 
-function createStepNew(name, x, y, metadata) {
-    const inPort = {
-        group: 'in',
-        args: {},
-        label: {
-            position: {
-                name: 'right',
-                args: { y: 6 } // extra arguments for the label layout function, see `layout.PortLabel` section
-            },
-            markup: '<text class="label-text" fill="blue"/>'
-        },
-        attrs: {
-            text: {
-                    text: ''
-                }
-        },
-        markup: '<circle r="6" fill="ivory"/>'
-    };
-    const ports = [inPort];
-    if (metadata.type === 'branch') {
-        _.forEach(metadata.params, (p) => {
-            if(p.type === 'result') {
-                ports.push({
-                    group: 'out',
-                    args: {},
-                    label: {
-                        position: {
-                            name: 'right',
-                            args: { y: 6 } // extra arguments for the label layout function, see `layout.PortLabel` section
-                        },
-                        markup: '<text class="label-text" fill="blue"/>'
-                    },
-                    attrs: {
-                        text: {
-                            text: p.name
-                        }
-                    },
-                    markup: '<circle r="6" fill="ivory"/>'
-                });
-            }
-        });
-    } else {
-        ports.push({
-            group: 'out',
-            args: {},
-            label: {
-                position: {
-                    name: 'right',
-                    args: { y: 6 } // extra arguments for the label layout function, see `layout.PortLabel` section
-                },
-                markup: '<text class="label-text" fill="blue"/>'
-            },
-            attrs: {
-                text: {
-                    text: ''
-                }
-            },
-            markup: '<circle r="6" fill="ivory"/>'
-        });
-    }
-
-    return new joint.shapes.standard.Rectangle({
-        position: {x: x, y: y},
-        size: stepSize,
-        attrs: {
-            body: {
-                refWidth: '100%',
-                refHeight: '100%',
-                fill: '#e4f1fb',
-                stroke: 'gray',
-                strokeWidth: 2,
-                rx: 10,
-                ry: 10
-            },
-            label: {
-                refY: '15',
-                yAlignment: 'middle',
-                xAlignment: 'middle',
-                fontSize: 12,
-                fill: '#2779aa',
-                text: joint.util.breakText(name, stepSize, {'font-size': 12}, {ellipsis: true})
-            }
-        },
-        ports: {
-            groups: {
-                'in': {
-                    position: {
-                        name: 'top'
-                    }
-                },
-                'out': {
-                    position: {
-                        name: 'bottom'
-                    }
-                }
-            },
-            items: ports
-        },
-        metaData: {
-            stepMetaData: metadata,
-            pipelineStepMetaData: {
-                params: []
-            }
-        }
-    });
-}
-
 /**
  * Adds a step to the designer.
  * @param name The display name of the step.
@@ -303,46 +264,48 @@ function createStepNew(name, x, y, metadata) {
  * @returns {devs.Model|Model|Model}
  */
 function createStep(name, x, y, metadata) {
-    const outports = [];
-    let labelMarkup;
+    const portTemplate = {
+        magnet: true,
+        label: {
+            markup: '<text class="label-text" font-size="12" fill="black"/>'
+        },
+        attrs: {
+            text: {
+                text: ''
+            }
+        }
+    };
+    const inPort = _.assign({}, portTemplate);
+    inPort.group = 'in';
+    const ports = [inPort];
+    let port;
     if (metadata.type === 'branch') {
         _.forEach(metadata.params, (p) => {
             if(p.type === 'result') {
-                outports.push(p.name);
+                port = _.assign({}, portTemplate);
+                port.group = 'out';
+                port.attrs = {
+                    text: {
+                        text: p.name
+                    }
+                };
+                ports.push(port);
             }
         });
     } else {
-        outports.push('out');
-        labelMarkup = '<none/>';
+        port = _.assign({}, portTemplate);
+        port.group = 'out';
+        ports.push(port);
     }
 
-    return new joint.shapes.devs.Model({
-        position: {
-            x: x,
-            y: y
-        },
+    return new joint.shapes.spark.Step({
+        position: {x: x, y: y},
         size: stepSize,
         attrs: {
-            '.body': {
-                refWidth: '100%',
-                refHeight: '100%',
-                fill: '#e4f1fb',
-                stroke: 'gray',
-                strokeWidth: 2,
-                rx: 10,
-                ry: 10
-            },
-            '.label': {
-                refY: '15',
-                yAlignment: 'middle',
-                xAlignment: 'middle',
-                fontSize: 15,
-                fill: '#2779aa',
-                text: joint.util.breakText(name, stepSize, { 'font-size': 12 }, { ellipsis: true })
+            label: {
+                text: joint.util.breakText(name, stepSize, {'font-size': 12}, {ellipsis: true})
             }
         },
-        inPorts: ['in'],
-        outPorts: outports,
         ports: {
             groups: {
                 'in': {
@@ -350,34 +313,29 @@ function createStep(name, x, y, metadata) {
                         name: 'top'
                     },
                     attrs: {
-                        '.port-body': {
+                        circle: {
                             fill: 'ivory',
-                            magnet: 'passive',
-                            r: 6
+                            r: 6,
+                            magnet: true
                         }
                     },
-                    label: {
-                        markup: '<none/>'
-                    }
+                    magnet: true
                 },
                 'out': {
                     position: {
                         name: 'bottom'
                     },
                     attrs: {
-                        '.port-body': {
+                        circle: {
                             fill: 'ivory',
-                            r: 4
+                            r: 4,
+                            magnet: true
                         }
                     },
-                    label: {
-                        position: {
-                            name: 'left'
-                        },
-                        markup: labelMarkup
-                    }
+                    magnet: true
                 }
-            }
+            },
+            items: ports
         },
         metaData: {
             stepMetaData: metadata,
@@ -538,15 +496,23 @@ function getNextStepIds(step) {
  * @param port An optional port name to link. Defaults to 'out'
  */
 function createLink(source, target, port) {
+    const outPorts = _.filter(source.getPorts(), p => p.group === 'out');
+    let outPortId;
+    if (port) {
+        outPortId = _.find(outPorts, p => p.attrs.text.text === port).id;
+    } else {
+        outPortId = _.find(outPorts, p => p.group === 'out').id;
+    }
+    const inPortId = _.find(target.getPorts(), p => p.group === 'in').id;
     const link = new joint.dia.Link({
         attrs: {'.marker-target': {d: 'M 10 0 L 0 5 L 10 10 z'}},
         source: {
             id: source.id,
-            port: port || 'out'
+            port: outPortId
         },
         target: {
             id: target.id,
-            port: 'in'
+            port: inPortId
         }
     });
     graph.addCell(link);
@@ -624,19 +590,29 @@ function loadPropertiesPanel(metaData) {
     $('#step-form #displayName').text(stepMetaData.displayName);
     $('#step-form #description').text(stepMetaData.description);
     $('#step-form #type').text(stepMetaData.type);
+    // Get the parent step ids
+    const stepIdCompletion = buildParentIdCompletionArray(pipelineMetaData.id);
     // load step form
     const stepForm = $('<div id="' + stepMetaData.id + '">');
     const formDiv = $('<div class="form-group dynamic-form">').appendTo(stepForm);
     let label = $('<label>');
     label.text('Execute If Empty:');
     label.appendTo(formDiv);
-        $('<input id="executeIfEmpty"/>').appendTo(formDiv);
+    let input = $('<input id="executeIfEmpty"/>');
+    input.appendTo(formDiv);
     let select = $('<select id="executeIfEmptyType" size="1">').appendTo(formDiv);
     $(parameterTypeOptions).appendTo(select);
+    input.autocomplete({
+        source: function (request, response) {
+            const type = $('#executeIfEmptyType').val();
+            if (type === 'step' || type === 'secondary') {
+                response(_.filter(stepIdCompletion, s => _.startsWith(s.toLowerCase(), request.term.toLowerCase())));
+            }
+        }
+    });
 
     // Build out the parameters
     let paramRow;
-    let input;
     _.forEach(stepMetaData.params, (param) => {
         paramRow = $('<div class="form-group dynamic-form">').appendTo(stepForm);
         label = $('<label>');
@@ -658,6 +634,14 @@ function loadPropertiesPanel(metaData) {
             if (select.val() === 'script') {
                 showCodeEditorDialog($(this).val(), 'scala');
                 $(this).prop('disabled', true);
+            }
+        });
+        input.autocomplete({
+            source: function (request, response) {
+                const type = $('#' + param.name + 'Type').val();
+                if (type === 'step' || type === 'secondary') {
+                    response(_.filter(stepIdCompletion, s => _.startsWith(s.toLowerCase(), request.term.toLowerCase())));
+                }
             }
         });
     });
@@ -706,6 +690,35 @@ function loadPropertiesPanel(metaData) {
         select = $('#' + param.name + 'Type');
         select.val(type);
         select.selectmenu('refresh');
+        // Prevent edits against the result fields
+        if (param.type === 'result') {
+            input.prop('disabled', true);
+            select.selectmenu( "disable" );
+        }
+    });
+}
+
+function buildParentIdCompletionArray(stepId) {
+    let links = getTargetLinks(diagramStepToStepMetaLookup[stepId]);
+    const stepIds = [];
+    let nextLinks;
+    let currentStep;
+    while(links && links.length > 0) {
+        nextLinks = [];
+        _.forEach(links, (l) => {
+            currentStep = currentSteps[l.get('source').id];
+            stepIds.push(currentStep.attributes.metaData.pipelineStepMetaData.id);
+            nextLinks = _.union(nextLinks, getTargetLinks(currentStep))
+        });
+        links = nextLinks;
+    }
+
+    return _.uniq(stepIds);
+}
+
+function getTargetLinks(el) {
+    return _.filter(graph.getConnectedLinks(el), function (l) {
+        return l.get('target').id === el.id;
     });
 }
 
