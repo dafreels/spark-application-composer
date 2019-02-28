@@ -3,9 +3,12 @@ const stepSize = {
     height: 50
 };
 const controlCharacters = ['!', '@', '#'];
+const stepForms = {};
 
 let graph;
 let paper;
+// Contains the element information that the user has selected
+let currentHighlightedElement;
 // Contains the current list of step elements on the designer canvas. The id is the element id of the canvas element.
 let currentSteps = {};
 // Contains a lookup from the unique step id within the pipeline back to the designer canvas element
@@ -57,8 +60,7 @@ function allowStepDrop(ev) {
     ev.preventDefault();
 }
 
-// TODO Not sure how this is called, but it may be an issue when the application editor is in place
-function drag(ev) {
+function dragStep(ev) {
     ev.dataTransfer.setData("text", $(ev.target).text());
     ev.dataTransfer.setData("id", ev.target.id);
 }
@@ -83,7 +85,11 @@ function dropStep(ev) {
  * @param evt The event from the click.
  */
 function handleElementSelect(evt) {
-    // evt.highlight(); // TODO Make highlight better and ensure previous highlighted elements are removed
+    if (currentHighlightedElement) {
+        currentHighlightedElement.unhighlight();
+    }
+    currentHighlightedElement = evt;
+    evt.highlight();
     loadPropertiesPanel(evt.model.attributes.metaData);
 }
 
@@ -96,7 +102,7 @@ function handleNew() {
             clearPipelineDesigner();
             showNewPipelineDialog();
         };
-        clearDialogCancelFunction = cancelClearPipelines;
+        clearFormDialogCancelFunction = cancelClearPipelines;
         showClearFormDialog();
     } else {
         clearPipelineDesigner();
@@ -104,16 +110,21 @@ function handleNew() {
     }
 }
 
+/**
+ * Handles the user clicking cancel on the clear form dialog.
+ */
 function cancelClearPipelines() {
     // Set the select back to the original value
-    if (selectedPipeline) {
+    if (currentPipeline && currentPipeline.id) {
         const select = $('#pipelines');
-        // select.val(selectedPipeline);
+        select.val(currentPipeline.id);
         select.selectmenu('refresh');
-        // selectedPipeline = 'none';
     }
 }
 
+/**
+ * Handles the reset button being clicked
+ */
 function handleReset() {
     if (currentPipeline || isDesignerPopulated()) {
         clearFormDialogClearFunction = function() {
@@ -162,6 +173,9 @@ function clearPipelineDesigner() {
     clearPropertiesPanel();
 }
 
+/**
+ * This function clears the step parameters from the properties panel
+ */
 function clearPropertiesPanel() {
     $('#stepId').text('');
     $('#displayName').text('');
@@ -171,6 +185,113 @@ function clearPropertiesPanel() {
     if (isValidPipelineId(selectedPipelineId)) {
         $('#pipelineName').text(getPipelineName(selectedPipelineId).name);
     }
+}
+
+function createStepNew(name, x, y, metadata) {
+    const inPort = {
+        group: 'in',
+        args: {},
+        label: {
+            position: {
+                name: 'right',
+                args: { y: 6 } // extra arguments for the label layout function, see `layout.PortLabel` section
+            },
+            markup: '<text class="label-text" fill="blue"/>'
+        },
+        attrs: {
+            text: {
+                    text: ''
+                }
+        },
+        markup: '<circle r="6" fill="ivory"/>'
+    };
+    const ports = [inPort];
+    if (metadata.type === 'branch') {
+        _.forEach(metadata.params, (p) => {
+            if(p.type === 'result') {
+                ports.push({
+                    group: 'out',
+                    args: {},
+                    label: {
+                        position: {
+                            name: 'right',
+                            args: { y: 6 } // extra arguments for the label layout function, see `layout.PortLabel` section
+                        },
+                        markup: '<text class="label-text" fill="blue"/>'
+                    },
+                    attrs: {
+                        text: {
+                            text: p.name
+                        }
+                    },
+                    markup: '<circle r="6" fill="ivory"/>'
+                });
+            }
+        });
+    } else {
+        ports.push({
+            group: 'out',
+            args: {},
+            label: {
+                position: {
+                    name: 'right',
+                    args: { y: 6 } // extra arguments for the label layout function, see `layout.PortLabel` section
+                },
+                markup: '<text class="label-text" fill="blue"/>'
+            },
+            attrs: {
+                text: {
+                    text: ''
+                }
+            },
+            markup: '<circle r="6" fill="ivory"/>'
+        });
+    }
+
+    return new joint.shapes.standard.Rectangle({
+        position: {x: x, y: y},
+        size: stepSize,
+        attrs: {
+            body: {
+                refWidth: '100%',
+                refHeight: '100%',
+                fill: '#e4f1fb',
+                stroke: 'gray',
+                strokeWidth: 2,
+                rx: 10,
+                ry: 10
+            },
+            label: {
+                refY: '15',
+                yAlignment: 'middle',
+                xAlignment: 'middle',
+                fontSize: 12,
+                fill: '#2779aa',
+                text: joint.util.breakText(name, stepSize, {'font-size': 12}, {ellipsis: true})
+            }
+        },
+        ports: {
+            groups: {
+                'in': {
+                    position: {
+                        name: 'top'
+                    }
+                },
+                'out': {
+                    position: {
+                        name: 'bottom'
+                    }
+                }
+            },
+            items: ports
+        },
+        metaData: {
+            stepMetaData: metadata,
+            pipelineStepMetaData: {
+                params: []
+            }
+        }
+    });
 }
 
 /**
@@ -194,6 +315,7 @@ function createStep(name, x, y, metadata) {
         outports.push('out');
         labelMarkup = '<none/>';
     }
+
     return new joint.shapes.devs.Model({
         position: {
             x: x,
@@ -413,6 +535,7 @@ function getNextStepIds(step) {
  * Given two models, create a link between them.
  * @param source The source model
  * @param target The target model
+ * @param port An optional port name to link. Defaults to 'out'
  */
 function createLink(source, target, port) {
     const link = new joint.dia.Link({
@@ -502,33 +625,50 @@ function loadPropertiesPanel(metaData) {
     $('#step-form #description').text(stepMetaData.description);
     $('#step-form #type').text(stepMetaData.type);
     // load step form
-    let stepForm = stepForms[stepMetaData.id];
-    if (!stepForm) {
-        stepForm = '<div id="' + stepMetaData.id + '">\n' +
-            '<div class="form-group dynamic-form">' +
-            '<label>Execute If Empty:</label>' +
-            '<input id="executeIfEmpty"/>' +
-            '<select id="executeIfEmptyType" size="1">' + parameterTypeOptions + '</select></div>\n';
+    const stepForm = $('<div id="' + stepMetaData.id + '">');
+    const formDiv = $('<div class="form-group dynamic-form">').appendTo(stepForm);
+    let label = $('<label>');
+    label.text('Execute If Empty:');
+    label.appendTo(formDiv);
+        $('<input id="executeIfEmpty"/>').appendTo(formDiv);
+    let select = $('<select id="executeIfEmptyType" size="1">').appendTo(formDiv);
+    $(parameterTypeOptions).appendTo(select);
 
-        // Build out the parameters
-        _.forEach(stepMetaData.params, function (param) {
-            stepForm += '<div class="form-group dynamic-form"><label>' + param.name + ':' + '</label>' +
-                '<input id="' + param.name + '"/><select id="' + param.name + 'Type" size="1">' + parameterTypeOptions +
-                '</select></div>\n';
+    // Build out the parameters
+    let paramRow;
+    let input;
+    _.forEach(stepMetaData.params, (param) => {
+        paramRow = $('<div class="form-group dynamic-form">').appendTo(stepForm);
+        label = $('<label>');
+        label.text(param.name + ':');
+        label.appendTo(paramRow);
+        input = $('<input id="' + param.name + '"/>');
+        input.appendTo(paramRow);
+        select = $('<select id="' + param.name + 'Type" size="1">').appendTo(paramRow);
+        select.appendTo(paramRow);
+        $(parameterTypeOptions).appendTo(select);
+        input.focusin(function () {
+            codeEditorCloseFunction = function () {
+                select.focus();
+                input.prop('disabled', false);
+            };
+            codeEditorSaveFunction = function (value) {
+                input.val(value);
+            };
+            if (select.val() === 'script') {
+                showCodeEditorDialog($(this).val(), 'scala');
+                $(this).prop('disabled', true);
+            }
         });
-
-        stepForm += '</div>';
-
-        stepForms[stepMetaData.id] = stepForm;
-    }
+    });
     // Clear the old form
     $('#step-parameters-form div').remove();
     // Add the new form
-    $('#step-parameters-form').append('<div id="' + stepMetaData.id + 'DynamicForm" class="dynamic-form">' + stepForm + '</div>');
+    $('#step-parameters-form').append('<div id="' + stepMetaData.id + 'DynamicForm" class="dynamic-form">').append(stepForm);
     // Setup the form
     let type = getType(pipelineMetaData.executeIfEmpty, 'static');
     let value;
-    let input = $('#executeIfEmpty');
+    input = $('#executeIfEmpty');
     if (type !== 'static' && type !== 'script') {
         input.val(pipelineMetaData.executeIfEmpty.substring(1));
     }
@@ -544,7 +684,6 @@ function loadPropertiesPanel(metaData) {
         input.blur(handleInputChange);
     });
     // Initialize the parameters form with existing values
-    let select;
     let defaultValue;
     let pipelineStepParam;
     _.forEach(stepMetaData.params, function (param) {
@@ -587,6 +726,17 @@ function getType(value, defaultType) {
     }
 
     return type;
+}
+
+function loadPipelineDesignerStepsUI() {
+    var stepsContainer = $('#step-panel');
+    stepsContainer.empty();
+    _.forEach(getSteps(), (step) => {
+        // Build out the pipeline designer step control
+        $('<div id="' + step.id + '" class="step ' + step.type + '" draggable="true" ondragstart="dragStep(event)">' + step.displayName + '</div>')
+            .appendTo(stepsContainer);
+        $('div #' + step.id).fitText(1.50);
+    });
 }
 
 /****************************************
@@ -667,7 +817,7 @@ function handleSave() {
             const select = $('#pipelines');
             select.empty();
             select.append($("<option />").val('none').text(''));
-            loadPipelines(handleLoadPipelines);
+            loadPipelinesUI();
             // Reselect the just saved pipeline
             const possibleMatches = $("#pipelines option").filter(function () { return $(this).text() === 'Test' });
             // Should have only matched one
@@ -677,10 +827,18 @@ function handleSave() {
     }
 }
 
-function handleLoadPipelines(pipelines) {
-    // TODO Move pipelines into a model
-    _.forEach(pipelines, function(pipeline) {
-        $("#pipelines").append($("<option />").val(pipeline.id).text(pipeline.name));
+/**
+ * This function populates the pipeline selection control
+ */
+function renderPipelinesDesignerSelect() {
+    const pipelines = $("#pipelines");
+    pipelines.empty();
+    pipelines.append($("<option />").val('none').text(''));
+    _.forEach(getPipelines(), (pipeline) => {
+        pipelines.append($("<option/>").val(pipeline.id).text(pipeline.name));
+    });
+    pipelines.selectmenu({
+        change: verifyLoadPipeline
     });
 }
 
@@ -689,7 +847,11 @@ function handleLoadPipelines(pipelines) {
  */
 function verifyLoadPipeline() {
     if (currentPipeline || isDesignerPopulated()) {
-        clearFormDialogClearFunction = loadPipeline;
+        clearFormDialogClearFunction = function() {
+            clearPipelineDesigner();
+            loadPipeline();
+        };
+        clearFormDialogCancelFunction = cancelClearPipelines;
         showClearFormDialog();
     } else {
         loadPipeline();

@@ -1,6 +1,6 @@
 let clearFormDialog;
 let clearFormDialogClearFunction;
-let clearDialogCancelFunction;
+let clearFormDialogCancelFunction;
 
 function initializeClearFormDialog() {
     clearFormDialog = $("#dialog-confirm").dialog({
@@ -24,8 +24,8 @@ function handleClearFormDialogClear() {
 }
 
 function handleClearFormDialogCancel() {
-    if (clearDialogCancelFunction) {
-        clearDialogCancelFunction();
+    if (clearFormDialogCancelFunction) {
+        clearFormDialogCancelFunction();
     }
     $(this).dialog('close');
 }

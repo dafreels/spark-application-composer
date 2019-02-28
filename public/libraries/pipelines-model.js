@@ -8,6 +8,10 @@ function getPipeline(id) {
     return cloneObject(_.find(pipelineData, p => p.id === id));
 }
 
+function getPipelines() {
+    return cloneObject(pipelineData);
+}
+
 function getPipelineStep(id, stepId) {
     const pipeline = _.find(pipelineData, p => p.id === id);
     if(pipeline) {

@@ -91,7 +91,7 @@ function handleStepSelection() {
             populateStepForm(this);
             currentEditorStepId = $('#edit-stepId').text();
         };
-        clearDialogCancelFunction = function() {
+        clearFormDialogCancelFunction = function() {
             $('#step-selector .ui-selected').removeClass('ui-selected');
             $('#step-selector').children('#' + currentEditorStepId).addClass('ui-selected');
         };
@@ -146,10 +146,10 @@ function populateStepForm(el) {
  * @returns Create the parameter row that can be appended to the parameters form.
  */
 function createParameterForm() {
-    var formDiv = $('<div class="form-group">');
+    const formDiv = $('<div class="form-group">');
     $('<label>Name:</label>').appendTo(formDiv);
     $('<input name="stepParamName" type="text"/>').appendTo(formDiv);
-    var select = $('<select>');
+    const select = $('<select>');
     select.appendTo(formDiv);
     $('<option value="text">Text</option>').appendTo(select);
     $('<option value="boolean">Boolean</option>').appendTo(select);
@@ -158,14 +158,14 @@ function createParameterForm() {
     $('<option value="result">Branch Result</option>').appendTo(select);
     // Options
     $('</select>').appendTo(formDiv);
-    var checkboxLabel = $('<label style="width: 100px; height: 15px; margin: 0 8px 0 8px;">Required</label>');
-    var checkbox = $('<input name="stepParamRequire" type="checkbox">');
+    const checkboxLabel = $('<label style="width: 100px; height: 15px; margin: 0 8px 0 8px;">Required</label>');
+    const checkbox = $('<input name="stepParamRequire" type="checkbox">');
     checkbox.uniqueId();
     checkboxLabel.attr('for', checkbox.attr('id'));
     checkboxLabel.appendTo(formDiv);
     checkbox.appendTo(formDiv);
     $('<label>Default Value:</label>').appendTo(formDiv);
-    var defaultValueInput = $('<input name="stepParamDefaultValue" type="text"/>');
+    const defaultValueInput = $('<input name="stepParamDefaultValue" type="text"/>');
     defaultValueInput.appendTo(formDiv);
     defaultValueInput.focusin(function() {
         codeEditorCloseFunction = function() {
@@ -180,7 +180,7 @@ function createParameterForm() {
             $(this).prop('disabled', true);
         }
     });
-    var button = $('<button class="ui-button ui-widget ui-corner-all ui-button-icon-only" title="Remove Parameter">');
+    const button = $('<button class="ui-button ui-widget ui-corner-all ui-button-icon-only" title="Remove Parameter">');
     button.appendTo(formDiv);
     $('<span class="ui-icon ui-icon-minus"></span>').appendTo(button);
     $('</button>').appendTo(formDiv);
@@ -235,7 +235,7 @@ function generateStepJson() {
 function handleNewStep() {
     if (stepNeedsSave()) {
         clearFormDialogClearFunction = function() { clearStepForm(true); };
-        clearDialogCancelFunction = function() {
+        clearFormDialogCancelFunction = function() {
             $('#step-selector .ui-selected').removeClass('ui-selected');
             $('#step-selector').children('#' + currentEditorStepId).addClass('ui-selected');
         };
@@ -251,7 +251,7 @@ function handleNewStep() {
 function handleResetStep() {
     if (stepNeedsSave()) {
         clearFormDialogClearFunction = function() { clearStepForm(true); };
-        clearDialogCancelFunction = function() {
+        clearFormDialogCancelFunction = function() {
             $('#step-selector .ui-selected').removeClass('ui-selected');
             $('#step-selector').children('#' + currentEditorStepId).addClass('ui-selected');
         };
@@ -317,6 +317,27 @@ function getObjectDiff(obj1, obj2) {
     }, Object.keys(obj2));
 }
 
+/**
+ * Helper function that converts an empty string to undefined.
+ * @param val The value to check.
+ * @returns {undefined}
+ */
 function setStringValue(val) {
     return val && val.trim().length > 0 ? val : undefined;
+}
+
+function renderStepSelectionUI() {
+    var stepSelector = $('#step-selector');
+    stepSelector.empty();
+    _.forEach(getSteps(), (step) => {
+        // Build out the step editor control
+        $('<li id="' + step.id + '" stepType="' + step.type + '" class="ui-widget-content">' + step.displayName + '</li>').appendTo(stepSelector);
+        $('li #' + step.id).fitText(1.50);
+    });
+    stepSelector.selectable({
+        stop: handleStepSelection,
+        selected: function (event, ui) {
+            $(ui.selected).addClass("ui-selected").siblings().removeClass("ui-selected");
+        }
+    });
 }

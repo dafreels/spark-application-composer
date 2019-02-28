@@ -11,3 +11,7 @@ function getStep(id) {
     }
     return null;
 }
+
+function getSteps() {
+    return cloneObject(stepData);
+}
