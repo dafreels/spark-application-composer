@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="css/jquery-ui.theme.css">
     <!-- dependencies -->
     <script src="libraries/aceeditor/1.4.3/ace.js" type="text/javascript" charset="utf-8"></script>
-    <script src="libraries/aceeditor/1.4.3/ext-beautify.js" type="text/javascript" charset="utf-8"></script>
     <script src="libraries/jquery-3.3.1.js"></script>
     <script src="libraries/jquery.fittext.js"></script>
     <script src="libraries/lodash/4.17.11/lodash.js"></script>
@@ -24,7 +23,8 @@
     <script src="libraries/new-pipeline-dialog.js"></script>
     <script src="libraries/validation-error-dialog.js"></script>
     <script src="libraries/steps-editor.js"></script>
-    <script src="libraries/pipeline-designer.js"></script>
+    <script src="libraries/pipeline-editor.js"></script>
+    <script src="libraries/application-editor.js"></script>
     <script src="libraries/app.js"></script>
     <title>Application Manager</title>
 </head>
@@ -32,7 +32,7 @@
 <div id="tabs">
     <ul>
         <li><a href="#tabs-1">Application Editor</a></li>
-        <li><a href="#tabs-2">Pipeline Designer</a></li>
+        <li><a href="#tabs-2">Pipeline Editor</a></li>
         <li><a href="#tabs-3">Step Editor</a></li>
     </ul>
     <div id="tabs-1">
@@ -44,6 +44,31 @@
                 <button id="save-application-button" class="ui-button ui-widget ui-corner-all">Save</button>
                 <button id="new-application-button" class="ui-button ui-widget ui-corner-all">New</button>
                 <button id="reset-application-button" class="ui-button ui-widget ui-corner-all">Reset</button>
+            </div>
+            <div id="application-layers">
+                <h2>Setup</h2>
+                <div></div>
+                <h2>Spark Configuration</h2>
+                <div>
+                    <fieldset>
+                        <legend>Kyro Classes</legend>
+                        <input id="kyro-classes" type="text" class="multi-input"/>
+                    </fieldset>
+                    <fieldset>
+                        <legend>Options
+                            <button id="add-options-button"
+                                    class="ui-button ui-widget ui-corner-all ui-button-icon-only"
+                                    title="Add Parameter">
+                                <span class="ui-icon ui-icon-plus"></span>Add Option
+                            </button>
+                        </legend>
+                        <div class="input_fields_wrap"></div>
+                    </fieldset>
+                </div>
+                <h2>Overrides</h2>
+                <div></div>
+                <h2>Executions</h2>
+                <div></div>
             </div>
         </div>
     </div>
@@ -167,7 +192,8 @@
                     <div style="height: 10%; width:100%; margin-bottom: 10px;">
                         <div class="step-parameters-name"><label>Parameters</label></div>
                         <div class="top-buttons">
-                            <button id="add-step-parameter-button" class="ui-button ui-widget ui-corner-all ui-button-icon-only"
+                            <button id="add-step-parameter-button"
+                                    class="ui-button ui-widget ui-corner-all ui-button-icon-only"
                                     title="Add Parameter">
                                 <span class="ui-icon ui-icon-plus"></span>Add Parameter
                             </button>

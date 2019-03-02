@@ -4,8 +4,6 @@ let codeEditorSaveFunction;
 let codeEditorCancelFunction;
 let codeEditorCloseFunction;
 
-const beautify = ace.require("ace/ext/beautify");
-
 function initializeCodeEditorDialog() {
     codeEditorDialog = $("#dialog-editor").dialog({
         autoOpen: false,
@@ -40,15 +38,13 @@ function showCodeEditorDialog(code, mode) {
     select.selectmenu('refresh');
     editor.session.setMode('ace/mode/' + mode);
     codeEditorDialog.dialog("open");
-    editor.setValue(code);
-    // Handle code beautification
-    beautify.beautify(editor.session);
+    editor.session.setValue(code);
 
 }
 
 function handleCodeEditorSave() {
     if (codeEditorSaveFunction) {
-        codeEditorSaveFunction(editor.getValue());
+        codeEditorSaveFunction(editor.session.getValue());
     }
     codeEditorDialog.dialog('close');
 }

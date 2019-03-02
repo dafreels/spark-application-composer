@@ -16,11 +16,13 @@ let diagramStepToStepMetaLookup = {};
 let currentPipeline;
 // Contains information about the step being dragged to the canvas
 let draggingStep;
+// Only used during the save operation
+let savedPipelineName;
 
 /**
  * Initialize the pipeline designer drawing canvas
  */
-function initializePipelineDesigner() {
+function initializePipelineEditor() {
     graph = new joint.dia.Graph;
     paper = new joint.dia.Paper({
         el: $('#pipeline-designer'),
@@ -299,7 +301,7 @@ function createStep(name, x, y, metadata) {
     }
 
     return new joint.shapes.spark.Step({
-        position: {x: x, y: y},
+        position: {x: x - (stepSize.width / 2), y: y},
         size: stepSize,
         attrs: {
             label: {
@@ -437,7 +439,7 @@ function generatePipeline() {
             let port;
             let param;
             _.forEach(links, function(link) {
-                port = link.get('source').port;
+                port = value.getPort(link.get('source').port).attrs.text.text;
                 param = _.find(step.params, function(p) { return p.name === port }) || {};
                 param.value = currentSteps[link.get('target').id].attributes.metaData.pipelineStepMetaData.id;
                 nextStepIds.push(param.value);
@@ -482,8 +484,8 @@ function getNextStepIds(step) {
     }
     const ids = [];
     _.forEach(step.params, function(param) {
-       if (param.type === 'result') {
-           return ids.push(param.value);
+       if (param.type === 'result' && param.value) {
+           ids.push(param.value);
        }
     });
     return ids;
@@ -547,11 +549,13 @@ function loadPipeline() {
                     // place the children side by side
                     childX = centerX - Math.round(((childParams.length * stepSize.width) + (childParams.length * 10)) / 2);
                     _.forEach(childParams, (param) => {
-                        pipelineStep = getPipelineStep(currentPipeline.id, param.value);
-                        gstep = addStepToDesigner(pipelineStep.id, pipelineStep.displayName, childX, y, pipelineStep.stepId, false);
-                        gstep.attributes.metaData.pipelineStepMetaData = pipelineStep;
-                        stepIdLookup[pipelineStep.id] = pipelineStep.stepId;
-                        childX += (stepSize.width + 10);
+                        if (param.value) {
+                            pipelineStep = getPipelineStep(currentPipeline.id, param.value);
+                            gstep = addStepToDesigner(pipelineStep.id, pipelineStep.displayName, childX, y, pipelineStep.stepId, false);
+                            gstep.attributes.metaData.pipelineStepMetaData = pipelineStep;
+                            stepIdLookup[pipelineStep.id] = pipelineStep.stepId;
+                            childX += (stepSize.width + 10);
+                        }
                     });
                     y += 100;
                 }
@@ -563,7 +567,7 @@ function loadPipeline() {
                 createLink(diagramStepToStepMetaLookup[step.id],
                     diagramStepToStepMetaLookup[step.nextStepId]);
             } else if (step.type === 'branch') {
-                _.forEach(_.filter(step.params, p => p.type === 'result'), (param) => {
+                _.forEach(_.filter(step.params, p => p.type === 'result' && p.value), (param) => {
                     createLink(diagramStepToStepMetaLookup[step.id],
                         diagramStepToStepMetaLookup[param.value], param.name);
                 });
@@ -602,6 +606,20 @@ function loadPropertiesPanel(metaData) {
     input.appendTo(formDiv);
     let select = $('<select id="executeIfEmptyType" size="1">').appendTo(formDiv);
     $(parameterTypeOptions).appendTo(select);
+    input.focusin(function () {
+        codeEditorCloseFunction = function () {
+            select.focus();
+            input.prop('disabled', false);
+        };
+        codeEditorSaveFunction = function (value) {
+            pipelineMetaData.executeIfEmpty = value;
+            input.val(value);
+        };
+        if (select.val() === 'script') {
+            showCodeEditorDialog(pipelineMetaData.executeIfEmpty, 'scala');
+            $(this).prop('disabled', true);
+        }
+    });
     input.autocomplete({
         source: function (request, response) {
             const type = $('#executeIfEmptyType').val();
@@ -629,10 +647,11 @@ function loadPropertiesPanel(metaData) {
                 input.prop('disabled', false);
             };
             codeEditorSaveFunction = function (value) {
+                _.find(pipelineMetaData.params, p => p.name = param.name).value = value;
                 input.val(value);
             };
             if (select.val() === 'script') {
-                showCodeEditorDialog($(this).val(), 'scala');
+                showCodeEditorDialog(_.find(pipelineMetaData.params, p => p.name = param.name).value, 'scala');
                 $(this).prop('disabled', true);
             }
         });
@@ -717,9 +736,12 @@ function buildParentIdCompletionArray(stepId) {
 }
 
 function getTargetLinks(el) {
-    return _.filter(graph.getConnectedLinks(el), function (l) {
-        return l.get('target').id === el.id;
-    });
+    if (el) {
+        return _.filter(graph.getConnectedLinks(el), function (l) {
+            return l.get('target').id === el.id;
+        });
+    }
+    return [];
 }
 
 function getType(value, defaultType) {
@@ -771,22 +793,23 @@ function handleValueChanges(input, select) {
     const step = diagramStepToStepMetaLookup[stepId];
     const stepMetaData = step.attributes.metaData.stepMetaData;
     const pipelineStepMetadata = step.attributes.metaData.pipelineStepMetaData;
-    if (inputId === 'executeIfEmpty') {
+    if (inputId === 'executeIfEmpty' && selectVal !== 'script') {
         pipelineStepMetadata.executeIfEmpty = value;
     } else if (pipelineStepMetadata && pipelineStepMetadata.params) {
-        const param = _.find(pipelineStepMetadata.params, function(p) { return p.name === inputId;});
+        let param = _.find(pipelineStepMetadata.params, function(p) { return p.name === inputId;});
         if (param) {
-            param.value = value;
             param.type = selectVal === 'script' ? 'script' : param.type;
         } else {
             const stepParam = _.find(stepMetaData.params, function(p) { return p.name === inputId; });
-            const newParam = {
-                value: value,
+            param = {
                 type: selectVal === 'script' ? 'script' : stepParam.type,
                 name: stepParam.name,
                 required: stepParam.required
             };
-            pipelineStepMetadata.params.push(newParam);
+            pipelineStepMetadata.params.push(param);
+        }
+        if (selectVal !== 'script') {
+            param.value = value;
         }
     }
 }
@@ -830,12 +853,9 @@ function handleSave() {
             const select = $('#pipelines');
             select.empty();
             select.append($("<option />").val('none').text(''));
+            savedPipelineName = pipeline.name;
+            // This is an async call to the server
             loadPipelinesUI();
-            // Reselect the just saved pipeline
-            const possibleMatches = $("#pipelines option").filter(function () { return $(this).text() === 'Test' });
-            // Should have only matched one
-            select.val($(possibleMatches[0]).val());
-            select.selectmenu('refresh');
         });
     }
 }
@@ -853,6 +873,14 @@ function renderPipelinesDesignerSelect() {
     pipelines.selectmenu({
         change: verifyLoadPipeline
     });
+    if (savedPipelineName) {
+        // Reselect the just saved pipeline
+        const possibleMatches = $("#pipelines option").filter(function () { return $(this).text() === savedPipelineName });
+        // Should have only matched one
+        pipelines.val($(possibleMatches[0]).val());
+        pipelines.selectmenu('refresh');
+        savedPipelineName = null;
+    }
 }
 
 /**

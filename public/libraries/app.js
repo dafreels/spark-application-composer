@@ -41,7 +41,8 @@ $(document).ready(function () {
 
     // Initialize the editors
     initializeStepsEditor();
-    initializePipelineDesigner();
+    initializePipelineEditor();
+    initializeApplicationEditor();
 
     // Load the steps data from the API and render the UIs.
     loadStepsUI();
