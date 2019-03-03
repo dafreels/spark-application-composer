@@ -2,7 +2,7 @@ body {
     text-align: center;
 }
 
-#pipeline-designer {
+#pipelineDesigner {
     background: #3baae3;
     width: auto;
     display: inline-flex;

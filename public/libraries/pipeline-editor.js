@@ -23,7 +23,7 @@ let savedPipelineName;
 function initializePipelineEditor() {
     graph = new joint.dia.Graph;
     paper = new joint.dia.Paper({
-        el: $('#pipeline-designer'),
+        el: $('#pipelineDesigner'),
         model: graph,
         height: 800,
         width: '100%',
@@ -546,7 +546,7 @@ function createLink(source, target, port) {
 function populatePipelineData(pipeline) {
     currentPipeline = pipeline;
     $('#pipelineName').text(currentPipeline.name);
-    const centerX = Math.round($('#pipeline-designer').width() / 2);
+    const centerX = Math.round($('#pipelineDesigner').width() / 2);
     const x = centerX - Math.round(stepSize.width / 2);
     let y = 50;
     let gstep;
