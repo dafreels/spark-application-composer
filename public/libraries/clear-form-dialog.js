@@ -30,6 +30,8 @@ function handleClearFormDialogCancel() {
     $(this).dialog('close');
 }
 
-function showClearFormDialog() {
+function showClearFormDialog(clearFunction, cancelFunction) {
+    clearFormDialogClearFunction = clearFunction;
+    clearFormDialogCancelFunction = cancelFunction;
     clearFormDialog.dialog("open");
 }

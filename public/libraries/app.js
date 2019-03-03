@@ -38,6 +38,7 @@ $(document).ready(function () {
     initializeAddStepDialog();
     initializeNewPipeineDialog();
     initializeAlertDialog();
+    initializeCopyPipelineDialog();
 
     // Initialize the editors
     initializeStepsEditor();

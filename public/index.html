@@ -20,6 +20,7 @@
     <script src="libraries/alert-dialog.js"></script>
     <script src="libraries/clear-form-dialog.js"></script>
     <script src="libraries/code-editor-dialog.js"></script>
+    <script src="libraries/copy-pipeline-dialog.js"></script>
     <script src="libraries/new-pipeline-dialog.js"></script>
     <script src="libraries/validation-error-dialog.js"></script>
     <script src="libraries/steps-editor.js"></script>
@@ -45,31 +46,31 @@
                 <button id="new-application-button" class="ui-button ui-widget ui-corner-all">New</button>
                 <button id="reset-application-button" class="ui-button ui-widget ui-corner-all">Reset</button>
             </div>
-            <div id="application-layers">
-                <h2>Setup</h2>
-                <div></div>
-                <h2>Spark Configuration</h2>
-                <div>
-                    <fieldset>
-                        <legend>Kyro Classes</legend>
-                        <input id="kyro-classes" type="text" class="multi-input"/>
-                    </fieldset>
-                    <fieldset>
-                        <legend>Options
-                            <button id="add-options-button"
-                                    class="ui-button ui-widget ui-corner-all ui-button-icon-only"
-                                    title="Add Parameter">
-                                <span class="ui-icon ui-icon-plus"></span>Add Option
-                            </button>
-                        </legend>
-                        <div class="input_fields_wrap"></div>
-                    </fieldset>
-                </div>
-                <h2>Overrides</h2>
-                <div></div>
-                <h2>Executions</h2>
-                <div></div>
-            </div>
+            <!--<div id="application-layers">-->
+                <!--<h2>Setup</h2>-->
+                <!--<div></div>-->
+                <!--<h2>Spark Configuration</h2>-->
+                <!--<div>-->
+                    <!--<fieldset>-->
+                        <!--<legend>Kyro Classes</legend>-->
+                        <!--<input id="kyro-classes" type="text" class="multi-input"/>-->
+                    <!--</fieldset>-->
+                    <!--<fieldset>-->
+                        <!--<legend>Options-->
+                            <!--<button id="add-options-button"-->
+                                    <!--class="ui-button ui-widget ui-corner-all ui-button-icon-only"-->
+                                    <!--title="Add Parameter">-->
+                                <!--<span class="ui-icon ui-icon-plus"></span>Add Option-->
+                            <!--</button>-->
+                        <!--</legend>-->
+                        <!--<div class="input_fields_wrap"></div>-->
+                    <!--</fieldset>-->
+                <!--</div>-->
+                <!--<h2>Overrides</h2>-->
+                <!--<div></div>-->
+                <!--<h2>Executions</h2>-->
+                <!--<div></div>-->
+            <!--</div>-->
         </div>
     </div>
     <div id="tabs-2">
@@ -81,6 +82,7 @@
                 <div class="top-buttons">
                     <button id="save-button" class="ui-button ui-widget ui-corner-all">Save</button>
                     <button id="new-button" class="ui-button ui-widget ui-corner-all">New</button>
+                    <button id="copy-button" class="ui-button ui-widget ui-corner-all">Copy</button>
                     <button id="reset-button" class="ui-button ui-widget ui-corner-all">Reset</button>
                 </div>
             </div>
@@ -252,6 +254,19 @@
         </select>
     </div>
     <div id="code-editor"></div>
+</div>
+<!-- Add step dialog -->
+<div id="dialog-copy-pipeline-form" title="Copy Pipeline">
+    <form id="copy-pipeline-form">
+        <div class="form-group">
+            <label for="copy-pipeline-id">Choose source pipeline</label>
+            <select name="pipelines" id="source-pipelines"></select>
+        </div>
+        <div class="form-group">
+            <label for="copy-pipeline-id">Name</label>
+            <input type="text" name="name" id="copy-pipeline-id" value="" class="text ui-widget-content ui-corner-all">
+        </div>
+    </form>
 </div>
 </body>
 </html>

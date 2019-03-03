@@ -77,16 +77,17 @@ function addParameter() {
  */
 function handleStepSelection() {
     if (stepNeedsSave()) {
-        clearFormDialogClearFunction = function() {
-            clearStepForm(false);
-            populateStepForm(this);
-            currentEditorStepId = $('#edit-stepId').text();
-        };
-        clearFormDialogCancelFunction = function() {
-            $('#step-selector .ui-selected').removeClass('ui-selected');
-            $('#step-selector').children('#' + currentEditorStepId).addClass('ui-selected');
-        };
-        showClearFormDialog();
+        showClearFormDialog(
+            function () {
+                clearStepForm(false);
+                populateStepForm(this);
+                currentEditorStepId = $('#edit-stepId').text();
+            },
+            function () {
+                $('#step-selector .ui-selected').removeClass('ui-selected');
+                $('#step-selector').children('#' + currentEditorStepId).addClass('ui-selected');
+            }
+        );
     } else {
         clearStepForm(false);
         populateStepForm(this);
@@ -237,17 +238,22 @@ function generateStepJson() {
     return step;
 }
 
+function displayClearFormDialog() {
+    showClearFormDialog(function () {
+            clearStepForm(true);
+        },
+        function () {
+            $('#step-selector .ui-selected').removeClass('ui-selected');
+            $('#step-selector').children('#' + currentEditorStepId).addClass('ui-selected');
+        });
+}
+
 /**
  * Handle the new button being clicked
  */
 function handleNewStep() {
     if (stepNeedsSave()) {
-        clearFormDialogClearFunction = function() { clearStepForm(true); };
-        clearFormDialogCancelFunction = function() {
-            $('#step-selector .ui-selected').removeClass('ui-selected');
-            $('#step-selector').children('#' + currentEditorStepId).addClass('ui-selected');
-        };
-        showClearFormDialog();
+        displayClearFormDialog();
     } else {
         clearStepForm(true);
     }
@@ -258,12 +264,7 @@ function handleNewStep() {
  */
 function handleResetStep() {
     if (stepNeedsSave()) {
-        clearFormDialogClearFunction = function() { clearStepForm(true); };
-        clearFormDialogCancelFunction = function() {
-            $('#step-selector .ui-selected').removeClass('ui-selected');
-            $('#step-selector').children('#' + currentEditorStepId).addClass('ui-selected');
-        };
-        showClearFormDialog();
+        displayClearFormDialog();
     } else {
         clearStepForm(true);
     }

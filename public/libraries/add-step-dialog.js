@@ -1,4 +1,6 @@
 let addStepDialog;
+// Contains information about the step being dragged to the canvas
+let draggingStep;
 
 function initializeAddStepDialog() {
     addStepDialog = $("#dialog-step-form").dialog({
@@ -8,9 +10,9 @@ function initializeAddStepDialog() {
         modal: true,
         buttons: {
             "Add Step": function () {
-                var idField = $('#add-step-id');
+                const idField = $('#add-step-id');
                 // TODO Make sure the id isn't already being used in the pipeline
-                addStepToDesigner(idField.val(), draggingStep.name, draggingStep.x, draggingStep.y, draggingStep.stepMetaDataId);
+                addStepToDesigner(idField.val(), draggingStep.name, draggingStep.x - (stepSize.width / 2), draggingStep.y, draggingStep.stepMetaDataId);
                 idField.val('');
                 draggingStep = null;
                 $(this).dialog('close');
@@ -24,6 +26,7 @@ function initializeAddStepDialog() {
     });
 }
 
-function showAddStepDialog() {
+function showAddStepDialog(step) {
+    draggingStep = step;
     addStepDialog.dialog('open');
 }

@@ -1,6 +1,6 @@
 
 function initializeApplicationEditor() {
-    $('#application-layers').accordion();
+    // $('#application-layers').accordion();
 /*
 kyroClassesSelect = $('#kyro-classes').selectize({
     plugins: ['remove_button', 'drag_drop'],
