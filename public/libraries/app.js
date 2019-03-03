@@ -36,9 +36,10 @@ $(document).ready(function () {
     initializeCodeEditorDialog();
     initializeValidationErrorDialog();
     initializeAddStepDialog();
-    initializeNewPipeineDialog();
+    initializeNewDialog();
     initializeAlertDialog();
     initializeCopyPipelineDialog();
+    initializeSettingsDialog();
 
     // Initialize the editors
     initializeStepsEditor();

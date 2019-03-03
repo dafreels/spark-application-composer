@@ -3,7 +3,7 @@ body {
 }
 
 #pipelineDesigner {
-    background: #3baae3;
+    background: #FFF;
     width: auto;
     display: inline-flex;
     box-shadow: 0 3px 5px rgba(0, 0, 0, 0.3);
@@ -16,6 +16,10 @@ body {
 
 #pipeline-label {
     font-weight: bold;
+}
+
+#applicationName {
+    margin-left: 10px;
 }
 
 #step-selector .ui-selecting {

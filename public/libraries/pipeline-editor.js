@@ -168,12 +168,20 @@ function handleNew() {
             select.val('none');
             select.selectmenu('refresh');
             clearPipelineDesigner();
-            showNewPipelineDialog();
+            showNewDialog(setupNew);
         }, cancelClearPipelines);
     } else {
         clearPipelineDesigner();
-        showNewPipelineDialog();
+        showNewDialog(setupNew);
     }
+}
+
+function setupNew(name) {
+    currentPipeline = {
+        name: name,
+        steps: []
+    };
+    $('#pipelineName').text(currentPipeline.name);
 }
 
 /**

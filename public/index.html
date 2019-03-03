@@ -5,10 +5,14 @@
     <link rel="stylesheet" type="text/css" href="css/app.css"/>
     <link rel="stylesheet" href="css/jquery-ui.css">
     <link rel="stylesheet" href="css/jquery-ui.theme.css">
+    <link rel="stylesheet" href="css/selectize.legacy.css">
+    <link rel="stylesheet" href="css/selectize.default.css">
+    <link rel="stylesheet" href="css/selectize.css">
     <!-- dependencies -->
     <script src="libraries/aceeditor/1.4.3/ace.js" type="text/javascript" charset="utf-8"></script>
     <script src="libraries/jquery-3.3.1.js"></script>
     <script src="libraries/jquery.fittext.js"></script>
+    <script src="libraries/selectize.js"></script>
     <script src="libraries/lodash/4.17.11/lodash.js"></script>
     <script src="libraries/backbone/1.3.3/backbone.js"></script>
     <script src="libraries/joint/2.2.1/joint.js"></script>
@@ -21,7 +25,8 @@
     <script src="libraries/clear-form-dialog.js"></script>
     <script src="libraries/code-editor-dialog.js"></script>
     <script src="libraries/copy-pipeline-dialog.js"></script>
-    <script src="libraries/new-pipeline-dialog.js"></script>
+    <script src="libraries/new-dialog.js"></script>
+    <script src="libraries/settings-dialog.js"></script>
     <script src="libraries/validation-error-dialog.js"></script>
     <script src="libraries/steps-editor.js"></script>
     <script src="libraries/pipeline-editor.js"></script>
@@ -46,32 +51,41 @@
                 <button id="new-application-button" class="ui-button ui-widget ui-corner-all">New</button>
                 <button id="reset-application-button" class="ui-button ui-widget ui-corner-all">Reset</button>
             </div>
-            <!--<div id="application-layers">-->
-                <!--<h2>Setup</h2>-->
-                <!--<div></div>-->
-                <!--<h2>Spark Configuration</h2>-->
-                <!--<div>-->
-                    <!--<fieldset>-->
-                        <!--<legend>Kyro Classes</legend>-->
-                        <!--<input id="kyro-classes" type="text" class="multi-input"/>-->
-                    <!--</fieldset>-->
-                    <!--<fieldset>-->
-                        <!--<legend>Options-->
-                            <!--<button id="add-options-button"-->
-                                    <!--class="ui-button ui-widget ui-corner-all ui-button-icon-only"-->
-                                    <!--title="Add Parameter">-->
-                                <!--<span class="ui-icon ui-icon-plus"></span>Add Option-->
-                            <!--</button>-->
-                        <!--</legend>-->
-                        <!--<div class="input_fields_wrap"></div>-->
-                    <!--</fieldset>-->
-                <!--</div>-->
-                <!--<h2>Overrides</h2>-->
-                <!--<div></div>-->
-                <!--<h2>Executions</h2>-->
-                <!--<div></div>-->
-            <!--</div>-->
         </div>
+            <div class="left">
+                <div class="panel">
+                    <div class="panel-heading"><span>Applications</span></div>
+                    <div class="panel-body">
+                        <div>
+                            <div class="form-group">
+                                <select name="applications" id="applications"></select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel">
+                    <div class="panel-heading"><span>Execution Pipelines</span></div>
+                    <div id="pipeline-panel" class="panel-body step-panel"></div>
+                </div>
+            </div>
+            <div class="right">
+                <div id="executionDesigner" class="joint-paper joint-theme-default" style="display: inline-block; float: left;"
+                     ondrop="dropStep(event)"
+                     ondragover="allowStepDrop(event)"></div>
+                <div style="width: 5%; display: inline-block; float: right;">
+                    <button id="edit-application-button"
+                            class="ui-button ui-widget ui-corner-all ui-button-icon-only"
+                            title="Edit Application Settings",
+                    style="margin-bottom: 8px">
+                        <span class="ui-icon ui-icon-wrench"></span>Edit Application Settings
+                    </button>
+                    <button id="add-execution-button"
+                            class="ui-button ui-widget ui-corner-all ui-button-icon-only"
+                            title="Add Execution">
+                        <span class="ui-icon ui-icon-plus"></span>Add Execution
+                    </button>
+                </div>
+            </div>
     </div>
     <div id="tabs-2">
         <div>
@@ -223,12 +237,12 @@
     </form>
 </div>
 <!-- Add pipeline dialog -->
-<div id="dialog-pipeline-form" title="Add Pipeline">
-    <p class="validateTips">Enter a name for this pipeline.</p>
-    <form id="add-pipeline-form">
+<div id="dialog-new-form" title="New">
+    <p class="validateTips">Enter a name.</p>
+    <form id="add-new-form">
         <fieldset>
-            <label for="add-pipeline-id">Name</label>
-            <input type="text" name="name" id="add-pipeline-id" value="" class="text ui-widget-content ui-corner-all">
+            <label for="add-new-id">Name</label>
+            <input type="text" name="name" id="add-new-id" value="" class="text ui-widget-content ui-corner-all">
         </fieldset>
     </form>
 </div>
@@ -255,7 +269,7 @@
     </div>
     <div id="code-editor"></div>
 </div>
-<!-- Add step dialog -->
+<!-- Copy pipeline dialog -->
 <div id="dialog-copy-pipeline-form" title="Copy Pipeline">
     <form id="copy-pipeline-form">
         <div class="form-group">
@@ -267,6 +281,29 @@
             <input type="text" name="name" id="copy-pipeline-id" value="" class="text ui-widget-content ui-corner-all">
         </div>
     </form>
+</div>
+<!-- Settings dialog -->
+<div id="dialog-settings-form" title="Copy Pipeline">
+    <div>
+        <label for="kyro-classes">Kyro Classes</label>
+        <input id="kyro-classes" type="text" class="multi-input"/>
+    </div>
+    <!--<fieldset>-->
+    <!--<legend>Options-->
+    <!--<button id="add-options-button"-->
+    <!--class="ui-button ui-widget ui-corner-all ui-button-icon-only"-->
+    <!--title="Add Parameter">-->
+    <!--<span class="ui-icon ui-icon-plus"></span>Add Option-->
+    <!--</button>-->
+    <!--</legend>-->
+    <!--<div class="input_fields_wrap"></div>-->
+    <!--</fieldset>-->
+    <!--</div>-->
+    <!--<h2>Overrides</h2>-->
+    <!--<div></div>-->
+    <!--<h2>Executions</h2>-->
+    <!--<div></div>-->
+    <!--</div>-->
 </div>
 </body>
 </html>
