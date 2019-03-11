@@ -206,10 +206,6 @@ function createParameterForm() {
                     defaultValues[formDiv.find('input[name="stepParamName"]').val()] = value;
                     defaultValueInput.val(JSON.stringify(value));
                     className.val(schemaName);
-                },
-                null,
-                function() {
-                    $('#add-step-parameter-button').focus();
                 });
         }
     });

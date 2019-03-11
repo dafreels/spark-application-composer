@@ -1,43 +1,21 @@
-let objectEditorDialog;
 let editObjectForm;
 let currentObjectData;
 let editObjectSaveFunction;
 let editObjectCancelFunction;
-let editObjectCloseFunction;
 
 function initializeObjectEditor() {
-    // objectEditorDialog = $("#edit-object-form").dialog({
-    //     autoOpen: false,
-    //     resizable: false,
-    //     height: 500,
-    //     width: 800,
-    //     modal: true,
-    //     closeOnEscape: true,
-    //     close: handleObjectEditorClose,
-    //     buttons: {
-    //         'Save': handleObjectEditorSave,
-    //         Cancel: handleObjectEditorCancel
-    //     }
-    // });
     $('#edit-object-form-save').click(handleObjectEditorSave);
     $('#edit-object-form-cancel').click(handleObjectEditorCancel);
     $('#edit-object-form-close').click(handleObjectEditorCancel);
-}
-
-function handleObjectEditorClose() {
-    if (editObjectCloseFunction) {
-        editObjectCloseFunction();
-    }
 }
 
 function handleObjectEditorSave() {
     // TODO Validate the data against the selected schema
     console.log(JSON.stringify(currentObjectData, null, 4));
     if (editObjectSaveFunction) {
-        editObjectSaveFunction(editObjectForm.getValue(), $('#objectEditorSchema').val());
+        editObjectSaveFunction(editObjectForm.alpaca().getValue(), $('#objectEditorSchema').val());
     }
     $('#edit-object-form').modal('hide');
-    // objectEditorDialog.dialog('close');
 }
 
 function handleObjectEditorCancel() {
@@ -45,10 +23,9 @@ function handleObjectEditorCancel() {
         editObjectCancelFunction();
     }
     $('#edit-object-form').modal('hide');
-    // objectEditorDialog.dialog('close');
 }
 
-function showObjectEditor(data, schemaName, saveFunction, cancelFunction, closeFunction) {
+function showObjectEditor(data, schemaName, saveFunction, cancelFunction) {
     if (data && _.isString(data) && data.trim().length > 0) {
         currentObjectData = JSON.parse(data);
     } else if (data && _.isObject(data)) {
@@ -56,17 +33,14 @@ function showObjectEditor(data, schemaName, saveFunction, cancelFunction, closeF
     }
     editObjectSaveFunction = saveFunction;
     editObjectCancelFunction = cancelFunction;
-    editObjectCloseFunction = closeFunction;
 
     const schema = getSchema(schemaName);
     if (schema) {
         const schemas = $('#objectEditorSchema');
         schemas.val(schemaName);
-        schemas.selectmenu('refresh');
         generateForm(schema.schema);
     }
     $('#edit-object-form').modal('show');
-    // objectEditorDialog.dialog('open');
 }
 
 function generateForm(schema) {
@@ -125,7 +99,4 @@ function renderSchemaUI() {
         $('<option value="'+ schema.name +'">' + schema.name + '</option>').appendTo(schemas);
     });
     schemas.change(handleSchemaChange);
-    // schemas.selectmenu({
-    //     change: handleSchemaChange
-    // });
 }
