@@ -44,7 +44,7 @@ function showCodeEditorDialog(code, mode) {
 
 function handleCodeEditorSave() {
     if (codeEditorSaveFunction) {
-        codeEditorSaveFunction(editor.session.getValue());
+        codeEditorSaveFunction(editor.session.getValue(), $('#codeEditorSyntax').val());
     }
     codeEditorDialog.dialog('close');
 }

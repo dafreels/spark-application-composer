@@ -31,3 +31,7 @@ NODE_ENV=mongo node server.js
 The UI is accessible at:
 
 http://localhost:8000
+
+## Generating Step Metadata
+A [tool](https://github.com/Acxiom/spark-pipeline-driver/tree/develop/application-utils) is provided that allows producing step metadata form jar files that contain steps that have been properly
+annotated.

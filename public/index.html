@@ -3,11 +3,11 @@
 <head>
     <link rel="stylesheet" type="text/css" href="css/joint.css"/>
     <link rel="stylesheet" type="text/css" href="css/app.css"/>
-    <link rel="stylesheet" href="css/jquery-ui.css">
-    <link rel="stylesheet" href="css/jquery-ui.theme.css">
-    <link rel="stylesheet" href="css/selectize.legacy.css">
-    <link rel="stylesheet" href="css/selectize.default.css">
-    <link rel="stylesheet" href="css/selectize.css">
+    <link rel="stylesheet" href="css/jquery-ui.css"/>
+    <link rel="stylesheet" href="css/jquery-ui.theme.css"/>
+    <link rel="stylesheet" href="css/selectize.legacy.css"/>
+    <link rel="stylesheet" href="css/selectize.default.css"/>
+    <link rel="stylesheet" href="css/selectize.css"/>
     <!-- dependencies -->
     <script src="libraries/aceeditor/1.4.3/ace.js" type="text/javascript" charset="utf-8"></script>
     <script src="libraries/jquery-3.3.1.js"></script>
@@ -17,8 +17,20 @@
     <script src="libraries/backbone/1.3.3/backbone.js"></script>
     <script src="libraries/joint/2.2.1/joint.js"></script>
     <script src="libraries/jquery-ui.js"></script>
+
+    <!-- dependencies (jquery, handlebars and bootstrap) -->
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.5/handlebars.min.js"></script>
+    <link type="text/css" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css" rel="stylesheet"/>
+    <script type="text/javascript" src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
+
+    <!-- alpaca -->
+    <link type="text/css" href="//code.cloudcms.com/alpaca/1.5.24/bootstrap/alpaca.min.css" rel="stylesheet"/>
+    <script type="text/javascript" src="//code.cloudcms.com/alpaca/1.5.24/bootstrap/alpaca.min.js"></script>
+
+
     <script src="libraries/steps-model.js"></script>
     <script src="libraries/pipelines-model.js"></script>
+    <script src="libraries/schemas-model.js"></script>
     <script src="libraries/services.js"></script>
     <script src="libraries/add-step-dialog.js"></script>
     <script src="libraries/alert-dialog.js"></script>
@@ -26,6 +38,7 @@
     <script src="libraries/code-editor-dialog.js"></script>
     <script src="libraries/copy-pipeline-dialog.js"></script>
     <script src="libraries/new-dialog.js"></script>
+    <script src="libraries/object-editor-dialog.js"></script>
     <script src="libraries/settings-dialog.js"></script>
     <script src="libraries/validation-error-dialog.js"></script>
     <script src="libraries/steps-editor.js"></script>
@@ -52,40 +65,41 @@
                 <button id="reset-application-button" class="ui-button ui-widget ui-corner-all">Reset</button>
             </div>
         </div>
-            <div class="left">
-                <div class="panel">
-                    <div class="panel-heading"><span>Applications</span></div>
-                    <div class="panel-body">
-                        <div>
-                            <div class="form-group">
-                                <select name="applications" id="applications"></select>
-                            </div>
+        <div class="left">
+            <div class="panel">
+                <div class="panel-heading"><span>Applications</span></div>
+                <div class="panel-body">
+                    <div>
+                        <div class="form-group">
+                            <select name="applications" id="applications"></select>
                         </div>
                     </div>
                 </div>
-                <div class="panel">
-                    <div class="panel-heading"><span>Execution Pipelines</span></div>
-                    <div id="pipeline-panel" class="panel-body step-panel"></div>
-                </div>
             </div>
-            <div class="right">
-                <div id="executionDesigner" class="joint-paper joint-theme-default" style="display: inline-block; float: left;"
-                     ondrop="dropStep(event)"
-                     ondragover="allowStepDrop(event)"></div>
-                <div style="width: 5%; display: inline-block; float: right;">
-                    <button id="edit-application-button"
-                            class="ui-button ui-widget ui-corner-all ui-button-icon-only"
-                            title="Edit Application Settings",
-                    style="margin-bottom: 8px">
-                        <span class="ui-icon ui-icon-wrench"></span>Edit Application Settings
-                    </button>
-                    <button id="add-execution-button"
-                            class="ui-button ui-widget ui-corner-all ui-button-icon-only"
-                            title="Add Execution">
-                        <span class="ui-icon ui-icon-plus"></span>Add Execution
-                    </button>
-                </div>
+            <div class="panel">
+                <div class="panel-heading"><span>Execution Pipelines</span></div>
+                <div id="pipeline-panel" class="panel-body step-panel"></div>
             </div>
+        </div>
+        <div class="right">
+            <div id="executionDesigner" class="joint-paper joint-theme-default"
+                 style="display: inline-block; float: left;"
+                 ondrop="dropStep(event)"
+                 ondragover="allowStepDrop(event)"></div>
+            <div style="width: 5%; display: inline-block; float: right;">
+                <button id="edit-application-button"
+                        class="ui-button ui-widget ui-corner-all ui-button-icon-only"
+                        title="Edit Application Settings"
+                        style="margin-bottom: 8px">
+                    <span class="ui-icon ui-icon-wrench"></span>Edit Application Settings
+                </button>
+                <button id="add-execution-button"
+                        class="ui-button ui-widget ui-corner-all ui-button-icon-only"
+                        title="Add Execution">
+                    <span class="ui-icon ui-icon-plus"></span>Add Execution
+                </button>
+            </div>
+        </div>
     </div>
     <div id="tabs-2">
         <div>
@@ -246,6 +260,31 @@
         </fieldset>
     </form>
 </div>
+<!-- Object Editor dialog -->
+<div class="modal fade" id="edit-object-form" tabindex="-1" role="dialog" aria-labelledby="Edit Object"
+     aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Edit Object</h5>
+                <button id="edit-object-form-close" type="button" class="close" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="schema-selection">
+                    <span>Schema:</span>
+                    <select id="objectEditorSchema"></select>
+                </div>
+                <div id="json-object-editor"></div>
+            </div>
+            <div class="modal-footer">
+                <button id="edit-object-form-save" type="button" class="btn btn-primary">Save</button>
+                <button id="edit-object-form-cancel" type="button" class="btn btn-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
 <!-- validation save errors dialog -->
 <div id="dialog-validation-error" title="Validation Error!">
     <p><span class="ui-icon ui-icon-alert" style="float:left; margin:12px 12px 20px 0;">
@@ -265,6 +304,7 @@
             <option value="scala">Scala</option>
             <option value="javascript">Javascript</option>
             <option value="json">JSON</option>
+            <option value="sql">SQL</option>
         </select>
     </div>
     <div id="code-editor"></div>
@@ -284,26 +324,51 @@
 </div>
 <!-- Settings dialog -->
 <div id="dialog-settings-form" title="Copy Pipeline">
-    <div>
-        <label for="kyro-classes">Kyro Classes</label>
-        <input id="kyro-classes" type="text" class="multi-input"/>
+    <div class="panel">
+        <div class="panel-heading"><span>Spark Configuration</span></div>
+        <div id="spark-conf-fields" class="panel-body">
+            <div class="form-group">
+                <label for="kyro-classes">Kyro Classes</label>
+                <input id="kyro-classes" type="text"/>
+            </div>
+            <div style="height: 10%; width:100%; margin-bottom: 10px;">
+                <div class="step-parameters-name"><label>Parameters</label></div>
+                <div class="top-buttons">
+                    <button id="add-spark-option-button"
+                            class="ui-button ui-widget ui-corner-all ui-button-icon-only"
+                            title="Add Option">
+                        <span class="ui-icon ui-icon-plus"></span>Add Option
+                    </button>
+                </div>
+            </div>
+            <div id="spark-conf-options"></div>
+        </div>
     </div>
-    <!--<fieldset>-->
-    <!--<legend>Options-->
-    <!--<button id="add-options-button"-->
-    <!--class="ui-button ui-widget ui-corner-all ui-button-icon-only"-->
-    <!--title="Add Parameter">-->
-    <!--<span class="ui-icon ui-icon-plus"></span>Add Option-->
-    <!--</button>-->
-    <!--</legend>-->
-    <!--<div class="input_fields_wrap"></div>-->
-    <!--</fieldset>-->
-    <!--</div>-->
-    <!--<h2>Overrides</h2>-->
-    <!--<div></div>-->
-    <!--<h2>Executions</h2>-->
-    <!--<div></div>-->
-    <!--</div>-->
+    <div class="panel">
+        <div class="panel-heading"><span>Global Overrides</span></div>
+        <div class="panel-body">
+            <div class="form-group">
+                <label for="step-packages">Step Packages</label>
+                <input id="step-packages" type="text"/>
+            </div>
+            <div class="form-group">
+                <label for="required-parameters">Required Parameters</label>
+                <input id="required-parameters" type="text"/>
+            </div>
+            <div class="form-group settings-form">
+                <label for="pipeline-listener">Pipeline Listener</label>
+                <input id="pipeline-listener" type="text"/>
+            </div>
+            <div class="form-group settings-form">
+                <label for="security-manager">Security Manager</label>
+                <input id="security-manager" type="text"/>
+            </div>
+            <div class="form-group settings-form">
+                <label for="step-mapper">Step Mapper</label>
+                <input id="step-mapper" type="text"/>
+            </div>
+        </div>
+    </div>
 </div>
 </body>
 </html>

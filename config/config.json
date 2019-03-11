@@ -21,6 +21,20 @@
                 ]
             }
         },
+        "static-schema": {
+            "enabled": true,
+            "priority": 11,
+            "route": "/schemas",
+            "module": {
+                "name": "serve-static",
+                "arguments": [
+                    "path:./schemas",
+                    {
+                        "extensions": ["json"]
+                    }
+                ]
+            }
+        },
         "router": {
             "module": {
                 "arguments": [

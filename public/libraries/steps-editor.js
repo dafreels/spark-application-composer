@@ -76,11 +76,12 @@ function addParameter() {
  * Populate the form with existing step data
  */
 function handleStepSelection() {
+    const selectedElement = this;
     if (stepNeedsSave()) {
         showClearFormDialog(
             function () {
                 clearStepForm(false);
-                populateStepForm(this);
+                populateStepForm(selectedElement);
                 currentEditorStepId = $('#edit-stepId').text();
             },
             function () {
@@ -90,7 +91,7 @@ function handleStepSelection() {
         );
     } else {
         clearStepForm(false);
-        populateStepForm(this);
+        populateStepForm(selectedElement);
     }
 }
 
@@ -127,7 +128,12 @@ function populateStepForm(el) {
             defaultValues[param.name] = param.defaultValue;
             formDiv.find('input[name="stepParamName"]').val(param.name);
             formDiv.find('input[name="stepParamDefaultValue"]').val(param.defaultValue);
-            select.val(param.type);
+            formDiv.find('input[name="stepParamClassName"]').val(param.className);
+            if (param.type.indexOf('script') === 0) {
+                select.val(param.type + '-' + (param.language || 'scala'));
+            } else {
+                select.val(param.type);
+            }
             select.selectmenu('refresh');
             if (param.required) {
                 checkbox.attr('checked', true).change();
@@ -142,49 +148,80 @@ function populateStepForm(el) {
  * @returns Create the parameter row that can be appended to the parameters form.
  */
 function createParameterForm() {
-    const formDiv = $('<div class="form-group">');
-    $('<label>Name:</label>').appendTo(formDiv);
-    $('<input name="stepParamName" type="text"/>').appendTo(formDiv);
+    const formDiv = $('<div class="row">');
+    $('<div class="col col-sm-1"><label>Name:</label></div>').appendTo(formDiv);
+    $('<div class="col col-sm-3"><input name="stepParamName" type="text"/></div>').appendTo(formDiv);
     const select = $('<select>');
-    select.appendTo(formDiv);
+    let column = $('<div class="col col-sm-2">');
+    select.appendTo(column);
+    column.appendTo(formDiv);
     $('<option value="text">Text</option>').appendTo(select);
     $('<option value="boolean">Boolean</option>').appendTo(select);
     $('<option value="integer">Integer</option>').appendTo(select);
-    $('<option value="script">Script</option>').appendTo(select);
+    $('<option value="script-scala">Scala Script</option>').appendTo(select);
+    $('<option value="script-sql">SQL Script</option>').appendTo(select);
+    $('<option value="script-json">JSON Script</option>').appendTo(select);
+    $('<option value="script-javascript">Javascript Script</option>').appendTo(select);
     $('<option value="result">Branch Result</option>').appendTo(select);
-    // Options
-    $('</select>').appendTo(formDiv);
-    const checkboxLabel = $('<label style="width: 100px; height: 15px; margin: 0 8px 0 8px;">Required</label>');
+    $('<option value="object">Object</option>').appendTo(select);
+    const checkboxLabel = $('<label>Required</label>');
     const checkbox = $('<input name="stepParamRequire" type="checkbox">');
     checkbox.uniqueId();
     checkboxLabel.attr('for', checkbox.attr('id'));
-    checkboxLabel.appendTo(formDiv);
-    checkbox.appendTo(formDiv);
-    $('<label>Default Value:</label>').appendTo(formDiv);
+    column = $('<div class="col col-sm-2 cb-margin">');
+    checkboxLabel.appendTo(column);
+    checkbox.appendTo(column);
+    column.appendTo(formDiv);
+    $('<div class="col col-sm-1"><label>Default Value:</label></div>').appendTo(formDiv);
+    column = $('<div class="col col-sm-2">');
+    column.appendTo(formDiv);
     const defaultValueInput = $('<input name="stepParamDefaultValue" type="text"/>');
-    defaultValueInput.appendTo(formDiv);
+    defaultValueInput.appendTo(column);
+
+    $('<div class="col col-sm-1"><label>Class Name:</label></div>').appendTo(formDiv);
+    column = $('<div class="col col-sm-2">');
+    const className = $('<input name="stepParamClassName" type="text"/>');
+    className.appendTo(column);
+    column.appendTo(formDiv);
+
     defaultValueInput.focusin(function() {
         codeEditorCloseFunction = function() {
             $('#add-step-parameter-button').focus();
             defaultValueInput.prop('disabled', false);
         };
-        codeEditorSaveFunction = function(value) {
+        codeEditorSaveFunction = function(value, lang) {
             defaultValues[formDiv.find('input[name="stepParamName"]').val()] = value;
             defaultValueInput.val(value);
+            const s = formDiv.find('select');
+            s.val('script-' + lang);
+            s.selectmenu('refresh');
         };
-        if (select.val() === 'script') {
-            showCodeEditorDialog(defaultValues[formDiv.find('input[name="stepParamName"]').val()] || '', 'scala');
+        if (select.val().indexOf('script') === 0) {
+            showCodeEditorDialog(defaultValues[formDiv.find('input[name="stepParamName"]').val()] || '', select.val().split('-')[1]);
             $(this).prop('disabled', true);
+        } else if (select.val() === 'object') {
+            showObjectEditor(defaultValues[formDiv.find('input[name="stepParamName"]').val()] || {},
+                formDiv.find('input[name="stepParamClassName"]').val(),
+                function(value, schemaName) {
+                    defaultValues[formDiv.find('input[name="stepParamName"]').val()] = value;
+                    defaultValueInput.val(JSON.stringify(value));
+                    className.val(schemaName);
+                },
+                null,
+                function() {
+                    $('#add-step-parameter-button').focus();
+                });
         }
     });
+
+    column = $('<div class="col col-sm-1">');
+    column.appendTo(formDiv);
     const button = $('<button class="ui-button ui-widget ui-corner-all ui-button-icon-only" title="Remove Parameter">');
-    button.appendTo(formDiv);
+    button.appendTo(column);
     $('<span class="ui-icon ui-icon-minus"></span>').appendTo(button);
-    $('</button>').appendTo(formDiv);
     button.click(function() {
         formDiv.remove();
     });
-    $('</div>').appendTo(formDiv);
     formDiv.attr('cbId', checkbox.attr('id'));
     return formDiv;
 }
@@ -209,12 +246,25 @@ function generateStepJson() {
 
     // Gather parameters
     let param;
-    $('#edit-step-parameters div').each(function() {
+    let selectionType;
+    let scriptLanguage;
+    $('#edit-step-parameters .row').each(function() {
+        selectionType = $(this).find('select').val();
+        if (selectionType.indexOf('script') === 0) {
+            scriptLanguage = selectionType.split('-')[1];
+            selectionType = selectionType.split('-')[0];
+        } else {
+            scriptLanguage = null;
+        }
         param = {
+            type: selectionType,
             name: $(this).find('input[name="stepParamName"]').val(),
-            type: $(this).find('select').val(),
-            required: $(this).find('#' + $(this).attr('cbId')).is(':checked')
+            required: $(this).find('#' + $(this).attr('cbId')).is(':checked'),
+            language: scriptLanguage,
+            className: setStringValue($(this).find('input[name="stepParamClassName"]').val())
         };
+
+        if (param.language === null) { delete param.language; }
 
         if ($(this).find('input[name="stepParamDefaultValue"]').val() !== '') {
             switch (param.type) {
@@ -224,6 +274,7 @@ function generateStepJson() {
                 case 'boolean':
                     param.defaultValue = $(this).find('input[name="stepParamDefaultValue"]').val().toLowerCase() === 'true';
                     break;
+                case 'object':
                 case 'script':
                     param.defaultValue = defaultValues[param.name];
                     break;
@@ -298,7 +349,61 @@ function stepNeedsSave() {
     const step = generateStepJson();
     if (step.id) {
         // Compare the objects
-        return getObjectDiff(step, getStep(step.id)).length > 0;
+        const originalStep = getStep(step.id);
+        if (_.difference(_.keys(step), _.keys(originalStep)).length > 0) {
+            return true;
+        } else if (step.id !== originalStep.id) {
+            return true;
+        } else if (step.displayName !== originalStep.displayName) {
+            return true;
+        } else if (step.description !== originalStep.description) {
+            return true;
+        } else if (step.type !== originalStep.type) {
+            return true;
+        } else if (step.engineMeta.spark !== originalStep.engineMeta.spark) {
+            return true;
+        } else {
+            if (step.params.length !== originalStep.params.length) {
+                return true;
+            }
+            let diff = false;
+            let param1;
+            _.forEach(step.params, (param) => {
+                param1 = _.find(originalStep.params, p => p.name === param.name);
+                if (!param1) {
+                    diff = true;
+                    return false;
+                } else if (param.type !== param1.type) {
+                    diff = true;
+                    return false;
+                } else if (param.required !== param1.required) {
+                    diff = true;
+                    return false;
+                }  else if (param.language !== param1.language) {
+                    diff = true;
+                    return false;
+                } else if (param.className !== param1.className) {
+                    diff = true;
+                    return false;
+                } else {
+                    let dv1;
+                    let dv2;
+                    if (_.isObject(param.defaultValue)) {
+                        dv1 = JSON.stringify(param.defaultValue);
+                        dv2 = JSON.stringify(param1.defaultValue)
+                    } else {
+                        dv1 = param.defaultValue;
+                        dv2 = param1.defaultValue;
+                    }
+
+                    if (dv1 !== dv2) {
+                        diff = true;
+                        return false;
+                    }
+                }
+            });
+            return diff;
+        }
     }
     var changed = !_.isEmpty(step.engineMeta.spark);
     _.forEach(_.keys(step).filter(p => p !== 'engineMeta' && p !== 'type'), function(property) {
@@ -307,24 +412,6 @@ function stepNeedsSave() {
         }
     });
     return changed;
-}
-
-/**
- * Helper function to perform a deep comparison
- * @param obj1 First object to be compared
- * @param obj2 Second object to be compared
- * @returns {string[]}
- */
-function getObjectDiff(obj1, obj2) {
-    return Object.keys(obj1).reduce((result, key) => {
-        if (!obj2.hasOwnProperty(key)) {
-            result.push(key);
-        } else if (_.isEqual(obj1[key], obj2[key])) {
-            const resultKeyIndex = result.indexOf(key);
-            result.splice(resultKeyIndex, 1);
-        }
-        return result;
-    }, Object.keys(obj2));
 }
 
 /**

@@ -22,49 +22,6 @@ body {
     margin-left: 10px;
 }
 
-#step-selector .ui-selecting {
-    background: #FECA40;
-}
-
-#step-selector .ui-selected {
-    background: #F39814;
-    color: white;
-}
-
-#step-selector {
-    list-style-type: none;
-    margin: 0;
-    padding: 0;
-    width: 60%;
-    text-align: center;
-}
-
-#step-selector li {
-    border-radius: 4px;
-    background: #e4f1fb;
-    color: #2779aa;
-    padding: 10px;
-    text-align: center;
-    height: 25px;
-    border: 1px solid gray;
-    margin: 5px;
-}
-
-#step-selector li[stepType="branch"].ui-selected {
-    background: #F39814;
-    color: white;
-}
-
-#step-selector li[stepType="branch"] {
-    background: #2779aa;
-    color: #e4f1fb;
-}
-
-.step-selector-panel {
-    height: 300px;
-    overflow: auto;
-}
-
 .top-buttons {
     text-align: right;
     display: inline-block;
@@ -117,6 +74,10 @@ body {
     border-top-right-radius: 4px;
 }
 
+.panel-spacer {
+    margin-top: 8px;
+}
+
 .panel-heading span {
     color: #eeeeee;
 }
@@ -132,6 +93,7 @@ body {
 
 .form-group input {
     margin-left: 10px;
+    margin-right: 8px;
 }
 
 .form-group select {
@@ -142,11 +104,6 @@ body {
     width: 90%;
 }
 
-.dynamic-form span.ui-selectmenu-button.ui-button {
-    width: 20%;
-    margin-left: 8px;
-}
-
 .dynamic-form input {
     margin-left: 10px;
     width: 40%;
@@ -155,6 +112,18 @@ body {
 .dynamic-form label {
     width: 20%;
     display: inline-block;
+}
+
+.settings-form label {
+    width: 20%;
+    display: inline-block;
+}
+
+.settings-form input {
+    margin-left: 10px;
+    width: 70%;
+    border-radius: 8px;
+    padding: 8px;
 }
 
 .form-group div {
@@ -238,11 +207,6 @@ body {
     font-size: 15px;
 }
 
-#edit-step-parameters span.ui-selectmenu-button.ui-button {
-    width: 15%;
-    margin-left: 8px;
-}
-
 #syntax-selection {
     display: inline-block;
     text-align: right;
@@ -270,3 +234,71 @@ body {
     width: 100%;
     text-align: left;
 }
+
+/* Steps Editor */
+#edit-step-parameters div {
+    margin-right: -30px;
+}
+
+.cb-margin {
+    margin-left: 20px;
+    margin-right: -55px;
+}
+
+#edit-step-parameters span.ui-selectmenu-button.ui-button {
+    width: 100%;
+    margin-left: 8px;
+}
+
+#edit-step-parameters label {
+    font-size: 10px;
+}
+
+#edit-step-parameters input {
+    width: 100%;
+    font-size: 10px;
+}
+
+#step-selector .ui-selecting {
+    background: #FECA40;
+}
+
+#step-selector .ui-selected {
+    background: #F39814;
+    color: white;
+}
+
+#step-selector {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    width: 60%;
+    text-align: center;
+}
+
+#step-selector li {
+    border-radius: 4px;
+    background: #e4f1fb;
+    color: #2779aa;
+    padding: 10px;
+    text-align: center;
+    height: 50px;
+    border: 1px solid gray;
+    margin: 5px;
+}
+
+#step-selector li[stepType="branch"].ui-selected {
+    background: #F39814;
+    color: white;
+}
+
+#step-selector li[stepType="branch"] {
+    background: #2779aa;
+    color: #e4f1fb;
+}
+
+.step-selector-panel {
+    height: 300px;
+    overflow: auto;
+}
+/* End Steps Editor */

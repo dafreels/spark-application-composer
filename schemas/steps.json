@@ -14,9 +14,6 @@
                     "type": "string",
                     "unique": true
                 },
-                "stepId": {
-                    "type": "string"
-                },
                 "displayName": {
                     "type": "string"
                 },
@@ -29,9 +26,6 @@
                         "Pipeline",
                         "branch"
                     ]
-                },
-                "nextStepId": {
-                    "type": "string"
                 },
                 "params": {
                     "type": "array",
@@ -52,7 +46,8 @@
                                     "script",
                                     "string",
                                     "text",
-                                    "result"
+                                    "result",
+                                    "object"
                                 ]
                             },
                             "name": {
@@ -61,21 +56,26 @@
                             "required": {
                                 "type": "boolean"
                             },
-                            "default": {
+                            "defaultValue": {
                                 "type": "string"
                             },
-                            "value": {
-                                "type": [
-                                    "string",
-                                    "boolean",
-                                    "integer"
-                                ]
+                            "language": {
+                                "type": "string"
+                            },
+                            "className": {
+                                "type": "string"
                             }
                         }
                     }
                 },
                 "engineMeta": {
-                    "type": "object"
+                    "type": "object",
+                    "properties": {
+                        "spark": {
+                            "type": "string",
+                            "description": "Contains the step object and function to be called at runtime."
+                        }
+                    }
                 }
             }
         }

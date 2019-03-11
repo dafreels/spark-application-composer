@@ -678,12 +678,14 @@ function loadPropertiesPanel(metaData) {
                 select.focus();
                 input.prop('disabled', false);
             };
-            codeEditorSaveFunction = function (value) {
-                _.find(pipelineMetaData.params, p => p.name = param.name).value = value;
+            codeEditorSaveFunction = function (value, lang) {
+                const tempParam = _.find(pipelineMetaData.params, p => p.name = param.name);
+                tempParam.value = value;
+                tempParam.language = lang;
                 input.val(value);
             };
             if (select.val() === 'script') {
-                showCodeEditorDialog(_.find(pipelineMetaData.params, p => p.name = param.name).value, 'scala');
+                showCodeEditorDialog(_.find(pipelineMetaData.params, p => p.name = param.name).value, param.language || 'scala');
                 $(this).prop('disabled', true);
             }
         });
@@ -804,12 +806,12 @@ function loadPipelineDesignerStepsUI() {
             .appendTo(stepsContainer);
         $('div #' + step.id).fitText(1.50);
     });
-    stepsContainer.tooltip({
-        position: {
-            my: "left center",
-            at: "right center"
-        }
-    });
+    // stepsContainer.tooltip({
+    //     position: {
+    //         my: "left center",
+    //         at: "right center"
+    //     }
+    // });
 }
 
 /****************************************

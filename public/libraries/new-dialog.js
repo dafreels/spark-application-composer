@@ -13,6 +13,13 @@ function initializeNewDialog() {
             Cancel: handleNewDialogCancel
         }
     });
+
+    $('#add-new-id').keypress(function(e) {
+        if (e.which === 13) {
+            e.preventDefault();
+            handleNewDialogSave();
+        }
+    });
 }
 
 function handleNewDialogSave() {

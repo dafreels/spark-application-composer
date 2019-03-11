@@ -20,6 +20,14 @@ function loadPipelines(callback) {
         });
 }
 
+function loadApplications(callback) {
+    $.getJSON('/api/v1/applications')
+        .done(function(data) {
+            // initializePipelines(data.applications);
+            callback(data.applications);
+        });
+}
+
 function savePipeline(pipeline, callback) {
     let type = 'POST';
     let url = '/api/v1/pipelines/';
@@ -62,4 +70,14 @@ function saveStep(step, callback) {
         data: JSON.stringify(step),
         success: callback
     });
+}
+function loadSchemas(callback) {
+    $.getJSON('/schemas/external/transformations.json')
+        .done(function(data) {
+            // TODO This will need to change to convert an array into an object lookup
+            initializeSchemas(data);
+            if (callback) {
+                callback();
+            }
+        });
 }

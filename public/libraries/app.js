@@ -17,6 +17,12 @@ function loadPipelinesUI() {
     });
 }
 
+function loadSchemasUI() {
+    loadSchemas(() => {
+        renderSchemaUI();
+    });
+}
+
 function cloneObject(obj) {
     if (!obj) {
         return null;
@@ -40,6 +46,7 @@ $(document).ready(function () {
     initializeAlertDialog();
     initializeCopyPipelineDialog();
     initializeSettingsDialog();
+    initializeObjectEditor();
 
     // Initialize the editors
     initializeStepsEditor();
@@ -50,6 +57,9 @@ $(document).ready(function () {
     loadStepsUI();
     // Load the pipelines data from the API and render the UIs.
     loadPipelinesUI();
+
+    // Load the known object schemas
+    loadSchemasUI();
 });
 
 /**

@@ -36,6 +36,8 @@ function initializeApplicationEditor() {
 
     $('#edit-application-button').click(displayEditApplicationButton);
     $('#new-application-button').click(handleNewApplication);
+    // TODO Point this at the correct function
+    $('#add-execution-button').click(showObjectEditor);
 }
 
 function displayEditApplicationButton() {
