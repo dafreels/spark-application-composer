@@ -410,15 +410,6 @@ function stepNeedsSave() {
     return changed;
 }
 
-/**
- * Helper function that converts an empty string to undefined.
- * @param val The value to check.
- * @returns {undefined}
- */
-function setStringValue(val) {
-    return val && val.trim().length > 0 ? val : undefined;
-}
-
 function renderStepSelectionUI() {
     const stepSelector = $('#step-selector');
     stepSelector.empty();

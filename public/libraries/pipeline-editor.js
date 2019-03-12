@@ -647,9 +647,18 @@ function loadPropertiesPanel(metaData) {
             pipelineMetaData.executeIfEmpty = value;
             input.val(value);
         };
+        // TODO Never thought about doing this
         if (select.val() === 'script') {
             showCodeEditorDialog(pipelineMetaData.executeIfEmpty, 'scala');
             $(this).prop('disabled', true);
+        } else if (select.val() === 'object') {
+            // showObjectEditor(pipelineMetaData.executeIfEmpty || {},
+            //     null,
+            //     function(value, schemaName) {
+            //         defaultValues[formDiv.find('input[name="stepParamName"]').val()] = value;
+            //         defaultValueInput.val(JSON.stringify(value));
+            //         className.val(schemaName);
+            //     });
         }
     });
     input.autocomplete({
@@ -674,19 +683,27 @@ function loadPropertiesPanel(metaData) {
         select.appendTo(paramRow);
         $(parameterTypeOptions).appendTo(select);
         input.focusin(function () {
+            const tempParam = _.find(pipelineMetaData.params, p => p.name === param.name);
             codeEditorCloseFunction = function () {
                 select.focus();
                 input.prop('disabled', false);
             };
             codeEditorSaveFunction = function (value, lang) {
-                const tempParam = _.find(pipelineMetaData.params, p => p.name = param.name);
                 tempParam.value = value;
                 tempParam.language = lang;
                 input.val(value);
             };
             if (select.val() === 'script') {
-                showCodeEditorDialog(_.find(pipelineMetaData.params, p => p.name = param.name).value, param.language || 'scala');
+                showCodeEditorDialog(tempParam.value, param.language || 'scala');
                 $(this).prop('disabled', true);
+            } else if (select.val() === 'object') {
+                showObjectEditor(setStringValue(tempParam.value) || {},
+                    param.className,
+                    function(value, schemaName) {
+                        input.val(value);
+                        tempParam.value = value;
+                        tempParam.className = schemaName;
+                    });
             }
         });
         input.autocomplete({
@@ -701,7 +718,7 @@ function loadPropertiesPanel(metaData) {
     // Clear the old form
     $('#step-parameters-form div').remove();
     // Add the new form
-    $('#step-parameters-form').append('<div id="' + stepMetaData.id + 'DynamicForm" class="dynamic-form">').append(stepForm);
+    $('#step-parameters-form').append(stepForm);
     // Setup the form
     let type = getType(pipelineMetaData.executeIfEmpty, 'static');
     let value;

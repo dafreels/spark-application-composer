@@ -1,29 +1,24 @@
-let addStepDialog;
 // Contains information about the step being dragged to the canvas
 let draggingStep;
 
 function initializeAddStepDialog() {
-    addStepDialog = $("#dialog-step-form").dialog({
-        autoOpen: false,
-        height: 'auto',
-        width: 350,
-        modal: true,
-        buttons: {
-            "Add Step": handleAddStep,
-            Cancel: function () {
-                draggingStep = null;
-                $('#add-step-id').val('');
-                $(this).dialog('close');
-            }
-        }
-    });
-
+    $('#add-step-form-save').click(handleAddStep);
+    $('#add-step-form-cancel').click(handleAddStepCancel);
+    $('#add-step-form-close').click(handleAddStepCancel);
     $('#add-step-id').keypress(function(e) {
         if (e.which === 13) {
             e.preventDefault();
             handleAddStep();
         }
     });
+    $('#dialog-step-form').on('shown.bs.modal', function () {
+        $('#add-step-id').focus();
+    });
+}
+
+function handleAddStepCancel() {
+    draggingStep = null;
+    $('#dialog-step-form').modal('hide');
 }
 
 function handleAddStep() {
@@ -32,10 +27,11 @@ function handleAddStep() {
     addStepToDesigner(idField.val(), draggingStep.name, draggingStep.x - (stepSize.width / 2), draggingStep.y, draggingStep.stepMetaDataId);
     idField.val('');
     draggingStep = null;
-    addStepDialog.dialog('close');
+    $('#dialog-step-form').modal('hide');
 }
 
 function showAddStepDialog(step) {
     draggingStep = step;
-    addStepDialog.dialog('open');
+    $('#add-step-id').val('');
+    $('#dialog-step-form').modal('show');
 }

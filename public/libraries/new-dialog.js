@@ -1,24 +1,18 @@
-let newDialog;
 let newSaveFunction;
 let newCancelFunction;
 
 function initializeNewDialog() {
-    newDialog = $("#dialog-new-form").dialog({
-        autoOpen: false,
-        height: 'auto',
-        width: 350,
-        modal: true,
-        buttons: {
-            "Save": handleNewDialogSave,
-            Cancel: handleNewDialogCancel
-        }
-    });
-
+    $('#new-form-save').click(handleNewDialogSave);
+    $('#new-form-cancel').click(handleNewDialogCancel);
+    $('#new-form-close').click(handleNewDialogCancel);
     $('#add-new-id').keypress(function(e) {
         if (e.which === 13) {
             e.preventDefault();
             handleNewDialogSave();
         }
+    });
+    $('#dialog-new-form').on('shown.bs.modal', function () {
+        $('#add-new-id').focus();
     });
 }
 
@@ -26,19 +20,19 @@ function handleNewDialogSave() {
     if (newSaveFunction) {
         newSaveFunction($('#add-new-id').val());
     }
-    newDialog.dialog('close');
+    $('#dialog-new-form').modal('hide');
 }
 
 function handleNewDialogCancel() {
     if (newCancelFunction) {
         newCancelFunction();
     }
-    newDialog.dialog('close');
+    $('#dialog-new-form').modal('hide');
 }
 
 function showNewDialog(saveFunction, cancelFunction) {
     newSaveFunction = saveFunction;
     newCancelFunction = cancelFunction;
     $('#add-new-id').val('');
-    newDialog.dialog('open');
+    $('#dialog-new-form').modal('show');
 }

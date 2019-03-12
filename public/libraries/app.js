@@ -2,7 +2,8 @@ const parameterTypeOptions = '<option value="static">Static</option>' +
     '<option value="global">Global</option>' +
     '<option value="step">Step Response</option>' +
     '<option value="secondary">Secondary Step Response</option>' +
-    '<option value="script">Script</option>';
+    '<option value="script">Script</option>' +
+    '<option value="object">Object</option>';
 
 function loadStepsUI() {
     loadSteps(() => {
@@ -28,6 +29,15 @@ function cloneObject(obj) {
         return null;
     }
     return JSON.parse(JSON.stringify(obj));
+}
+
+/**
+ * Helper function that converts an empty string to undefined.
+ * @param val The value to check.
+ * @returns {undefined}
+ */
+function setStringValue(val) {
+    return val && val.trim().length > 0 ? val : undefined;
 }
 
 $(document).ready(function () {

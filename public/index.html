@@ -241,24 +241,56 @@
     </span>These items will be permanently deleted and cannot be recovered. Are you sure?</p>
 </div>
 <!-- Add step dialog -->
-<div id="dialog-step-form" title="Add Step">
-    <p class="validateTips">Enter a unique id for this step.</p>
-    <form id="add-step-form">
-        <fieldset>
-            <label for="add-step-id">Name</label>
-            <input type="text" name="name" id="add-step-id" value="" class="text ui-widget-content ui-corner-all">
-        </fieldset>
-    </form>
+<div id="dialog-step-form" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="Add Step" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button id="add-step-form-close" type="button" class="close" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h5 class="modal-title" id="addStepModalLabel">Add Step</h5>
+            </div>
+            <div class="modal-body">
+                <p class="validateTips">Enter a unique id for this step.</p>
+                <form id="add-step-form">
+                    <fieldset>
+                        <label for="add-step-id">Name</label>
+                        <input type="text" name="name" id="add-step-id" value="" class="text ui-widget-content ui-corner-all">
+                    </fieldset>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button id="add-step-form-save" type="button" class="btn btn-primary">Save</button>
+                <button id="add-step-form-cancel" type="button" class="btn btn-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
 </div>
 <!-- Add pipeline dialog -->
-<div id="dialog-new-form" title="New">
-    <p class="validateTips">Enter a name.</p>
-    <form id="add-new-form">
-        <fieldset>
-            <label for="add-new-id">Name</label>
-            <input type="text" name="name" id="add-new-id" value="" class="text ui-widget-content ui-corner-all">
-        </fieldset>
-    </form>
+<div id="dialog-new-form" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="New" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button id="new-form-close" type="button" class="close" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h5 class="modal-title" id="newModalLabel">New</h5>
+            </div>
+            <div class="modal-body">
+                <form id="add-new-form">
+                    <fieldset>
+                        <label for="add-new-id">Name</label>
+                        <input type="text" name="name" id="add-new-id" value=""
+                               class="text ui-widget-content ui-corner-all">
+                    </fieldset>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button id="new-form-save" type="button" class="btn btn-primary">Save</button>
+                <button id="new-form-cancel" type="button" class="btn btn-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
 </div>
 <!-- Object Editor dialog -->
 <div class="modal fade" id="edit-object-form" tabindex="-1" role="dialog" aria-labelledby="Edit Object"
@@ -266,10 +298,10 @@
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="exampleModalLabel">Edit Object</h5>
                 <button id="edit-object-form-close" type="button" class="close" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
+                <h5 class="modal-title" id="exampleModalLabel">Edit Object</h5>
             </div>
             <div class="modal-body">
                 <div id="schema-selection">

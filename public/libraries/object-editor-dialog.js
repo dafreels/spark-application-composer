@@ -36,8 +36,8 @@ function showObjectEditor(data, schemaName, saveFunction, cancelFunction) {
 
     const schema = getSchema(schemaName);
     if (schema) {
-        const schemas = $('#objectEditorSchema');
-        schemas.val(schemaName);
+        console.log('Selecting ' + schemaName + ' in drop down');
+        $('#objectEditorSchema').val(schemaName).change();
         generateForm(schema.schema);
     }
     $('#edit-object-form').modal('show');
