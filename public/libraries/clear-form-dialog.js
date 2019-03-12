@@ -1,37 +1,28 @@
-let clearFormDialog;
 let clearFormDialogClearFunction;
 let clearFormDialogCancelFunction;
 
 function initializeClearFormDialog() {
-    clearFormDialog = $("#dialog-confirm").dialog({
-        autoOpen: false,
-        resizable: false,
-        height: "auto",
-        width: 400,
-        modal: true,
-        buttons: {
-            'Clear': handleClearFormDialogClear,
-            Cancel: handleClearFormDialogCancel
-        }
-    });
+    $('#clear-form-clear').click(handleClearFormDialogClear);
+    $('#clear-form-cancel').click(handleClearFormDialogCancel);
+    $('#clear-form-close').click(handleClearFormDialogCancel);
 }
 
 function handleClearFormDialogClear() {
     if (clearFormDialogClearFunction) {
         clearFormDialogClearFunction();
     }
-    $(this).dialog('close');
+    $('#dialog-confirm').modal('hide');
 }
 
 function handleClearFormDialogCancel() {
     if (clearFormDialogCancelFunction) {
         clearFormDialogCancelFunction();
     }
-    $(this).dialog('close');
+    $('#dialog-confirm').modal('hide');
 }
 
 function showClearFormDialog(clearFunction, cancelFunction) {
     clearFormDialogClearFunction = clearFunction;
     clearFormDialogCancelFunction = cancelFunction;
-    clearFormDialog.dialog("open");
+    $('#dialog-confirm').modal('show');
 }

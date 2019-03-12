@@ -1,63 +1,46 @@
 let editor;
-let codeEditorDialog;
 let codeEditorSaveFunction;
 let codeEditorCancelFunction;
-let codeEditorCloseFunction;
 
 function initializeCodeEditorDialog() {
-    codeEditorDialog = $("#dialog-editor").dialog({
-        autoOpen: false,
-        resizable: false,
-        height: 500,
-        width: 800,
-        modal: true,
-        closeOnEscape: true,
-        close: handleCodeEditorClose,
-        buttons: {
-            'Save': handleCodeEditorSave,
-            Cancel: handleCodeEditorCancel
-        }
+    $('#edit-code-form-save').click(handleCodeEditorSave);
+    $('#edit-code-form-cancel').click(handleCodeEditorCancel);
+    $('#edit-code-form-close').click(handleCodeEditorCancel);
+    $('#codeEditorSyntax').change(function () {
+        editor.session.setMode('ace/mode/' + $(this).val());
     });
 
-    $('#codeEditorSyntax').selectmenu({
-        change: function() {
-            editor.session.setMode('ace/mode/' + $(this).val());
-        }
+    editor = ace.edit('code-editor', {
+        maxLines: 25,
+        minLines: 25
     });
-
-    editor = ace.edit('code-editor');
     editor.setTheme('ace/theme/solarized_light');
 }
 
-function showCodeEditorDialog(code, mode) {
+function showCodeEditorDialog(code, mode, saveFunction, cancelFunction) {
+    codeEditorSaveFunction = saveFunction;
+    codeEditorCancelFunction = cancelFunction;
+
     if (!mode) {
         mode = 'javascript';
     }
-    const select = $('#codeEditorSyntax');
-    select.val(mode);
-    select.selectmenu('refresh');
+    $('#codeEditorSyntax').val(mode).change();
     editor.session.setMode('ace/mode/' + mode);
-    codeEditorDialog.dialog("open");
     editor.session.setValue(code);
-
+    $('#dialog-editor').modal('show');
 }
 
 function handleCodeEditorSave() {
     if (codeEditorSaveFunction) {
         codeEditorSaveFunction(editor.session.getValue(), $('#codeEditorSyntax').val());
     }
-    codeEditorDialog.dialog('close');
+    $('#dialog-editor').modal('hide');
 }
 
 function handleCodeEditorCancel() {
     if (codeEditorCancelFunction) {
         codeEditorCancelFunction();
     }
-    codeEditorDialog.dialog('close');
+    $('#dialog-editor').modal('hide');
 }
 
-function handleCodeEditorClose() {
-    if (codeEditorCloseFunction) {
-        codeEditorCloseFunction();
-    }
-}

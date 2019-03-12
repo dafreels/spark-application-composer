@@ -1,21 +1,14 @@
-let alertDialog;
 
 function initializeAlertDialog() {
-    alertDialog = $("#dialog-alert").dialog({
-        autoOpen: false,
-        resizable: false,
-        height: "auto",
-        width: 400,
-        modal: true,
-        buttons: {
-            Ok: function() {
-                $(this).dialog( "close" );
-            }
-        }
-    });
+    $('#alert-dialog-ok').click(handleClose);
+    $('#alert-dialog-close').click(handleClose);
+}
+
+function handleClose() {
+    $('#dialog-alert').modal('hide');
 }
 
 function showAlertDialog(message) {
     $('#dialog-alert-field').text(message);
-    alertDialog.dialog('open');
+    $('#dialog-alert').modal('show');
 }

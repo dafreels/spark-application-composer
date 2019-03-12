@@ -18,14 +18,14 @@ function initializeStepsEditor() {
 }
 
 function handleBulkAdd() {
-    codeEditorSaveFunction = function(code) {
-        saveBulkSteps(code, function() {
-            currentEditorStepId = null;
-            loadStepsUI();
-            clearStepForm(true);
+    showCodeEditorDialog('[]', 'json',
+        function(code) {
+            saveBulkSteps(code, function() {
+                currentEditorStepId = null;
+                loadStepsUI();
+                clearStepForm(true);
+            });
         });
-    };
-    showCodeEditorDialog('[]', 'json');
 }
 
 function saveStepChanges() {
@@ -185,19 +185,16 @@ function createParameterForm() {
     column.appendTo(formDiv);
 
     defaultValueInput.focusin(function() {
-        codeEditorCloseFunction = function() {
-            $('#add-step-parameter-button').focus();
-            defaultValueInput.prop('disabled', false);
-        };
-        codeEditorSaveFunction = function(value, lang) {
-            defaultValues[formDiv.find('input[name="stepParamName"]').val()] = value;
-            defaultValueInput.val(value);
-            const s = formDiv.find('select');
-            s.val('script-' + lang);
-            s.selectmenu('refresh');
-        };
         if (select.val().indexOf('script') === 0) {
-            showCodeEditorDialog(defaultValues[formDiv.find('input[name="stepParamName"]').val()] || '', select.val().split('-')[1]);
+            showCodeEditorDialog(defaultValues[formDiv.find('input[name="stepParamName"]').val()] || '',
+                select.val().split('-')[1],
+                function(value, lang) {
+                    defaultValues[formDiv.find('input[name="stepParamName"]').val()] = value;
+                    defaultValueInput.val(value);
+                    const s = formDiv.find('select');
+                    s.val('script-' + lang);
+                    s.selectmenu('refresh');
+                });
             $(this).prop('disabled', true);
         } else if (select.val() === 'object') {
             showObjectEditor(defaultValues[formDiv.find('input[name="stepParamName"]').val()] || {},

@@ -236,9 +236,26 @@
     </div>
 </div>
 <!-- Modal dialog -->
-<div id="dialog-confirm" title="Clear Form?">
-    <p><span class="ui-icon ui-icon-alert" style="float:left; margin:12px 12px 20px 0;">
-    </span>These items will be permanently deleted and cannot be recovered. Are you sure?</p>
+<div id="dialog-confirm" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="Clear Form?"
+     aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button id="clear-form-close" type="button" class="close" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h5 class="modal-title" id="clearFormModalLabel">Clear Form?</h5>
+            </div>
+            <div class="modal-body">
+                <p><span class="ui-icon ui-icon-alert" style="float:left; margin:5px 0 0 0;"></span>
+                These items will be permanently deleted and cannot be recovered. Are you sure?</p>
+            </div>
+            <div class="modal-footer">
+                <button id="clear-form-clear" type="button" class="btn btn-primary">Clear</button>
+                <button id="clear-form-cancel" type="button" class="btn btn-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
 </div>
 <!-- Add step dialog -->
 <div id="dialog-step-form" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="Add Step" aria-hidden="true">
@@ -293,7 +310,7 @@
     </div>
 </div>
 <!-- Object Editor dialog -->
-<div class="modal fade" id="edit-object-form" tabindex="-1" role="dialog" aria-labelledby="Edit Object"
+<div id="edit-object-form" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="Edit Object"
      aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -324,38 +341,86 @@
     <div id="dialog-validation-error-field"></div>
 </div>
 <!-- alert dialog -->
-<div id="dialog-alert" title="Error!">
-    <span class="ui-icon ui-icon-alert" style="float:left; margin:12px 12px 20px 0;"></span>
-    <span id="dialog-alert-field" style="float:left; margin:12px 12px 20px 0;"></span>
+<div id="dialog-alert" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="Alert!" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button id="alert-dialog-close" type="button" class="close" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h5 class="modal-title" id="alertModalLabel">Alert!</h5>
+            </div>
+            <div class="modal-body">
+                <span class="ui-icon ui-icon-alert"></span>
+                <span id="dialog-alert-field"></span>
+            </div>
+            <div class="modal-footer">
+                <button id="alert-dialog-ok" type="button" class="btn btn-primary">OK</button>
+            </div>
+        </div>
+    </div>
 </div>
 <!-- Code Editor Dialog -->
-<div id="dialog-editor" title="Edit Code">
-    <div id="syntax-selection">
-        <span>Syntax:</span>
-        <select id="codeEditorSyntax">
-            <option value="scala">Scala</option>
-            <option value="javascript">Javascript</option>
-            <option value="json">JSON</option>
-            <option value="sql">SQL</option>
-        </select>
+<div id="dialog-editor" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="Edit Copy" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button id="edit-code-form-close" type="button" class="close" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h5 class="modal-title" id="editCodeModalLabel">Edit Code</h5>
+            </div>
+            <div class="modal-body">
+                <div id="syntax-selection">
+                    <span>Syntax:</span>
+                    <select id="codeEditorSyntax">
+                        <option value="scala">Scala</option>
+                        <option value="javascript">Javascript</option>
+                        <option value="json">JSON</option>
+                        <option value="sql">SQL</option>
+                    </select>
+                </div>
+                <div id="code-editor"></div>
+            </div>
+            <div class="modal-footer">
+                <button id="edit-code-form-save" type="button" class="btn btn-primary">Save</button>
+                <button id="edit-code-form-cancel" type="button" class="btn btn-secondary">Cancel</button>
+            </div>
+        </div>
     </div>
-    <div id="code-editor"></div>
 </div>
 <!-- Copy pipeline dialog -->
-<div id="dialog-copy-pipeline-form" title="Copy Pipeline">
-    <form id="copy-pipeline-form">
-        <div class="form-group">
-            <label for="copy-pipeline-id">Choose source pipeline</label>
-            <select name="pipelines" id="source-pipelines"></select>
+<div id="dialog-copy-pipeline-form" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="Copy Pipelne"
+     aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button id="copy-pipeline-form-close" type="button" class="close" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h5 class="modal-title" id="copyPipelineeModalLabel">Edit Object</h5>
+            </div>
+            <div class="modal-body">
+                <form id="copy-pipeline-form">
+                    <div class="form-group">
+                        <label for="copy-pipeline-id">Choose source pipeline</label>
+                        <select name="pipelines" id="source-pipelines"></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="copy-pipeline-id">Name</label>
+                        <input type="text" name="name" id="copy-pipeline-id" value="" class="text ui-widget-content ui-corner-all">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button id="copy-pipeline-form-save" type="button" class="btn btn-primary">Save</button>
+                <button id="copy-pipeline-form-cancel" type="button" class="btn btn-secondary">Cancel</button>
+            </div>
         </div>
-        <div class="form-group">
-            <label for="copy-pipeline-id">Name</label>
-            <input type="text" name="name" id="copy-pipeline-id" value="" class="text ui-widget-content ui-corner-all">
-        </div>
-    </form>
+    </div>
 </div>
 <!-- Settings dialog -->
-<div id="dialog-settings-form" title="Copy Pipeline">
+<div id="dialog-settings-form" title="Settings">
     <div class="panel">
         <div class="panel-heading"><span>Spark Configuration</span></div>
         <div id="spark-conf-fields" class="panel-body">

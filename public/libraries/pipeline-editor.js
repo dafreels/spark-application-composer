@@ -78,7 +78,7 @@ function dropStep(ev) {
             stepMetaDataId: ev.dataTransfer.getData("id")
         });
     } else {
-        showAlertDialog('Click new to create a new Pipeline!');
+        showAlertDialog('Please select or create a pipeline!');
     }
 }
 
@@ -205,20 +205,17 @@ function handleCopy() {
 }
 
 function displayCopyPipelineDialog() {
-    showCopyPipelineDialog(function() {
+    showCopyPipelineDialog(function(name, pipelineId) {
         const select = $('#pipelines');
         select.val('none');
         select.selectmenu('refresh');
         $('#pipelineName').text('');
         clearPipelineDesigner();
-        // Get the selected pipeline
-        const pipelineId = $('#source-pipelines').val();
-        // Get the new name
-        const name = $('#copy-pipeline-id').val();
         // Get a cloned copy of the data
         const pipeline = getPipeline(pipelineId);
         // Remove the original id
         delete pipeline.id;
+        delete pipeline._id;
         // Use the updated name
         pipeline.name = name;
         populatePipelineData(pipeline);
@@ -639,17 +636,13 @@ function loadPropertiesPanel(metaData) {
     let select = $('<select id="executeIfEmptyType" size="1">').appendTo(formDiv);
     $(parameterTypeOptions).appendTo(select);
     input.focusin(function () {
-        codeEditorCloseFunction = function () {
-            select.focus();
-            input.prop('disabled', false);
-        };
-        codeEditorSaveFunction = function (value) {
-            pipelineMetaData.executeIfEmpty = value;
-            input.val(value);
-        };
         // TODO Never thought about doing this
         if (select.val() === 'script') {
-            showCodeEditorDialog(pipelineMetaData.executeIfEmpty, 'scala');
+            showCodeEditorDialog(pipelineMetaData.executeIfEmpty, 'scala',
+                function (value) {
+                    pipelineMetaData.executeIfEmpty = value;
+                    input.val(value);
+                });
             $(this).prop('disabled', true);
         } else if (select.val() === 'object') {
             // showObjectEditor(pipelineMetaData.executeIfEmpty || {},
@@ -684,17 +677,13 @@ function loadPropertiesPanel(metaData) {
         $(parameterTypeOptions).appendTo(select);
         input.focusin(function () {
             const tempParam = _.find(pipelineMetaData.params, p => p.name === param.name);
-            codeEditorCloseFunction = function () {
-                select.focus();
-                input.prop('disabled', false);
-            };
-            codeEditorSaveFunction = function (value, lang) {
-                tempParam.value = value;
-                tempParam.language = lang;
-                input.val(value);
-            };
             if (select.val() === 'script') {
-                showCodeEditorDialog(tempParam.value, param.language || 'scala');
+                showCodeEditorDialog(tempParam.value, param.language || 'scala',
+                    function (value, lang) {
+                        tempParam.value = value;
+                        tempParam.language = lang;
+                        input.val(value);
+                    });
                 $(this).prop('disabled', true);
             } else if (select.val() === 'object') {
                 showObjectEditor(setStringValue(tempParam.value) || {},
@@ -929,10 +918,8 @@ function renderPipelinesDesignerSelect() {
     pipelines.selectmenu({
         change: verifyLoadPipeline
     });
-    sourcePipelines.selectmenu({
-        change: function() {
-            $('#copy-pipeline-id').val($('#source-pipelines :selected').text() + '-1');
-        }
+    sourcePipelines.change(function () {
+        $('#copy-pipeline-id').val($('#source-pipelines :selected').text() + '-1');
     });
     if (savedPipelineName) {
         // Reselect the just saved pipeline
