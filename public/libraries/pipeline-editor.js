@@ -819,16 +819,11 @@ function loadPipelineDesignerStepsUI() {
     stepsContainer.empty();
     _.forEach(getSteps(), (step) => {
         // Build out the pipeline designer step control
-        $('<div id="' + step.id + '" class="step ' + step.type + '" draggable="true" ondragstart="dragStep(event)" title="' + step.description + '">' + step.displayName + '</div>')
+        $('<div id="' + step.id + '" class="step ' + step.type + '" draggable="true" ondragstart="dragStep(event)" ' +
+        'title="' + step.description + '" data-toggle="tooltip" data-placement="right">' + step.displayName + '</div>')
             .appendTo(stepsContainer);
         $('div #' + step.id).fitText(1.50);
     });
-    // stepsContainer.tooltip({
-    //     position: {
-    //         my: "left center",
-    //         at: "right center"
-    //     }
-    // });
 }
 
 /****************************************
