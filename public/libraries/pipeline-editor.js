@@ -1,3 +1,5 @@
+const pipelinesContainerId = 'pipelines-editor';
+
 const stepSize = {
     width: 275,
     height: 50
@@ -25,7 +27,7 @@ function initializePipelineEditor() {
     paper = new joint.dia.Paper({
         el: $('#pipelineDesigner'),
         model: graph,
-        height: 800,
+        height: 1600,
         width: '100%',
         gridSize: 1,
         defaultLink: new joint.dia.Link({
@@ -65,7 +67,7 @@ function allowStepDrop(ev) {
 
 function dragStep(ev) {
     ev.dataTransfer.setData("text", $(ev.target).text());
-    ev.dataTransfer.setData("id", ev.target.id);
+    ev.dataTransfer.setData("id", ev.target.id.split('_')[1]);
 }
 
 function dropStep(ev) {
@@ -804,15 +806,16 @@ function getType(value, defaultType) {
 }
 
 function loadPipelineDesignerStepsUI() {
-    var stepsContainer = $('#step-panel');
+    var stepsContainer = $('#test-panel');
     stepsContainer.empty();
-    _.forEach(getSteps(), (step) => {
-        // Build out the pipeline designer step control
-        $('<div id="' + step.id + '" class="step ' + step.type + '" draggable="true" ondragstart="dragStep(event)" ' +
-        'title="' + step.description + '" data-toggle="tooltip" data-placement="right">' + step.displayName + '</div>')
-            .appendTo(stepsContainer);
-        $('div #' + step.id).fitText(1.50);
-    });
+    // _.forEach(getSteps(), (step) => {
+    //     // Build out the pipeline designer step control
+    //     $('<div id="' + step.id + '" class="step ' + step.type + '" draggable="true" ondragstart="dragStep(event)" ' +
+    //     'title="' + step.description + '" data-toggle="tooltip" data-placement="right">' + step.displayName + '</div>')
+    //         .appendTo(stepsContainer);
+    //     $('div #' + step.id).fitText(1.50);
+    // });
+    generateStepContainers(pipelinesContainerId, stepsContainer, null, 'dragStep(event)');
 }
 
 /****************************************

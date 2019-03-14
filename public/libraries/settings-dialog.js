@@ -1,9 +1,7 @@
 let settingsDialog;
 let settingsSaveFunction;
 let settingsCancelFunction;
-let kryoClassesSelect;
 let kryoClasses;
-let stepPackagesSelect;
 let stepPackages;
 let requiredParametersSelect;
 let requiredParameters;
@@ -21,52 +19,31 @@ function initializeSettingsDialog() {
         }
     });
 
-    kryoClassesSelect = $('#kyro-classes').selectize({
-        plugins: ['remove_button', 'drag_drop'],
-        delimiter: ',',
-        persist: false,
-        create: function (input) {
-            return {
-                value: input,
-                text: input
-            }
-        },
-        onChange: function (value) {
-            kryoClasses = value.split(',');
-        }
-    })[0].selectize;
+    $('#kyro-classes').tokenfield()
+        .on('tokenfield:createdtoken', handleKryoClassesChange)
+        .on('tokenfield:removedtoken', handleKryoClassesChange);
 
-    stepPackagesSelect = $('#step-packages').selectize({
-        plugins: ['remove_button', 'drag_drop'],
-        delimiter: ',',
-        persist: false,
-        create: function (input) {
-            return {
-                value: input,
-                text: input
-            }
-        },
-        onChange: function (value) {
-            stepPackages = value.split(',');
-        }
-    })[0].selectize;
+    $('#step-packages').tokenfield()
+        .on('tokenfield:createdtoken', handleStepPackagesChange)
+        .on('tokenfield:removedtoken', handleStepPackagesChange);
 
-    requiredParametersSelect = $('#required-parameters').selectize({
-        plugins: ['remove_button', 'drag_drop'],
-        delimiter: ',',
-        persist: false,
-        create: function (input) {
-            return {
-                value: input,
-                text: input
-            }
-        },
-        onChange: function (value) {
-            requiredParameters = value.split(',');
-        }
-    })[0].selectize;
+    $('#required-parameters').tokenfield()
+        .on('tokenfield:createdtoken', handleRequiredParametersChange)
+        .on('tokenfield:removedtoken', handleRequiredParametersChange);
 
     $('#add-spark-option-button').click(createStepOption);
+}
+
+function handleKryoClassesChange() {
+    kryoClasses = $('#kyro-classes').tokenfield('getTokensList').split(',');
+}
+
+function handleStepPackagesChange() {
+    stepPackages = $('#step-packages').tokenfield('getTokensList').split(',');
+}
+
+function handleRequiredParametersChange() {
+    stepPackages = $('#required-parameters').tokenfield('getTokensList').split(',');
 }
 
 function handleSettingsDialogSave() {

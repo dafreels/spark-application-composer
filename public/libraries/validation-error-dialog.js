@@ -1,18 +1,11 @@
-let validationErrorDialog;
 
 function initializeValidationErrorDialog() {
-    validationErrorDialog = $("#dialog-validation-error").dialog({
-        autoOpen: false,
-        resizable: false,
-        height: "auto",
-        width: 400,
-        modal: true,
-        buttons: {
-            Ok: function() {
-                $(this).dialog( "close" );
-            }
-        }
-    });
+    $('#validation-dialog-ok').click(handleValidationClose);
+    $('#validation-dialog-close').click(handleValidationClose);
+}
+
+function handleValidationClose() {
+    $('#dialog-validation-error').modal('hide');
 }
 
 function showValidationErrorDialog(validations) {
@@ -25,5 +18,5 @@ function showValidationErrorDialog(validations) {
         $('</ul>').appendTo(list);
         list.appendTo(errorDiv);
     });
-    validationErrorDialog.dialog('open');
+    $('#dialog-validation-error').modal('show');
 }

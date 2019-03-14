@@ -5,6 +5,52 @@ const parameterTypeOptions = '<option value="static">Static</option>' +
     '<option value="script">Script</option>' +
     '<option value="object">Object</option>';
 
+function generateStepContainers(containerId, parentContainer, stepSelectHandler, dragHandler) {
+    const steps = _.sortBy(getSteps(), ['category']);
+    let panel;
+    let heading;
+    let button;
+    let category;
+    let stepSection;
+    let stepField;
+    let buttonSpan;
+    let categoryId;
+    _.forEach(steps, (step) => {
+        if (step.category !== category) {
+            category = step.category;
+            categoryId = containerId + '_' + category;
+            panel = $('<div class="panel panel-info">');
+            panel.appendTo(parentContainer);
+            heading = $('<div class="panel-heading" style="display: inline-block; width: 100%;">');
+            heading.appendTo(panel);
+            $('<span style="font-size: 25px;">' + category + '</span>').appendTo(heading);
+            button = $('<button id="btn' + categoryId + '" class="btn btn-info" type="button" data-toggle="collapse" data-target="#' + categoryId + '"' +
+                '                            aria-expanded="false" aria-controls="' + categoryId + '">\n' +
+                '                        <i class="glyphicon glyphicon-menu-right"></i>\n' +
+                '                    </button>');
+            buttonSpan = $('<span class="pull-right">');
+            buttonSpan.appendTo(heading);
+            button.appendTo(buttonSpan);
+            button.click(function (evt) {
+                const icon = $(evt.target).find('i');
+                icon.toggleClass('glyphicon-menu-right');
+                icon.toggleClass('glyphicon-menu-down');
+            });
+            stepSection = $('<div id="' + categoryId + '" class="collapse" style="max-height: 250px; overflow: auto;">');
+            stepSection.appendTo(panel);
+        }
+        stepField = $('<div id="' + containerId + '_' + step.id + '" class="step ' + step.type + '" ' +
+            'title="' + step.description + '" data-toggle="tooltip" data-placement="right">' + step.displayName + '</div>');
+        if (dragHandler) {
+            // draggable="true" ondragstart="dragStep(event)"
+            stepField.attr('draggable', 'true');
+            stepField.attr('ondragstart', dragHandler);
+        }
+        stepField.appendTo(stepSection);
+        stepField.click(stepSelectHandler);
+    });
+}
+
 function loadStepsUI() {
     loadSteps(() => {
         loadPipelineDesignerStepsUI();

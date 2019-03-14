@@ -3,31 +3,23 @@
 <head>
     <link rel="stylesheet" type="text/css" href="css/joint.css"/>
     <link rel="stylesheet" type="text/css" href="css/app.css"/>
-    <link rel="stylesheet" href="css/jquery-ui.css"/>
-    <link rel="stylesheet" href="css/jquery-ui.theme.css"/>
-    <link rel="stylesheet" href="css/selectize.legacy.css"/>
-    <link rel="stylesheet" href="css/selectize.default.css"/>
-    <link rel="stylesheet" href="css/selectize.css"/>
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css"/>
+    <link rel="stylesheet" type="text/css" href="css/bootstrap-tokenfield.css"/>
+    <link rel="stylesheet" type="text/css" href="css/alpaca.min.css"/>
+    <link rel="stylesheet" type="text/css" href="css/jquery-ui.css"/>
+    <link rel="stylesheet" type="text/css" href="css/jquery-ui.theme.css"/>
     <!-- dependencies -->
     <script src="libraries/aceeditor/1.4.3/ace.js" type="text/javascript" charset="utf-8"></script>
     <script src="libraries/jquery-3.3.1.js"></script>
     <script src="libraries/jquery.fittext.js"></script>
-    <script src="libraries/selectize.js"></script>
     <script src="libraries/lodash/4.17.11/lodash.js"></script>
     <script src="libraries/backbone/1.3.3/backbone.js"></script>
     <script src="libraries/joint/2.2.1/joint.js"></script>
     <script src="libraries/jquery-ui.js"></script>
-
-    <!-- dependencies (jquery, handlebars and bootstrap) -->
-    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.5/handlebars.min.js"></script>
-    <link type="text/css" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css" rel="stylesheet"/>
-    <script type="text/javascript" src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
-
-    <!-- alpaca -->
-    <link type="text/css" href="//code.cloudcms.com/alpaca/1.5.24/bootstrap/alpaca.min.css" rel="stylesheet"/>
-    <script type="text/javascript" src="//code.cloudcms.com/alpaca/1.5.24/bootstrap/alpaca.min.js"></script>
-
-
+    <script src="libraries/handlebars/4.0.5/handlebars.min.js"></script>
+    <script src="libraries/bootstrap/3.4.1/bootstrap.min.js"></script>
+    <script src="libraries/bootstrap/tokenfield/0.12.1/bootstrap-tokenfield.min.js"></script>
+    <script src="libraries/alpacajs/1.5.24/alpaca.min.js"></script>
     <script src="libraries/steps-model.js"></script>
     <script src="libraries/pipelines-model.js"></script>
     <script src="libraries/schemas-model.js"></script>
@@ -66,7 +58,7 @@
             </div>
         </div>
         <div class="left">
-            <div class="panel">
+            <div class="panel panel-primary">
                 <div class="panel-heading"><span>Applications</span></div>
                 <div class="panel-body">
                     <div>
@@ -76,7 +68,7 @@
                     </div>
                 </div>
             </div>
-            <div class="panel">
+            <div class="panel panel-primary">
                 <div class="panel-heading"><span>Execution Pipelines</span></div>
                 <div id="pipeline-panel" class="panel-body step-panel"></div>
             </div>
@@ -115,7 +107,7 @@
                 </div>
             </div>
             <div class="left">
-                <div class="panel">
+                <div class="panel panel-info">
                     <div class="panel-heading"><span>Pipelines</span></div>
                     <div class="panel-body">
                         <div>
@@ -125,11 +117,8 @@
                         </div>
                     </div>
                 </div>
-                <div class="panel">
-                    <div class="panel-heading"><span>Steps</span></div>
-                    <div id="step-panel" class="panel-body step-panel"></div>
-                </div>
-                <div id="step-properties" class="panel">
+                <div id="test-panel" class="panel panel-info"></div>
+                <div id="step-properties" class="panel panel-info">
                     <div class="panel-heading"><span>Step Data</span></div>
                     <div class="panel-body">
                         <div id="step-form">
@@ -162,7 +151,7 @@
             </div>
             <!-- TODO Add a slider to allow zoom on canvas -->
             <div class="right">
-                <div id="pipelineDesigner" class="joint-paper joint-theme-default" style="width: 100%"
+                <div id="pipelineDesigner" class="joint-paper joint-theme-default" style="height:100%; width: 100%; overflow: auto"
                      ondrop="dropStep(event)"
                      ondragover="allowStepDrop(event)"></div>
             </div>
@@ -171,20 +160,13 @@
     <div id="tabs-3">
         <div style="height: 10%; width:100%; margin-bottom: 10px;">
             <div class="top-buttons" style="width: 100%">
-                <button id="bulk-step-button" class="ui-button ui-widget ui-corner-all">Add Bulk</button>
-                <button id="save-step-button" class="ui-button ui-widget ui-corner-all">Save</button>
-                <button id="new-step-button" class="ui-button ui-widget ui-corner-all">New</button>
-                <button id="reset-step-button" class="ui-button ui-widget ui-corner-all">Reset</button>
+                <button id="bulk-step-button" class="btn btn-info">Add Bulk</button>
+                <button id="save-step-button" class="btn btn-info">Save</button>
+                <button id="new-step-button" class="btn btn-info">New</button>
+                <button id="reset-step-button" class="btn btn-info">Reset</button>
             </div>
         </div>
-        <div class="left" style="overflow: auto">
-            <div class="panel">
-                <div class="panel-heading"><span>Steps</span></div>
-                <div id="step-selector-panel" class="panel-body step-selector-panel">
-                    <ol id="step-selector" style="width: 100%"></ol>
-                </div>
-            </div>
-        </div>
+        <div id="main-steps-panel" class="left" style="overflow: auto"></div>
         <div class="right">
             <div id="edit-step-form" class="panel panel-body">
                 <div class="step-form">
@@ -196,6 +178,9 @@
                 </div>
                 <div class="step-form">
                     <label>Description:</label><input id="edit-description"/>
+                </div>
+                <div class="step-form">
+                    <label>Category:</label><input id="edit-category"/>
                 </div>
                 <div class="step-form">
                     <label>Engine Meta:</label><input id="edit-engineMeta"/>
@@ -223,9 +208,9 @@
                         <div class="step-parameters-name"><label>Parameters</label></div>
                         <div class="top-buttons">
                             <button id="add-step-parameter-button"
-                                    class="ui-button ui-widget ui-corner-all ui-button-icon-only"
+                                    class="btn btn-info"
                                     title="Add Parameter">
-                                <span class="ui-icon ui-icon-plus"></span>Add Parameter
+                                <i class="glyphicon glyphicon-plus-sign"></i>
                             </button>
                         </div>
                     </div>
@@ -335,10 +320,26 @@
     </div>
 </div>
 <!-- validation save errors dialog -->
-<div id="dialog-validation-error" title="Validation Error!">
-    <p><span class="ui-icon ui-icon-alert" style="float:left; margin:12px 12px 20px 0;">
-    </span>There were errors with the changes. The following parameters are required:</p>
-    <div id="dialog-validation-error-field"></div>
+<div id="dialog-validation-error" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="Validation Error!"
+     aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button id="validation-dialog-close" type="button" class="close" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h5 class="modal-title" id="validationModalLabel">Alert!</h5>
+            </div>
+            <div class="modal-body">
+                <span class="ui-icon ui-icon-alert"></span>
+                <span>There were errors with the changes. The following parameters are required:</span>
+                <div id="dialog-validation-error-field"></div>
+            </div>
+            <div class="modal-footer">
+                <button id="validation-dialog-ok" type="button" class="btn btn-primary">OK</button>
+            </div>
+        </div>
+    </div>
 </div>
 <!-- alert dialog -->
 <div id="dialog-alert" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="Alert!" aria-hidden="true">
@@ -420,7 +421,8 @@
     </div>
 </div>
 <!-- Settings dialog -->
-<div id="dialog-settings-form" title="Settings">
+<!-- TODO Does this need to be a dialog? -->
+<div id="dialog-settings-form" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="Settings" aria-hidden="true">
     <div class="panel">
         <div class="panel-heading"><span>Spark Configuration</span></div>
         <div id="spark-conf-fields" class="panel-body">

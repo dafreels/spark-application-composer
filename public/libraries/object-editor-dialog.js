@@ -11,7 +11,6 @@ function initializeObjectEditor() {
 
 function handleObjectEditorSave() {
     // TODO Validate the data against the selected schema
-    console.log(JSON.stringify(currentObjectData, null, 4));
     if (editObjectSaveFunction) {
         editObjectSaveFunction(editObjectForm.alpaca().getValue(), $('#objectEditorSchema').val());
     }
@@ -36,7 +35,6 @@ function showObjectEditor(data, schemaName, saveFunction, cancelFunction) {
 
     const schema = getSchema(schemaName);
     if (schema) {
-        console.log('Selecting ' + schemaName + ' in drop down');
         $('#objectEditorSchema').val(schemaName).change();
         generateForm(schema.schema);
     }
@@ -68,9 +66,14 @@ function generateOptions(schema, options) {
                 obj.type = 'integer';
                 break;
             case 'array':
-                obj.type = 'array';
-                obj.items = { fields: {}};
-                generateOptions(schema.properties[key].items, obj.items);
+                if (schema.properties[key].items.type === 'string') {
+                    obj.type = 'token';
+                    // TODO capture that we have a token field so we can convert to an array on save
+                } else {
+                    obj.type = 'array';
+                    obj.items = { fields: {}};
+                    generateOptions(schema.properties[key].items, obj.items);
+                }
                 break;
             case 'object':
                 obj.type = 'object';
