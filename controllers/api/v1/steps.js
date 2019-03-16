@@ -1,7 +1,7 @@
-const PipelineStepsModel = require(`../../../models/steps.model`);
+const StepsModel = require('../../../models/steps.model');
 const BaseRoutes = require('../../../lib/base.routes');
 
-const baseRoutes = new BaseRoutes('step', 'steps', PipelineStepsModel);
+const baseRoutes = new BaseRoutes('step', 'steps', StepsModel);
 
 module.exports = function (router) {
     baseRoutes.buildBasicCrudRoutes(router);

@@ -1,4 +1,4 @@
-const Ajv = require('ajv')
+const Ajv = require('ajv');
 const schema = require('../schemas/applications.json');
 const BaseModel = require('../lib/base.model');
 
