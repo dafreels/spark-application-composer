@@ -3,26 +3,47 @@
 <head>
     <link rel="stylesheet" type="text/css" href="css/joint.css"/>
     <link rel="stylesheet" type="text/css" href="css/app.css"/>
-    <link rel="stylesheet" href="css/jquery-ui.css">
-    <link rel="stylesheet" href="css/jquery-ui.theme.css">
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css"/>
+    <link rel="stylesheet" type="text/css" href="css/bootstrap-tokenfield.css"/>
+    <link rel="stylesheet" type="text/css" href="css/alpaca.min.css"/>
+    <link rel="stylesheet" type="text/css" href="css/jquery-ui.css"/>
+    <link rel="stylesheet" type="text/css" href="css/jquery-ui.theme.css"/>
     <!-- dependencies -->
+    <script src="libraries/aceeditor/1.4.3/ace.js" type="text/javascript" charset="utf-8"></script>
     <script src="libraries/jquery-3.3.1.js"></script>
     <script src="libraries/jquery.fittext.js"></script>
     <script src="libraries/lodash/4.17.11/lodash.js"></script>
     <script src="libraries/backbone/1.3.3/backbone.js"></script>
-    <script src="libraries/joint/2.1.0/joint.js"></script>
+    <script src="libraries/joint/2.2.1/joint.js"></script>
     <script src="libraries/jquery-ui.js"></script>
+    <script src="libraries/handlebars/4.0.5/handlebars.min.js"></script>
+    <script src="libraries/bootstrap/3.4.1/bootstrap.min.js"></script>
+    <script src="libraries/bootstrap/tokenfield/0.12.1/bootstrap-tokenfield.min.js"></script>
+    <script src="libraries/alpacajs/1.5.24/alpaca.min.js"></script>
+    <script src="libraries/steps-model.js"></script>
+    <script src="libraries/pipelines-model.js"></script>
+    <script src="libraries/schemas-model.js"></script>
     <script src="libraries/services.js"></script>
+    <script src="libraries/add-step-dialog.js"></script>
+    <script src="libraries/alert-dialog.js"></script>
+    <script src="libraries/clear-form-dialog.js"></script>
+    <script src="libraries/code-editor-dialog.js"></script>
+    <script src="libraries/copy-pipeline-dialog.js"></script>
+    <script src="libraries/new-dialog.js"></script>
+    <script src="libraries/object-editor-dialog.js"></script>
+    <script src="libraries/settings-dialog.js"></script>
+    <script src="libraries/validation-error-dialog.js"></script>
     <script src="libraries/steps-editor.js"></script>
+    <script src="libraries/pipeline-editor.js"></script>
+    <script src="libraries/application-editor.js"></script>
     <script src="libraries/app.js"></script>
-    <script src="libraries/pipeline-designer.js"></script>
     <title>Application Manager</title>
 </head>
 <body>
 <div id="tabs">
     <ul>
         <li><a href="#tabs-1">Application Editor</a></li>
-        <li><a href="#tabs-2">Pipeline Designer</a></li>
+        <li><a href="#tabs-2">Pipeline Editor</a></li>
         <li><a href="#tabs-3">Step Editor</a></li>
     </ul>
     <div id="tabs-1">
@@ -36,6 +57,41 @@
                 <button id="reset-application-button" class="ui-button ui-widget ui-corner-all">Reset</button>
             </div>
         </div>
+        <div class="left">
+            <div class="panel panel-primary">
+                <div class="panel-heading"><span>Applications</span></div>
+                <div class="panel-body">
+                    <div>
+                        <div class="form-group">
+                            <select name="applications" id="applications"></select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="panel panel-primary">
+                <div class="panel-heading"><span>Execution Pipelines</span></div>
+                <div id="pipeline-panel" class="panel-body step-panel"></div>
+            </div>
+        </div>
+        <div class="right">
+            <div id="executionDesigner" class="joint-paper joint-theme-default"
+                 style="display: inline-block; float: left;"
+                 ondrop="dropStep(event)"
+                 ondragover="allowStepDrop(event)"></div>
+            <div style="width: 5%; display: inline-block; float: right;">
+                <button id="edit-application-button"
+                        class="ui-button ui-widget ui-corner-all ui-button-icon-only"
+                        title="Edit Application Settings"
+                        style="margin-bottom: 8px">
+                    <span class="ui-icon ui-icon-wrench"></span>Edit Application Settings
+                </button>
+                <button id="add-execution-button"
+                        class="ui-button ui-widget ui-corner-all ui-button-icon-only"
+                        title="Add Execution">
+                    <span class="ui-icon ui-icon-plus"></span>Add Execution
+                </button>
+            </div>
+        </div>
     </div>
     <div id="tabs-2">
         <div>
@@ -46,12 +102,12 @@
                 <div class="top-buttons">
                     <button id="save-button" class="ui-button ui-widget ui-corner-all">Save</button>
                     <button id="new-button" class="ui-button ui-widget ui-corner-all">New</button>
+                    <button id="copy-button" class="ui-button ui-widget ui-corner-all">Copy</button>
                     <button id="reset-button" class="ui-button ui-widget ui-corner-all">Reset</button>
                 </div>
             </div>
-            <!-- TODO Add buttons to add a new pipeline and save changes -->
             <div class="left">
-                <div class="panel">
+                <div class="panel panel-info">
                     <div class="panel-heading"><span>Pipelines</span></div>
                     <div class="panel-body">
                         <div>
@@ -61,11 +117,8 @@
                         </div>
                     </div>
                 </div>
-                <div class="panel">
-                    <div class="panel-heading"><span>Steps</span></div>
-                    <div id="step-panel" class="panel-body step-panel"></div>
-                </div>
-                <div id="step-properties" class="panel">
+                <div id="test-panel" class="panel panel-info"></div>
+                <div id="step-properties" class="panel panel-info">
                     <div class="panel-heading"><span>Step Data</span></div>
                     <div class="panel-body">
                         <div id="step-form">
@@ -98,28 +151,22 @@
             </div>
             <!-- TODO Add a slider to allow zoom on canvas -->
             <div class="right">
-                <div id="pipeline-designer" class="joint-paper joint-theme-default" style="width: 100%"
-                     ondrop="drop(event)"
-                     ondragover="allowDrop(event)"></div>
+                <div id="pipelineDesigner" class="joint-paper joint-theme-default" style="height:100%; width: 100%; overflow: auto"
+                     ondrop="dropStep(event)"
+                     ondragover="allowStepDrop(event)"></div>
             </div>
         </div>
     </div>
     <div id="tabs-3">
         <div style="height: 10%; width:100%; margin-bottom: 10px;">
             <div class="top-buttons" style="width: 100%">
-                <button id="save-step-button" class="ui-button ui-widget ui-corner-all">Save</button>
-                <button id="new-step-button" class="ui-button ui-widget ui-corner-all">New</button>
-                <button id="reset-step-button" class="ui-button ui-widget ui-corner-all">Reset</button>
+                <button id="bulk-step-button" class="btn btn-info">Add Bulk</button>
+                <button id="save-step-button" class="btn btn-info">Save</button>
+                <button id="new-step-button" class="btn btn-info">New</button>
+                <button id="reset-step-button" class="btn btn-info">Reset</button>
             </div>
         </div>
-        <div class="left" style="overflow: auto">
-            <div class="panel">
-                <div class="panel-heading"><span>Steps</span></div>
-                <div id="step-selector-panel" class="panel-body step-selector-panel">
-                    <ol id="step-selector" style="width: 90%"></ol>
-                </div>
-            </div>
-        </div>
+        <div id="main-steps-panel" class="left" style="overflow: auto"></div>
         <div class="right">
             <div id="edit-step-form" class="panel panel-body">
                 <div class="step-form">
@@ -133,6 +180,9 @@
                     <label>Description:</label><input id="edit-description"/>
                 </div>
                 <div class="step-form">
+                    <label>Category:</label><input id="edit-category"/>
+                </div>
+                <div class="step-form">
                     <label>Engine Meta:</label><input id="edit-engineMeta"/>
                 </div>
                 <div id="branch-type" class="step-form">
@@ -144,14 +194,23 @@
                         <input type="radio" name="stepTypeRadio" value="branch" id="branchRadio">
                     </div>
                 </div>
+                <div class="step-form">
+                    <label>Modified Date:</label>
+                    <div id="step-modifiedDate"></div>
+                </div>
+                <div class="step-form">
+                    <label>Creation Date:</label>
+                    <div id="step-creationDate"></div>
+                </div>
                 <!-- Dynamic parameters panel -->
                 <div>
                     <div style="height: 10%; width:100%; margin-bottom: 10px;">
                         <div class="step-parameters-name"><label>Parameters</label></div>
                         <div class="top-buttons">
-                            <button id="add-step-parameter-button" class="ui-button ui-widget ui-corner-all ui-button-icon-only"
+                            <button id="add-step-parameter-button"
+                                    class="btn btn-info"
                                     title="Add Parameter">
-                                <span class="ui-icon ui-icon-plus"></span>Add Parameter
+                                <i class="glyphicon glyphicon-plus-sign"></i>
                             </button>
                         </div>
                     </div>
@@ -162,35 +221,253 @@
     </div>
 </div>
 <!-- Modal dialog -->
-<div id="dialog-confirm" title="Clear Form?">
-    <p><span class="ui-icon ui-icon-alert" style="float:left; margin:12px 12px 20px 0;">
-    </span>These items will be permanently deleted and cannot be recovered. Are you sure?</p>
+<div id="dialog-confirm" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="Clear Form?"
+     aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button id="clear-form-close" type="button" class="close" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h5 class="modal-title" id="clearFormModalLabel">Clear Form?</h5>
+            </div>
+            <div class="modal-body">
+                <p><span class="ui-icon ui-icon-alert" style="float:left; margin:5px 0 0 0;"></span>
+                These items will be permanently deleted and cannot be recovered. Are you sure?</p>
+            </div>
+            <div class="modal-footer">
+                <button id="clear-form-clear" type="button" class="btn btn-primary">Clear</button>
+                <button id="clear-form-cancel" type="button" class="btn btn-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
 </div>
 <!-- Add step dialog -->
-<div id="dialog-step-form" title="Add Step">
-    <p class="validateTips">Enter a unique id for this step.</p>
-    <form id="add-step-form">
-        <fieldset>
-            <label for="add-step-id">Name</label>
-            <input type="text" name="name" id="add-step-id" value="" class="text ui-widget-content ui-corner-all">
-        </fieldset>
-    </form>
+<div id="dialog-step-form" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="Add Step" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button id="add-step-form-close" type="button" class="close" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h5 class="modal-title" id="addStepModalLabel">Add Step</h5>
+            </div>
+            <div class="modal-body">
+                <p class="validateTips">Enter a unique id for this step.</p>
+                <form id="add-step-form">
+                    <fieldset>
+                        <label for="add-step-id">Name</label>
+                        <input type="text" name="name" id="add-step-id" value="" class="text ui-widget-content ui-corner-all">
+                    </fieldset>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button id="add-step-form-save" type="button" class="btn btn-primary">Save</button>
+                <button id="add-step-form-cancel" type="button" class="btn btn-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
 </div>
 <!-- Add pipeline dialog -->
-<div id="dialog-pipeline-form" title="Add Pipeline">
-    <p class="validateTips">Enter a name for this pipeline.</p>
-    <form id="add-pipeline-form">
-        <fieldset>
-            <label for="add-pipeline-id">Name</label>
-            <input type="text" name="name" id="add-pipeline-id" value="" class="text ui-widget-content ui-corner-all">
-        </fieldset>
-    </form>
+<div id="dialog-new-form" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="New" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button id="new-form-close" type="button" class="close" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h5 class="modal-title" id="newModalLabel">New</h5>
+            </div>
+            <div class="modal-body">
+                <form id="add-new-form">
+                    <fieldset>
+                        <label for="add-new-id">Name</label>
+                        <input type="text" name="name" id="add-new-id" value=""
+                               class="text ui-widget-content ui-corner-all">
+                    </fieldset>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button id="new-form-save" type="button" class="btn btn-primary">Save</button>
+                <button id="new-form-cancel" type="button" class="btn btn-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
 </div>
-<!-- Pipeline save errors dialog -->
-<div id="dialog-pipeline-error" title="Clear Pipeline Designer?">
-    <p><span class="ui-icon ui-icon-alert" style="float:left; margin:12px 12px 20px 0;">
-    </span>There were errors with the pipeline. The following parameters are required:</p>
-    <div id="dialog-pipeline-error-field"></div>
+<!-- Object Editor dialog -->
+<div id="edit-object-form" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="Edit Object"
+     aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button id="edit-object-form-close" type="button" class="close" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h5 class="modal-title" id="exampleModalLabel">Edit Object</h5>
+            </div>
+            <div class="modal-body">
+                <div id="schema-selection">
+                    <span>Schema:</span>
+                    <select id="objectEditorSchema"></select>
+                </div>
+                <div id="json-object-editor"></div>
+            </div>
+            <div class="modal-footer">
+                <button id="edit-object-form-save" type="button" class="btn btn-primary">Save</button>
+                <button id="edit-object-form-cancel" type="button" class="btn btn-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- validation save errors dialog -->
+<div id="dialog-validation-error" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="Validation Error!"
+     aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button id="validation-dialog-close" type="button" class="close" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h5 class="modal-title" id="validationModalLabel">Alert!</h5>
+            </div>
+            <div class="modal-body">
+                <span class="ui-icon ui-icon-alert"></span>
+                <span>There were errors with the changes. The following parameters are required:</span>
+                <div id="dialog-validation-error-field"></div>
+            </div>
+            <div class="modal-footer">
+                <button id="validation-dialog-ok" type="button" class="btn btn-primary">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- alert dialog -->
+<div id="dialog-alert" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="Alert!" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button id="alert-dialog-close" type="button" class="close" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h5 class="modal-title" id="alertModalLabel">Alert!</h5>
+            </div>
+            <div class="modal-body">
+                <span class="ui-icon ui-icon-alert"></span>
+                <span id="dialog-alert-field"></span>
+            </div>
+            <div class="modal-footer">
+                <button id="alert-dialog-ok" type="button" class="btn btn-primary">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Code Editor Dialog -->
+<div id="dialog-editor" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="Edit Copy" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button id="edit-code-form-close" type="button" class="close" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h5 class="modal-title" id="editCodeModalLabel">Edit Code</h5>
+            </div>
+            <div class="modal-body">
+                <div id="syntax-selection">
+                    <span>Syntax:</span>
+                    <select id="codeEditorSyntax">
+                        <option value="scala">Scala</option>
+                        <option value="javascript">Javascript</option>
+                        <option value="json">JSON</option>
+                        <option value="sql">SQL</option>
+                    </select>
+                </div>
+                <div id="code-editor"></div>
+            </div>
+            <div class="modal-footer">
+                <button id="edit-code-form-save" type="button" class="btn btn-primary">Save</button>
+                <button id="edit-code-form-cancel" type="button" class="btn btn-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Copy pipeline dialog -->
+<div id="dialog-copy-pipeline-form" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="Copy Pipelne"
+     aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button id="copy-pipeline-form-close" type="button" class="close" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h5 class="modal-title" id="copyPipelineeModalLabel">Edit Object</h5>
+            </div>
+            <div class="modal-body">
+                <form id="copy-pipeline-form">
+                    <div class="form-group">
+                        <label for="copy-pipeline-id">Choose source pipeline</label>
+                        <select name="pipelines" id="source-pipelines"></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="copy-pipeline-id">Name</label>
+                        <input type="text" name="name" id="copy-pipeline-id" value="" class="text ui-widget-content ui-corner-all">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button id="copy-pipeline-form-save" type="button" class="btn btn-primary">Save</button>
+                <button id="copy-pipeline-form-cancel" type="button" class="btn btn-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Settings dialog -->
+<!-- TODO Does this need to be a dialog? -->
+<div id="dialog-settings-form" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="Settings" aria-hidden="true">
+    <div class="panel">
+        <div class="panel-heading"><span>Spark Configuration</span></div>
+        <div id="spark-conf-fields" class="panel-body">
+            <div class="form-group">
+                <label for="kyro-classes">Kyro Classes</label>
+                <input id="kyro-classes" type="text"/>
+            </div>
+            <div style="height: 10%; width:100%; margin-bottom: 10px;">
+                <div class="step-parameters-name"><label>Parameters</label></div>
+                <div class="top-buttons">
+                    <button id="add-spark-option-button"
+                            class="ui-button ui-widget ui-corner-all ui-button-icon-only"
+                            title="Add Option">
+                        <span class="ui-icon ui-icon-plus"></span>Add Option
+                    </button>
+                </div>
+            </div>
+            <div id="spark-conf-options"></div>
+        </div>
+    </div>
+    <div class="panel">
+        <div class="panel-heading"><span>Global Overrides</span></div>
+        <div class="panel-body">
+            <div class="form-group">
+                <label for="step-packages">Step Packages</label>
+                <input id="step-packages" type="text"/>
+            </div>
+            <div class="form-group">
+                <label for="required-parameters">Required Parameters</label>
+                <input id="required-parameters" type="text"/>
+            </div>
+            <div class="form-group settings-form">
+                <label for="pipeline-listener">Pipeline Listener</label>
+                <input id="pipeline-listener" type="text"/>
+            </div>
+            <div class="form-group settings-form">
+                <label for="security-manager">Security Manager</label>
+                <input id="security-manager" type="text"/>
+            </div>
+            <div class="form-group settings-form">
+                <label for="step-mapper">Step Mapper</label>
+                <input id="step-mapper" type="text"/>
+            </div>
+        </div>
+    </div>
 </div>
 </body>
 </html>

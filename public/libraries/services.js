@@ -1,29 +1,59 @@
-var stepLookup = {}; // TODO move this to a model?
-var pipelineLookup = {}; // TODO move this to a model?
 
-function loadSteps(render) {
+function loadSteps(callback) {
     $.getJSON('/api/v1/steps')
         .done(function(data) {
+            const steps = [];
             _.forEach(data.steps, function(step) {
-                render(step);
                 delete step._id;
-                stepLookup[step.id] = step;
+                steps.push(step);
             });
+            initializeSteps(steps);
+            callback(data.steps);
         });
 }
 
-function loadPipelines(render) {
+function loadPipelines(callback) {
     $.getJSON('/api/v1/pipelines')
         .done(function(data) {
-            $.each(data.pipelines, function(){
-                render(this);
-                pipelineLookup[this.id] = this;
-            });
+            initializePipelines(data.pipelines);
+            callback(data.pipelines);
         });
 }
 
-function savePipeline(pipelineJson) {
-    // TODO Add service call to 'api/v1/pipelines' here
+function loadApplications(callback) {
+    $.getJSON('/api/v1/applications')
+        .done(function(data) {
+            // initializePipelines(data.applications);
+            callback(data.applications);
+        });
+}
+
+function savePipeline(pipeline, callback) {
+    let type = 'POST';
+    let url = '/api/v1/pipelines/';
+    if (pipeline.id) {
+        type = 'PUT';
+        url = '/api/v1/pipelines/' + pipeline.id;
+    }
+    $.ajax({
+        type: type,
+        url: url,
+        contentType: "application/json",
+        data: JSON.stringify(pipeline),
+        success: callback
+    });
+}
+
+function saveBulkSteps(steps, callback) {
+    if (_.isArray(JSON.parse(steps))) {
+        $.ajax({
+            type: 'POST',
+            url: '/api/v1/steps/',
+            contentType: "application/json",
+            data: steps,
+            success: callback
+        });
+    }
 }
 
 function saveStep(step, callback) {
@@ -40,4 +70,14 @@ function saveStep(step, callback) {
         data: JSON.stringify(step),
         success: callback
     });
+}
+function loadSchemas(callback) {
+    $.getJSON('/schemas/external/transformations.json')
+        .done(function(data) {
+            // TODO This will need to change to convert an array into an object lookup
+            initializeSchemas(data);
+            if (callback) {
+                callback();
+            }
+        });
 }

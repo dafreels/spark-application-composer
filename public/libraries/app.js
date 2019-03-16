@@ -1,477 +1,190 @@
-var dropStep = null;
-var selectedPipeline = 'none';
-var currentSteps = {};
-var diagramStepToStepMetaLookup = {};
-var stepForms = {};
-var currentPipeline;
-var controlCharacters = ['!', '@', '#'];
-var clearFunction;
-
-var parameterTypeOptions = '<option value="static">Static</option>' +
+const parameterTypeOptions = '<option value="static">Static</option>' +
     '<option value="global">Global</option>' +
     '<option value="step">Step Response</option>' +
     '<option value="secondary">Secondary Step Response</option>' +
-    '<option value="script">Script</option>';
+    '<option value="script">Script</option>' +
+    '<option value="object">Object</option>';
 
-function allowDrop(ev) {
-    ev.preventDefault();
+function generateStepContainers(containerId, parentContainer, stepSelectHandler, dragHandler) {
+    const steps = _.sortBy(getSteps(), ['category']);
+    let panel;
+    let heading;
+    let button;
+    let category;
+    let stepSection;
+    let stepField;
+    let buttonSpan;
+    let categoryId;
+    _.forEach(steps, (step) => {
+        if (step.category !== category) {
+            category = step.category;
+            categoryId = containerId + '_' + category;
+            panel = $('<div class="panel panel-info">');
+            panel.appendTo(parentContainer);
+            heading = $('<div class="panel-heading" style="display: inline-block; width: 100%;">');
+            heading.appendTo(panel);
+            $('<span style="font-size: 25px;">' + category + '</span>').appendTo(heading);
+            button = $('<button id="btn' + categoryId + '" class="btn btn-info" type="button" data-toggle="collapse" data-target="#' + categoryId + '"' +
+                '                            aria-expanded="false" aria-controls="' + categoryId + '">\n' +
+                '                        <i class="glyphicon glyphicon-menu-right"></i>\n' +
+                '                    </button>');
+            buttonSpan = $('<span class="pull-right">');
+            buttonSpan.appendTo(heading);
+            button.appendTo(buttonSpan);
+            button.click(function (evt) {
+                const icon = $(evt.target).find('i');
+                icon.toggleClass('glyphicon-menu-right');
+                icon.toggleClass('glyphicon-menu-down');
+            });
+            stepSection = $('<div id="' + categoryId + '" class="collapse" style="max-height: 250px; overflow: auto;">');
+            stepSection.appendTo(panel);
+        }
+        stepField = $('<div id="' + containerId + '_' + step.id + '" class="step ' + step.type + '" ' +
+            'title="' + step.description + '" data-toggle="tooltip" data-placement="right">' + step.displayName + '</div>');
+        if (dragHandler) {
+            // draggable="true" ondragstart="dragStep(event)"
+            stepField.attr('draggable', 'true');
+            stepField.attr('ondragstart', dragHandler);
+        }
+        stepField.appendTo(stepSection);
+        stepField.click(stepSelectHandler);
+    });
 }
 
-function drag(ev) {
-    ev.dataTransfer.setData("text", $(ev.target).text());
-    ev.dataTransfer.setData("id", ev.target.id);
+function loadStepsUI() {
+    loadSteps(() => {
+        loadPipelineDesignerStepsUI();
+        renderStepSelectionUI();
+    });
 }
 
-function drop(ev) {
-    ev.preventDefault();
-    const stepLookupElement = stepLookup[ev.dataTransfer.getData("id")];
-    dropStep = {
-        name: ev.dataTransfer.getData("text"),
-        x: ev.offsetX,
-        y: ev.offsetY,
-        stepMetaData: stepLookupElement
-    };
-    addStepDialog.dialog('open');
+function loadPipelinesUI() {
+    loadPipelines(() => {
+        renderPipelinesDesignerSelect();
+    });
 }
 
-var clearDesignerDialog;
-var pipelineErrorDialog;
-var addStepDialog;
-var addPipelineDialog;
-
-/* Pipeline Designer tasks:
- *
- * TODO Need to handle branch steps (type == branch)
- * TODO Element removal
- * TODO Handle mixing step metadata with PipelineStep metadata on the element/model
- */
-
-function clearPipelineDesigner() {
-    graph.clear();
-    currentSteps = {};
-    diagramStepToStepMetaLookup = {};
-    clearPropertiesPanel();
+function loadSchemasUI() {
+    loadSchemas(() => {
+        renderSchemaUI();
+    });
 }
 
-function verifyLoadPipeline() {
-    if (currentPipeline || isDesignerPopulated()) {
-        clearFunction = loadPipeline;
-        showClearDesignerDialog();
-    } else {
-        loadPipeline();
+function cloneObject(obj) {
+    if (!obj) {
+        return null;
     }
-}
-
-function loadPipeline() {
-    var pipelineId = $("#pipelines").val();
-    if (pipelineId !== 'none') {
-        currentPipeline = pipelineLookup[pipelineId];
-        $('#pipelineName').text(currentPipeline.name);
-        var x = 50;
-        var y = 50;
-        var gstep;
-        var stepIdLookup = {};
-        // Add each step to the designer
-        _.forEach(currentPipeline.steps, function (step) {
-            // Add the steps to the designer
-            gstep = addStepToDesigner(step.id, step.displayName, x, y, step.stepId);
-            gstep.attributes.metaData.pipelineStepMetaData = step;
-            y += 100;
-            stepIdLookup[step.id] = step.stepId;
-        });
-        // Create the links between steps
-        _.forEach(currentPipeline.steps, function (step) {
-            if (step.nextStepId) {
-                createLink(diagramStepToStepMetaLookup[step.id],
-                    diagramStepToStepMetaLookup[step.nextStepId]);
-            }
-        });
-
-        loadPropertiesPanel(diagramStepToStepMetaLookup[currentPipeline.steps[0].id].attributes.metaData);
-    }
-    /*
-     * TODO:
-     *  fit canvas content
-     */
-}
-
-function addStepToDesigner(id, name, x, y, stepId) {
-    var step = createStep(name, x, y, stepLookup[stepId]).addTo(graph);
-    step.attributes.metaData.pipelineStepMetaData.id = id;
-    if (!step.attributes.metaData.pipelineStepMetaData.params) {
-        step.attributes.metaData.pipelineStepMetaData.params = [];
-    }
-    currentPipeline.steps.push(step.attributes.metaData.pipelineStepMetaData);
-    loadPropertiesPanel(step.attributes.metaData);
-    currentSteps[step.id] = step;
-    diagramStepToStepMetaLookup[id] = step;
-    return step;
+    return JSON.parse(JSON.stringify(obj));
 }
 
 /**
- * Called when the user clicks the step in the designer.
- * @param evt The event from the click.
+ * Helper function that converts an empty string to undefined.
+ * @param val The value to check.
+ * @returns {undefined}
  */
-function handleElementSelect(evt) {
-    // evt.highlight(); // TODO Make highlight better and ensure previous highlighted elements are removed
-    loadPropertiesPanel(evt.model.attributes.metaData);
-}
-
-function loadPropertiesPanel(metaData) {
-    var stepMetaData = metaData.stepMetaData;
-    var pipelineMetaData = metaData.pipelineStepMetaData;
-    $('#step-form #pipelineStepId').text(pipelineMetaData.id);
-    $('#step-form #stepId').text(stepMetaData.id);
-    $('#step-form #displayName').text(stepMetaData.displayName);
-    $('#step-form #description').text(stepMetaData.description);
-    $('#step-form #type').text(stepMetaData.type);
-    // load step form
-    var stepForm = stepForms[stepMetaData.id];
-    if (!stepForm) {
-        stepForm = '<div id="' + stepMetaData.id + '">\n' +
-            '<div class="form-group dynamic-form">' +
-            '<label>Execute If Empty:</label>' +
-            '<input id="executeIfEmpty"/>' +
-            '<select id="executeIfEmptyType" size="1">' + parameterTypeOptions + '</select></div>\n';
-
-        // Build out the parameters
-        _.forEach(stepMetaData.params, function (param) {
-            stepForm += '<div class="form-group dynamic-form"><label>' + param.name + ':' + '</label>' +
-                '<input id="' + param.name + '"/><select id="' + param.name + 'Type" size="1">' + parameterTypeOptions +
-                '</select></div>\n';
-        });
-
-        stepForm += '</div>';
-
-        stepForms[stepMetaData.id] = stepForm;
-    }
-    // Clear the old form
-    $('#step-parameters-form div').remove();
-    // Add the new form
-    $('#step-parameters-form').append('<div id="' + stepMetaData.id + 'DynamicForm" class="dynamic-form">' + stepForm + '</div>');
-    // Setup the form
-    var type = getType(pipelineMetaData.executeIfEmpty, 'static');
-    var value;
-    var input = $('#executeIfEmpty');
-    if (type !== 'static' && type !== 'script') {
-        input.val(pipelineMetaData.executeIfEmpty.substring(1));
-    }
-    input.blur(handleInputChange);
-    var el = $('#executeIfEmptyType');
-    el.selectmenu({ change: handleTypeSelectChange });
-    el.val(type);
-    el.selectmenu('refresh');
-    _.forEach(stepMetaData.params, function (param) {
-        el = $('#' + param.name + 'Type');
-        el.selectmenu({ change: handleTypeSelectChange });
-        input = $('#' + param.name);
-        input.blur(handleInputChange);
-    });
-    // Initialize the parameters form with existing values
-    var select;
-    _.forEach(pipelineMetaData.params, function (param) {
-        value = param.value;
-        // Handle script versus param.type
-        type = getType(value, param.type === 'script' ? 'script' : 'static');
-        if (type !== 'static' && type !== 'script') {
-            value = value.substring(1);
-        }
-        input = $('#' + param.name);
-        input.val(value);
-        // set the select value
-        select = $('#' + param.name + 'Type');
-        select.val(type);
-        select.selectmenu('refresh');
-    });
-}
-
-function handleTypeSelectChange(evt, ui) {
-    var input = $('#' + evt.target.id.substring(0, evt.target.id.indexOf('Type')));
-    var select = $(evt.target);
-    handleValueChanges(input, select);
-}
-
-function handleInputChange(evt) {
-    var input = $(evt.target);
-    var select = $('#' + evt.target.id + 'Type');
-    handleValueChanges(input, select);
-}
-
-function handleValueChanges(input, select) {
-    var inputId = input.attr('id');
-    var stepId = $('#pipelineStepId').text();
-    var selectVal = select.val();
-    var value = getLeadCharacter(selectVal) + input.val();
-    var step = diagramStepToStepMetaLookup[stepId];
-    var stepMetaData = step.attributes.metaData.stepMetaData;
-    var pipelineStepMetadata = step.attributes.metaData.pipelineStepMetaData;
-    if (inputId === 'executeIfEmpty') {
-        pipelineStepMetadata.executeIfEmpty = value;
-    } else if (pipelineStepMetadata && pipelineStepMetadata.params) {
-        var param = _.find(pipelineStepMetadata.params, function(p) { return p.name === inputId;});
-        if (param) {
-            param.value = value;
-            param.type = selectVal === 'script' ? 'script' : param.type;
-        } else {
-            var stepParam = _.find(stepMetaData.params, function(p) { return p.name === inputId; });
-            var newParam = {
-                value: value,
-                type: selectVal === 'script' ? 'script' : stepParam.type,
-                name: stepParam.name,
-                required: stepParam.required
-            };
-            pipelineStepMetadata.params.push(newParam);
-        }
-    }
-}
-
-function getLeadCharacter(selectVal) {
-    var leadCharacter = '';
-    switch(selectVal) {
-        case 'global':
-            leadCharacter = '!';
-            break;
-        case 'step':
-            leadCharacter = '@';
-            break;
-        case 'secondary':
-            leadCharacter = '#';
-            break;
-    }
-    return leadCharacter;
-}
-
-function getType(value, defaultType) {
-    var type = defaultType;
-    if (value && controlCharacters.indexOf(value[0]) !== -1) {
-        switch (value[0]) {
-            case '!':
-                type = 'global';
-                break;
-            case '@':
-                type = 'step';
-                break;
-            case '#':
-                type = 'secondary';
-                break;
-        }
-    }
-
-    return type;
-}
-
-function clearPropertiesPanel() {
-    $('#stepId').text('');
-    $('#displayName').text('');
-    $('#description').text('');
-    $('#step-parameters-form div').remove();
-    var selectedPipelineId = $('#pipelines').val();
-    if (pipelineLookup[selectedPipelineId]) {
-        $('#pipelineName').text(pipelineLookup[selectedPipelineId].name);
-    }
-}
-
-function showClearDesignerDialog() {
-    selectedPipeline = $('#pipelines').val();
-    clearDesignerDialog.dialog("open");
-}
-
-function handleNew() {
-    if (currentPipeline || isDesignerPopulated()) {
-        clearFunction = function() {
-            var select = $('#pipelines');
-            select.val('none');
-            select.selectmenu('refresh');
-            addPipelineDialog.dialog("open");
-        };
-        showClearDesignerDialog();
-    } else {
-        clearPipelineDesigner();
-        addPipelineDialog.dialog("open");
-    }
-}
-
-function handleReset() {
-    if (currentPipeline || isDesignerPopulated()) {
-        clearFunction = function() {
-            var select = $('#pipelines');
-            select.val('none');
-            select.selectmenu('refresh');
-            $('#pipelineName').text('');
-        };
-        showClearDesignerDialog();
-    } else {
-        clearPipelineDesigner();
-    }
-}
-
-function handleClear() {
-    clearPipelineDesigner();
-    clearFunction();
-    $(this).dialog('close');
-}
-
-function handleSave() {
-    var pipelineJson = generatePipelineJson();
-    console.log(JSON.stringify(pipelineJson, null, 4));
-    // Run validation of configured steps against step metadata
-    var errors = [];
-    var error;
-    var currentStep;
-    // TODO Combine this for loop with the code on line 338
-    // TODO Clean up the ugly dialog
-    _.forEach(pipelineJson.steps, function(step) {
-        currentStep = stepLookup[step.stepId];
-        error = null;
-        _.forEach(currentStep.params, function(param) {
-            if (param.required && !_.find(step.params, function(p) { return  p.name === param.name})) {
-                if (!error) {
-                    error = {
-                        id: step.id,
-                        fields: []
-                    };
-                    errors.push(error);
-                }
-                error.fields.push(param.name);
-            }
-        });
-    });
-    if (errors.length > 0) {
-        // Set the errors on the div
-        var errorDiv = $('#dialog-pipeline-error-field');
-        errorDiv.empty();
-        _.forEach(errors, function(error) {
-            $('<h3>' + error.id + '</h3>').appendTo(errorDiv);
-            var list = $('<ul>');
-            _.forEach(error.fields, function(f) { $('<li>' + f + '</li>').appendTo(list); });
-            $('</ul>').appendTo(list);
-            list.appendTo(errorDiv);
-        });
-        pipelineErrorDialog.dialog("open");
-    } else {
-        savePipeline(pipelineJson);
-    }
-}
-
-
-function loadStepsUI() {
-    var stepsContainer = $('#step-panel');
-    var stepSelector = $('#step-selector');
-    stepsContainer.empty();
-    stepSelector.empty();
-    loadSteps(function (step) {
-        // Build out the pipeline designer step control
-        $('<div id="' + step.id + '" class="step" draggable="true" ondragstart="drag(event)">' + step.displayName + '</div>')
-            .appendTo(stepsContainer);
-        $('div #' + step.id).fitText(1.50);
-        // Build out the step editor control
-        $('<li id="' + step.id + '" class="ui-widget-content">' + step.displayName + '</li>').appendTo(stepSelector);
-        $('li #' + step.id).fitText(1.50);
-    });
-    stepSelector.selectable({
-        stop: handleStepSelection,
-        selected: function (event, ui) {
-            $(ui.selected).addClass("ui-selected").siblings().removeClass("ui-selected");
-        }
-    });
+function setStringValue(val) {
+    return val && val.trim().length > 0 ? val : undefined;
 }
 
 $(document).ready(function () {
+    // Setup the tabbed interface
     $('#tabs').tabs();
-    createDesignerPanel();
-    loadStepsUI();
-    $("#pipelines").append($("<option />").val('none').text(''));
-    loadPipelines(function(pipeline) {
-        $("#pipelines").append($("<option />").val(pipeline.id).text(pipeline.name));
-    });
 
-    $("#pipelines").selectmenu({
-        change: verifyLoadPipeline
-    });
+    // Generate custom diagram shape
+    createCustomElement();
 
-    clearDesignerDialog = $("#dialog-confirm").dialog({
-        autoOpen: false,
-        resizable: false,
-        height: "auto",
-        width: 400,
-        modal: true,
-        buttons: {
-            'Clear': handleClear,
-            Cancel: function () {
-                // TODO Need to functionalize this so it can have different behaviors
-                // Set the select back to the original value
-                if (selectedPipeline) {
-                    var select = $('#pipelines');
-                    select.val(selectedPipeline);
-                    select.selectmenu('refresh');
-                    selectedPipeline = 'none';
-                }
-                $(this).dialog('close');
-            }
-        }
-    });
+    // Initialize dialogs
+    initializeClearFormDialog();
+    initializeCodeEditorDialog();
+    initializeValidationErrorDialog();
+    initializeAddStepDialog();
+    initializeNewDialog();
+    initializeAlertDialog();
+    initializeCopyPipelineDialog();
+    initializeSettingsDialog();
+    initializeObjectEditor();
 
-    pipelineErrorDialog = $("#dialog-pipeline-error").dialog({
-        autoOpen: false,
-        resizable: false,
-        height: "auto",
-        width: 400,
-        modal: true,
-        buttons: {
-            Ok: function() {
-                $( this ).dialog( "close" );
-            }
-        }
-    });
-
-    addStepDialog = $("#dialog-step-form").dialog({
-        autoOpen: false,
-        height: 'auto',
-        width: 350,
-        modal: true,
-        buttons: {
-            "Add Step": function () {
-                var idField = $('#add-step-id');
-                addStepToDesigner(idField.val(), dropStep.name, dropStep.x, dropStep.y, dropStep.stepMetaData.id);
-                idField.val('');
-                $(this).dialog('close');
-            },
-            Cancel: function () {
-                dropStep = null;
-                $('#add-step-id').val('');
-                $(this).dialog('close');
-            }
-        }
-    });
-
-    addPipelineDialog = $("#dialog-pipeline-form").dialog({
-        autoOpen: false,
-        height: 'auto',
-        width: 350,
-        modal: true,
-        buttons: {
-            "New Pipeline": function () {
-                var idField = $('#add-pipeline-id');
-                currentPipeline = {
-                    name: idField.val(),
-                    steps: []
-                };
-                $('#pipelineName').text(currentPipeline.name);
-                idField.val('');
-                $(this).dialog('close');
-            },
-            Cancel: function () {
-                dropStep = null;
-                $('#add-step-id').val('');
-                $(this).dialog('close');
-            }
-        }
-    });
-
-    // Pipeline Designer
-    $('#save-button').click(handleSave);
-    $('#new-button').click(handleNew);
-    $('#reset-button').click(handleReset);
-
+    // Initialize the editors
     initializeStepsEditor();
+    initializePipelineEditor();
+    initializeApplicationEditor();
+
+    // Load the steps data from the API and render the UIs.
+    loadStepsUI();
+    // Load the pipelines data from the API and render the UIs.
+    loadPipelinesUI();
+
+    // Load the known object schemas
+    loadSchemasUI();
 });
+
+/**
+ * Define the custom shape we use on the designer canvas
+ */
+function createCustomElement() {
+    joint.dia.Element.define('spark.Step', {
+        attrs: {
+            body: {
+                refWidth: '100%',
+                refHeight: '100%',
+                fill: '#e4f1fb',
+                stroke: 'gray',
+                strokeWidth: 2,
+                rx: 10,
+                ry: 10
+            },
+            label: {
+                textVerticalAnchor: 'middle',
+                textAnchor: 'middle',
+                refX: '50%',
+                refY: '50%',
+                yAlignment: 'middle',
+                xAlignment: 'middle',
+                fontSize: 12,
+                fill: '#2779aa'
+            },
+            closeButton: {
+                r: 7,
+                fill: '#d21502',
+                x: 0,
+                y: 0,
+                visibility: 'hidden'
+            },
+            closeLabel: {
+                textVerticalAnchor: 'middle',
+                textAnchor: 'middle',
+                x: 0,
+                y: 0,
+                z: 0,
+                text: 'x',
+                visibility: 'hidden',
+                fill: 'white'
+            },
+            link: {
+                xlinkShow: 'new',
+                cursor: 'pointer',
+                event: 'close:button:pointerdown',
+            }
+        }
+    }, {
+        markup: [{
+            tagName: 'rect',
+            selector: 'body',
+        }, {
+            tagName: 'text',
+            selector: 'label'
+        }, {
+            tagName: 'a',
+            selector: 'link',
+            children: [{
+                tagName: 'circle',
+                selector: 'closeButton',
+
+            },
+                {
+                    tagName: 'text',
+                    selector: 'closeLabel'
+                }]
+        }]
+    });
+}
