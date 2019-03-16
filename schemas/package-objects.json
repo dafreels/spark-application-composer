@@ -1,0 +1,29 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "package-objects.json",
+    "$ref": "#/definitions/package-objects",
+    "definitions": {
+        "pipelines": {
+            "type": "object",
+            "required": [
+                "id",
+                "classPath",
+                "schema"
+            ],
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "classPath": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "schema": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}
