@@ -3,21 +3,14 @@
     "$id": "package-objects.json",
     "$ref": "#/definitions/package-objects",
     "definitions": {
-        "pipelines": {
+        "package-objects": {
             "type": "object",
             "required": [
                 "id",
-                "classPath",
                 "schema"
             ],
             "properties": {
                 "id": {
-                    "type": "string"
-                },
-                "classPath": {
-                    "type": "string"
-                },
-                "description": {
                     "type": "string"
                 },
                 "schema": {
