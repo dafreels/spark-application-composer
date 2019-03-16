@@ -1,4 +1,4 @@
-const ApplicationsModel = require(`../../../models/applications.model`);
+const ApplicationsModel = require('../../../models/applications.model');
 const BaseRoutes = require('../../../lib/base.routes');
 
 const baseRoutes = new BaseRoutes('application', 'applications', ApplicationsModel);
