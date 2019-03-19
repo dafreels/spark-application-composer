@@ -66,14 +66,15 @@ function generateOptions(schema, options) {
                 obj.type = 'integer';
                 break;
             case 'array':
-                if (schema.properties[key].items.type === 'string') {
-                    obj.type = 'token';
+                // if (schema.properties[key].items.type === 'string') {
+                //     obj.type = 'token';
+                //     obj.id = key;
                     // TODO capture that we have a token field so we can convert to an array on save
-                } else {
+                // } else {
                     obj.type = 'array';
                     obj.items = { fields: {}};
                     generateOptions(schema.properties[key].items, obj.items);
-                }
+                // }
                 break;
             case 'object':
                 obj.type = 'object';
@@ -99,7 +100,7 @@ function renderSchemaUI() {
     schemas.empty();
     $('<option value="none">').appendTo(schemas);
     _.forEach(getSchemas(), (schema) => {
-        $('<option value="'+ schema.name +'">' + schema.name + '</option>').appendTo(schemas);
+        $('<option value="'+ schema.id +'">' + schema.id + '</option>').appendTo(schemas);
     });
     schemas.change(handleSchemaChange);
 }

@@ -72,10 +72,9 @@ function saveStep(step, callback) {
     });
 }
 function loadSchemas(callback) {
-    $.getJSON('/schemas/external/transformations.json')
+    $.getJSON('/api/v1/package-objects')
         .done(function(data) {
-            // TODO This will need to change to convert an array into an object lookup
-            initializeSchemas(data);
+            initializeSchemas(data['package-objects']);
             if (callback) {
                 callback();
             }
