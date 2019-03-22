@@ -102,7 +102,7 @@ function selectStep(selectedElement) {
 function populateStepForm(el) {
     currentEditorStepId = el.attr('id').split('_')[1];
     defaultValues = {};
-    const currentStep = getStep(currentEditorStepId);
+    const currentStep = stepsModel.getStep(currentEditorStepId);
     $('#edit-stepId').text(currentEditorStepId);
     $('#edit-displayName').val(currentStep.displayName);
     $('#edit-description').val(currentStep.description);
@@ -334,7 +334,7 @@ function stepNeedsSave() {
     const step = generateStepJson();
     if (step.id) {
         // Compare the objects
-        const originalStep = getStep(step.id);
+        const originalStep = stepsModel.getStep(step.id);
         if (_.difference(_.keys(step), _.keys(originalStep)).length > 0) {
             return true;
         } else if (step.id !== originalStep.id) {
@@ -408,7 +408,7 @@ function renderStepSelectionUI() {
     if (saveStepName) {
         clearStepForm(true);
         // Find and select the newly created step
-        const currentEditorStep = _.find(getSteps(), s => s.displayName === saveStepName);
+        const currentEditorStep = _.find(stepsModel.getSteps(), s => s.displayName === saveStepName);
         if (currentEditorStep) {
             saveStepName = null;
             const selectedElement = $('#' + stepContainerId + '_' + currentEditorStep.id);

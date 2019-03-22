@@ -1,17 +1,22 @@
-let schemaData;
 
-function initializeSchemas(schemas) {
-    schemaData = _.map(schemas, (schema) => {
-        delete schema._id;
-        return schema;
-    });
-}
+class SchemasModel {
+    constructor(schemas) {
+        this.setSchemas(schemas);
+    }
 
-function getSchemas() {
-    return cloneObject(schemaData);
-}
+    setSchemas(schemas) {
+        this.schemas = _.map(schemas, (schema) => {
+            delete schema._id;
+            return schema;
+        });
+    }
 
-function getSchema(name) {
-    const schema = _.find(schemaData, s => s.id === name);
-    return cloneObject(schema);
+    getSchemas() {
+        return cloneObject(this.schemas);
+    }
+
+    getSchema(name) {
+        const schema = _.find(this.schemas, s => s.id === name);
+        return cloneObject(schema);
+    }
 }

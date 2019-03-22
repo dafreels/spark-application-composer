@@ -36,7 +36,7 @@
     <script src="libraries/pipeline-editor.js"></script>
     <script src="libraries/globals-editor.js"></script>
     <script src="libraries/class-override-editor.js"></script>
-    <script src="libraries/execution-editor-dialog.js"></script>
+    <script src="libraries/graph-editor.js"></script>
     <script src="libraries/application-editor.js"></script>
     <script src="libraries/app.js"></script>
     <title>Application Manager</title>
@@ -125,7 +125,7 @@
                                 </a>
                             </h4>
                         </div>
-                        <div id="globals-settings" class="panel-collapse collapse" role="tabpanel"
+                        <div id="globals-settings" class="panel-collapse collapse container-fluid" role="tabpanel"
                              aria-labelledby="globals-heading">
                             <div id="globals" class="panel-body"></div>
                         </div>
@@ -141,7 +141,7 @@
                         </div>
                         <div id="execution-settings" class="panel-collapse collapse" role="tabpanel"
                              aria-labelledby="execution-heading">
-                            <div class="pull-right">
+                            <div style="height: 25px;width: 100%;text-align: right;margin-right: 8px;">
                                 <button id="add-execution-button"
                                         class="btn btn-info"
                                         title="Add Parameter">
@@ -149,10 +149,54 @@
                                 </button>
                             </div>
                             <div class="panel-body">
-                                <div id="executionDesigner" class="joint-paper joint-theme-default"
-                                     style="display: inline-block; float: left;"
-                                     ondrop="dropStep(event)"
-                                     ondragover="allowStepDrop(event)"></div>
+                                <div class="left">
+                                    <div class="form-group row"><label class="col-sm-6">Choose Pipelines:</label></div>
+                                    <div class="form-group row">
+                                        <div class="col-sm-3" style="height: 150px;">
+                                            <select id="available-pipelines" multiple class="form-control" style="height: 100%"></select>
+                                        </div>
+                                        <div class="col-sm-2">
+                                            <div style="margin-bottom: 5px;">
+                                                <button id="move-pipeline-up-button"
+                                                        class="btn btn-info"
+                                                        title="Add Parameter">
+                                                    <i class="glyphicon glyphicon-arrow-up"></i>
+                                                </button>
+                                            </div>
+                                            <div style="margin-bottom: 5px;">
+                                                <button id="add-pipeline-button"
+                                                        class="btn btn-info"
+                                                        title="Add Parameter">
+                                                    <i class="glyphicon glyphicon-arrow-right"></i>
+                                                </button>
+                                            </div>
+                                            <div style="margin-bottom: 5px;">
+                                                <button id="remove-pipeline-button"
+                                                        class="btn btn-info"
+                                                        title="Add Parameter">
+                                                    <i class="glyphicon glyphicon-arrow-left"></i>
+                                                </button>
+                                            </div>
+                                            <div>
+                                                <button id="move-pipeline-down-button"
+                                                        class="btn btn-info"
+                                                        title="Add Parameter">
+                                                    <i class="glyphicon glyphicon-arrow-down"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-3" style="height: 150px;">
+                                            <select id="selected-pipelines" multiple class="form-control" style="height: 100%"></select>
+                                        </div>
+                                    </div>
+                                    <div id="edit-execution-classes-form"></div>
+                                    <div id="edit-execution-globals-form"></div>
+                                </div>
+                                <div class="right">
+                                    <div id="executionDesigner" class="joint-paper joint-theme-default"
+                                         ondrop="dropStep(event)"
+                                         ondragover="allowStepDrop(event)"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -178,7 +222,7 @@
                         <div class="panel-body">
                             <div>
                                 <div class="form-group">
-                                    <select name="pipelines" id="pipelines"></select>
+                                    <select name="pipelines" id="pipelines" class="form-control"></select>
                                 </div>
                             </div>
                         </div>
@@ -339,7 +383,7 @@
     </div>
 </div>
 <!-- Add pipeline dialog -->
-<div id="dialog-new-form" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="New" aria-hidden="true">
+<div id="dialog-new-form" class="modal fade" style="z-index:2000;" tabindex="-1" role="dialog" aria-labelledby="New" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
@@ -365,7 +409,7 @@
     </div>
 </div>
 <!-- Object Editor dialog -->
-<div id="edit-object-form" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="Edit Object"
+<div id="edit-object-form" class="modal fade" style="z-index:2000;" tabindex="-1" role="dialog" aria-labelledby="Edit Object"
      aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -486,32 +530,6 @@
             <div class="modal-footer">
                 <button id="copy-pipeline-form-save" type="button" class="btn btn-info">Save</button>
                 <button id="copy-pipeline-form-cancel" type="button" class="btn btn-secondary">Cancel</button>
-            </div>
-        </div>
-    </div>
-</div>
-<!-- Execution Editor dialog -->
-<div id="execution-editor-form" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="Edit Execution"
-     aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button id="edit-execution-form-close" type="button" class="close" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-                <h5 class="modal-title" id="editExecutionModalLabel">Edit Object</h5>
-            </div>
-            <div>
-                <div class="modal-body form-group settings-form">
-                    <label>Name:</label>
-                    <input id="execution-name" type="text"/>
-                </div>
-                <div id="edit-execution-form" class="modal-body"></div>
-            </div>
-
-            <div class="modal-footer">
-                <button id="edit-execution-form-save" type="button" class="btn btn-info">Save</button>
-                <button id="edit-execution-form-cancel" type="button" class="btn btn-secondary">Cancel</button>
             </div>
         </div>
     </div>

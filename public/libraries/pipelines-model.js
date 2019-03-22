@@ -1,33 +1,30 @@
-let pipelineData;
 
-function initializePipelines(pipelines) {
-    pipelineData = pipelines;
-}
-
-function getPipeline(id) {
-    return cloneObject(_.find(pipelineData, p => p.id === id));
-}
-
-function getPipelines() {
-    return cloneObject(pipelineData);
-}
-
-function getPipelineStep(id, stepId) {
-    const pipeline = _.find(pipelineData, p => p.id === id);
-    if(pipeline) {
-       return cloneObject(_.find(pipeline.steps, step => step.id === stepId));
+class PipelinesModel {
+    constructor(pipelines) {
+        this.pipelines = pipelines;
     }
-    return null;
-}
 
-function isValidPipelineId(id) {
-    return _.findIndex(pipelineData, p => p.id === id) !== -1
-}
-
-function getPipelineName(id) {
-    const pipeline = _.find(pipelineData, p => p.id === id);
-    if(pipeline) {
-        return pipeline.name;
+    setPipelines(pipelines) {
+        this.pipelines = pipelines;
     }
-    return null;
+
+    getPipeline(id) {
+        return cloneObject(_.find(this.pipelines, p => p.id === id));
+    }
+
+    getPipelines() {
+        return cloneObject(this.pipelines);
+    }
+
+    isValidPipelineId(id) {
+        return this.getPipeline(id) !== undefined;
+    }
+
+    getPipelineName(id) {
+        const pipeline = this.getPipeline(id);
+        if(pipeline) {
+            return pipeline.name;
+        }
+        return null;
+    }
 }

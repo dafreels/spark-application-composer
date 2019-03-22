@@ -1,5 +1,5 @@
 
-class ExecutionEditor {
+class AddExecutionDialog {
     constructor(parentContainer) {
         this.parent = parentContainer;
 
@@ -41,9 +41,6 @@ class ExecutionEditor {
 
         this.parent.empty();
         this.data = data || {};
-        // TODO May want to give these two a different parent to make the form more readable
-        new ClassOverridesEditor(this.parent, this.data);
-        new GlobalsEditor(this.parent, this.data);
         $('#execution-name').val(data.name || '');
 
         $('#execution-editor-form').modal('show');

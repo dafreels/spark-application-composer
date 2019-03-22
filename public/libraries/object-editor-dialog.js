@@ -33,7 +33,7 @@ function showObjectEditor(data, schemaName, saveFunction, cancelFunction) {
     editObjectSaveFunction = saveFunction;
     editObjectCancelFunction = cancelFunction;
 
-    const schema = getSchema(schemaName);
+    const schema = schemasModel.getSchema(schemaName);
     if (schema) {
         $('#objectEditorSchema').val(schemaName).change();
         generateForm(schema.schema);
@@ -89,7 +89,7 @@ function generateOptions(schema, options) {
 }
 
 function handleSchemaChange() {
-    const schema = getSchema($(this).val());
+    const schema = schemasModel.getSchema($(this).val());
     if (schema) {
         generateForm(schema.schema);
     }
@@ -99,7 +99,7 @@ function renderSchemaUI() {
     const schemas = $('#objectEditorSchema');
     schemas.empty();
     $('<option value="none">').appendTo(schemas);
-    _.forEach(getSchemas(), (schema) => {
+    _.forEach(schemasModel.getSchemas(), (schema) => {
         $('<option value="'+ schema.id +'">' + schema.id + '</option>').appendTo(schemas);
     });
     schemas.change(handleSchemaChange);

@@ -1,5 +1,3 @@
-let applicationGraph;
-let applicationPaper;
 // The current application being edited
 let currentApplication;
 // The current kryoClasses array
@@ -11,50 +9,24 @@ let requiredParameters;
 
 let globals;
 let classOverrides;
-let executionEditor;
 
-// This is a lookup for all of the executions on the paper
-let currentExecutions = [];
+let graphEditor;
+
+// The metadata for the currently selected execution
+let executionMetaData;
 
 function initializeApplicationEditor() {
     const select = $('#applications');
     select.append($("<option />").val('none').text(''));
 
-    applicationGraph = new joint.dia.Graph;
-    applicationPaper = new joint.dia.Paper({
-        el: $('#executionDesigner'),
-        model: applicationGraph,
-        height: 800,
-        width: '95%',
-        gridSize: 1,
-        defaultLink: new joint.dia.Link({
-            attrs: {'.marker-target': {d: 'M 10 0 L 0 5 L 10 10 z'}}
-        })
-        // allowLink: handleLinkEvent,
-        // validateConnection: function (cellViewS, magnetS, cellViewT, magnetT) {
-        //     if (getConnectedLinks(cellViewT.model, V(magnetT).attr('port')) > 0) return false;
-        //     // Prevent linking from input ports.
-        //     if (magnetS && magnetS.getAttribute('port-group') === 'in') return false;
-        //     // Prevent linking from output ports to input ports within one element.
-        //     if (cellViewS === cellViewT) return false;
-        //     // Prevent linking to input ports.
-        //     return magnetT && magnetT.getAttribute('port-group') === 'in';
-        // },
-        // validateMagnet: function (cellView, magnet) {
-        //     if (getConnectedLinks(cellView.model, V(magnet).attr('port')) > 0) return false;
-        //     if (magnet.getAttribute('magnet') !== 'passive') return true;
-        // }
-    });
-
-    applicationPaper.on('cell:mouseover', handleExecutionMouseOver);
-    applicationPaper.on('cell:mouseout', handleExecutionMouseOut);
-    // applicationPaper.on('close:button:pointerdown', handleExecutionRemove);
-    applicationPaper.on('edit:button:pointerdown', handleExecutionEdit);
-
+    // TODO add the remove handler?
+    graphEditor = new GraphEditor($('#executionDesigner'),
+        createExecution,
+        null,
+        handleExecutionAddPort,
+        loadExecutionEditorPanel);
     globals = new GlobalsEditor($('#globals'), {});
     classOverrides = new ClassOverridesEditor($('#application-setup-panel'), {});
-
-    executionEditor = new ExecutionEditor($('#edit-execution-form'));
 
     $('#new-application-button').click(handleNewApplication);
     $('#save-application-button').click(handleSaveApplication);
@@ -76,114 +48,68 @@ function initializeApplicationEditor() {
     $('#required-parameters').tokenfield()
         .on('tokenfield:createdtoken', handleRequiredParametersChange)
         .on('tokenfield:removedtoken', handleRequiredParametersChange);
+
+    // TODO Formalize this code
+    new ClassOverridesEditor($('#edit-execution-classes-form'), {});
+    new GlobalsEditor($('#edit-execution-globals-form'), {});
+
+    // Create the pipeline selection buttons
+    $('#add-pipeline-button').click(function() {
+        const option = $('#available-pipelines option:selected');
+        option.remove();
+        option.appendTo($('#selected-pipelines'));
+        populateExecutionPipelineIds();
+    });
+    $('#remove-pipeline-button').click(function() {
+        const option = $('#selected-pipelines option:selected');
+        option.remove();
+        option.appendTo($('#available-pipelines'));
+        populateExecutionPipelineIds();
+    });
+    $('#move-pipeline-up-button').click(function() {
+        const option = $('#selected-pipelines option:selected');
+        option.prev().before(option);
+        populateExecutionPipelineIds();
+    });
+    $('#move-pipeline-down-button').click(function() {
+        const option = $('#selected-pipelines option:selected');
+        option.next().after(option);
+        populateExecutionPipelineIds();
+    });
 }
 
 /*
  * Graph functions
  */
-
-/**
- * Helper function that displays the close button when the mouse pointer is over the cell
- * @param evt The underlying cell
- */
-function handleExecutionMouseOver(evt) {
-    const close = getExecutionElements(evt);
-    if (close.populated) {
-        close.closeButton.setAttribute('visibility', 'visible');
-        close.closeLabel.setAttribute('visibility', 'visible');
-        close.editButton.setAttribute('visibility', 'visible');
-        close.editLabel.setAttribute('visibility', 'visible');
-    }
-}
-
-/**
- * Helper function that hides the close button when the mouse pointer leaves the cell
- * @param evt The underlying cell
- */
-function handleExecutionMouseOut(evt) {
-    const close = getExecutionElements(evt);
-    if (close.populated) {
-        close.closeButton.setAttribute('visibility', 'hidden');
-        close.closeLabel.setAttribute('visibility', 'hidden');
-        close.editButton.setAttribute('visibility', 'hidden');
-        close.editLabel.setAttribute('visibility', 'hidden');
-    }
-}
-
-/**
- * Utility function to locate the 'close button elements'
- */
-function getExecutionElements(evt) {
-    const elements = {
-        populated: false
-    };
-    for (let i = 0; i < evt.el.children.length; i++) {
-        if (evt.el.children[i].attributes && evt.el.children[i].attributes['joint-selector']) {
-            if (evt.el.children[i].attributes['joint-selector'].value === 'link') {
-                switch (evt.el.children[i].children[0].attributes['joint-selector'].value) {
-                    case 'closeButton':
-                        elements.populated = true;
-                        elements.closeButton = evt.el.children[i].children[0];
-                        elements.closeLabel = evt.el.children[i].children[1];
-                        break;
-                    case 'closeLabel':
-                        elements.populated = true;
-                        elements.closeButton = evt.el.children[i].children[1];
-                        elements.closeLabel = evt.el.children[i].children[0];
-                        break;
-                }
-            } else if(evt.el.children[i].attributes['joint-selector'].value === 'editLink') {
-                switch(evt.el.children[i].children[0].attributes['joint-selector'].value) {
-                    case 'editLabel':
-                        elements.populated = true;
-                        elements.editButton = evt.el.children[i].children[1];
-                        elements.editLabel = evt.el.children[i].children[0];
-                        break;
-                    case 'editButton':
-                        elements.populated = true;
-                        elements.editButton = evt.el.children[i].children[0];
-                        elements.editLabel = evt.el.children[i].children[1];
-                        break;
-                }
-            }
-        }
-    }
-
-    return elements;
-}
-
 /**
  * Clears the canvas
  */
 function clearExecutionGraph() {
-    applicationGraph.clear();
-    currentExecutions = [];
+    this.graphEditor.clear();
 }
 
 function handleAddExecution() {
-    executionEditor.showExecutionEditor({}, function(data) {
+    showNewDialog(function(name) {
+        // TODO Use the locations of other executions on the canvas to place this execution
         const x = Math.round($('#executionDesigner').width() / 2);
         const y = 50;
-        addExecutionToCanvas(data.name, x, y, data);
+        graphEditor.addElementToCanvas(name, x, y, {
+            id: name,
+            pipelineIds: [],
+            pipelines: [],
+            parents: []
+        });
     });
 }
 
 /**
- * Adds a new execution to the canvas
- * @param name The name to display
- * @param x The x coordinates on the canvas
- * @param y The y coordinates on the canvas
- * @param metadata The metadata to attach to this execution element
- * @returns {*}
+ * This function handles adding a new outport to the execution
+ * @param evt The click event containing the element
  */
-function addExecutionToCanvas(name, x, y, metadata) {
-    const execution = createExecution(name, x, y, metadata || {}).addTo(applicationGraph);
-    currentExecutions.push(execution);
-    return execution;
-}
-
-function handleExecutionEdit(evt) {
-    executionEditor.showExecutionEditor(evt.model.attributes.metaData);
+function handleExecutionAddPort(evt) {
+    const port = _.assign({}, portTemplate);
+    port.group = 'out';
+    evt.model.addPorts([port]);
 }
 
 /**
@@ -195,39 +121,9 @@ function handleExecutionEdit(evt) {
  * @returns {joint.shapes.spark.Execution}
  */
 function createExecution(name, x, y, metadata) {
-    // const portTemplate = {
-    //     magnet: true,
-    //     label: {
-    //         markup: '<text class="label-text" font-size="12" fill="black"/>'
-    //     },
-    //     attrs: {
-    //         text: {
-    //             text: ''
-    //         }
-    //     }
-    // };
-    // const inPort = _.assign({}, portTemplate);
-    // inPort.group = 'in';
-    // const ports = [inPort];
-    // let port;
-    // if (metadata.type === 'branch') {
-    //     _.forEach(metadata.params, (p) => {
-    //         if(p.type === 'result') {
-    //             port = _.assign({}, portTemplate);
-    //             port.group = 'out';
-    //             port.attrs = {
-    //                 text: {
-    //                     text: p.name
-    //                 }
-    //             };
-    //             ports.push(port);
-    //         }
-    //     });
-    // } else {
-    //     port = _.assign({}, portTemplate);
-    //     port.group = 'out';
-    //     ports.push(port);
-    // }
+    const inPort = _.assign({}, portTemplate);
+    inPort.group = 'in';
+    const ports = [inPort];
 
     return new joint.shapes.spark.Execution({
         position: {x: x, y: y},
@@ -237,37 +133,37 @@ function createExecution(name, x, y, metadata) {
                 text: joint.util.breakText(name, stepSize, {'font-size': 12}, {ellipsis: true})
             }
         },
-        // ports: {
-        //     groups: {
-        //         'in': {
-        //             position: {
-        //                 name: 'top'
-        //             },
-        //             attrs: {
-        //                 circle: {
-        //                     fill: 'ivory',
-        //                     r: 6,
-        //                     magnet: true
-        //                 }
-        //             },
-        //             magnet: true
-        //         },
-        //         'out': {
-        //             position: {
-        //                 name: 'bottom'
-        //             },
-        //             attrs: {
-        //                 circle: {
-        //                     fill: 'ivory',
-        //                     r: 4,
-        //                     magnet: true
-        //                 }
-        //             },
-        //             magnet: true
-        //         }
-        //     },
-        //     items: ports
-        // },
+        ports: {
+            groups: {
+                'in': {
+                    position: {
+                        name: 'top'
+                    },
+                    attrs: {
+                        circle: {
+                            fill: 'ivory',
+                            r: 6,
+                            magnet: true
+                        }
+                    },
+                    magnet: true
+                },
+                'out': {
+                    position: {
+                        name: 'bottom'
+                    },
+                    attrs: {
+                        circle: {
+                            fill: 'ivory',
+                            r: 4,
+                            magnet: true
+                        }
+                    },
+                    magnet: true
+                }
+            },
+            items: ports
+        },
         metaData: metadata
     });
 }
@@ -334,7 +230,25 @@ function setupNewApplication(name) {
 /*
  * Execution editor functions
  */
+function loadExecutionEditorPanel(metaData) {
+    executionMetaData = metaData;
+    const pipelines = pipelinesModel.getPipelines();
+    // TODO Filter pipelines by what is already in the execution list/application list
+    const availableSelect = $('#available-pipelines');
+    availableSelect.empty();
+    const selectedPipelines = $('#selected-pipelines');
+    selectedPipelines.empty();
+    _.forEach(pipelines, pipeline => $('<option value="' + pipeline.id + '">' + pipeline.name + '</option>').appendTo(availableSelect));
+}
 
+function populateExecutionPipelineIds() {
+    if (executionMetaData) {
+        executionMetaData.pipelineIds = [];
+        $('#selected-pipelines').children('option').each(function () {
+            executionMetaData.pipelineIds.push($(this).val());
+        });
+    }
+}
 /*
  * End execution editor functions
  */
@@ -342,7 +256,6 @@ function setupNewApplication(name) {
 /*
  * Save functions
  */
-
 function handleSaveApplication() {
     console.log(JSON.stringify(generateApplicationJson(), null, 4));
 }
@@ -379,6 +292,21 @@ function generateApplicationJson() {
     application.pipelineListener = classOverrideSettings.pipelineListener;
     application.securityManager = classOverrideSettings.securityManager;
     application.stepMapper = classOverrideSettings.stepMapper;
+
+    // Get the executions
+    const executions = graphEditor.getGraphMetaData();
+    application.executions = [];
+    application.pipelines = [];
+    const pipelineIds = [];
+    _.forEach(executions, (execution) => {
+        application.executions.push(execution.metaData);
+        _.forEach(execution.metaData.pipelineIds, (id) => {
+            if(pipelineIds.indexOf(id) === -1) {
+                pipelineIds.push(id);
+                application.pipelines.push(pipelinesModel.getPipeline(id));
+            }
+        });
+    });
 
     return application;
 }

@@ -45,43 +45,6 @@
     display: inline-block;
 }
 
-.form-group {
-    padding: 5px 0;
-    text-align: left;
-}
-
-.form-group label {
-    width: 40%;
-}
-
-.form-group input {
-    margin-left: 10px;
-    margin-right: 8px;
-}
-
-.form-group select {
-    margin-left: 8px;
-}
-
-.form-group span.ui-selectmenu-button.ui-button {
-    width: 90%;
-}
-
-.dynamic-form input {
-    margin-left: 10px;
-    width: 40%;
-}
-
-.dynamic-form label {
-    width: 20%;
-    display: inline-block;
-}
-
-.dynamic-form span.ui-selectmenu-button.ui-button {
-    width: 20%;
-    margin-left: 8px;
-}
-
 .settings-form label {
     width: 20%;
     display: inline-block;
@@ -92,22 +55,6 @@
     width: 70%;
     border-radius: 8px;
     padding: 8px;
-}
-
-.form-group div {
-    background: #e4f1fb;
-    color: #333333;
-    padding: 5px;
-    border-radius: 10px;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    overflow: hidden;
-}
-
-.form-group div:hover {
-    text-overflow: clip;
-    white-space: normal;
-    word-break: keep-all;
 }
 
 .step-panel {

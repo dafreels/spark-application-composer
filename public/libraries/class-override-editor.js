@@ -11,20 +11,20 @@ class ClassOverridesEditor {
     }
 
     buildForm() {
-        const pipelineListenerdiv = $('<div class="form-group settings-form"><label>Pipeline Listener</label></div>');
+        const pipelineListenerDiv = $('<div class="form-group settings-form"><label>Pipeline Listener</label></div>');
         const pipelineListenerInput = $('<input type="text"/>');
-        pipelineListenerInput.appendTo(pipelineListenerdiv);
-        pipelineListenerdiv.appendTo(this.parent);
+        pipelineListenerInput.appendTo(pipelineListenerDiv);
+        pipelineListenerDiv.appendTo(this.parent);
 
-        const securityManagerdiv = $('<div class="form-group settings-form"><label>Security Manager</label></div>');
+        const securityManagerDiv = $('<div class="form-group settings-form"><label>Security Manager</label></div>');
         const securityManagerInput = $('<input type="text"/>');
-        securityManagerInput.appendTo(securityManagerdiv);
-        securityManagerdiv.appendTo(this.parent);
+        securityManagerInput.appendTo(securityManagerDiv);
+        securityManagerDiv.appendTo(this.parent);
 
-        const stepMapperdiv = $('<div class="form-group settings-form"><label>Step Mapper</label></div>');
+        const stepMapperDiv = $('<div class="form-group settings-form"><label>Step Mapper</label></div>');
         const stepMapperInput = $('<input type="text"/>');
-        stepMapperInput.appendTo(stepMapperdiv);
-        stepMapperdiv.appendTo(this.parent);
+        stepMapperInput.appendTo(stepMapperDiv);
+        stepMapperDiv.appendTo(this.parent);
 
         const parent = this;
         pipelineListenerInput.blur(function() {

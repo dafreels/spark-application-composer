@@ -5,8 +5,24 @@ const parameterTypeOptions = '<option value="static">Static</option>' +
     '<option value="script">Script</option>' +
     '<option value="object">Object</option>';
 
+const portTemplate = {
+    magnet: true,
+    label: {
+        markup: '<text class="label-text" font-size="12" fill="black"/>'
+    },
+    attrs: {
+        text: {
+            text: ''
+        }
+    }
+};
+
+const stepsModel = new StepsModel(null);
+const pipelinesModel = new PipelinesModel(null);
+const schemasModel = new SchemasModel(null);
+
 function generateStepContainers(containerId, parentContainer, stepSelectHandler, dragHandler) {
-    const steps = _.sortBy(getSteps(), ['category']);
+    const steps = _.sortBy(stepsModel.getSteps(), ['category']);
     let panel;
     let heading;
     let button;
@@ -49,6 +65,39 @@ function generateStepContainers(containerId, parentContainer, stepSelectHandler,
         stepField.appendTo(stepSection);
         stepField.click(stepSelectHandler);
     });
+}
+
+/**
+ * Determines the number of links already attached to the port.
+ * @param cell The element.
+ * @param portId The id of the port.
+ * @param graph The graph where the links are stored
+ * @returns {number} Number of links for the element and port.
+ */
+function getConnectedLinks(cell, portId, graph) {
+    let source;
+    return _.filter(graph.getConnectedLinks(cell), function (link) {
+        source = link.get('source') || {};
+        return source.id === cell.id && source.port === portId;
+    }).length;
+}
+
+/**
+ * Handles removal of links that cannot be connected.
+ * @param linkView The link being drawn
+ * @returns {boolean} true ig the link was properly connected
+ */
+function handleLinkEvent(linkView) {
+    return linkView.targetMagnet !== null;
+}
+
+/**
+ * Returns true if there are elements on the designer canvas.
+ * @param graph The graph where the elements are stored
+ * @returns {boolean}
+ */
+function isDesignerPopulated(graph) {
+    return graph.getCells().length > 0;
 }
 
 function loadStepsUI() {
@@ -237,24 +286,23 @@ function createExecutionShape() {
                 event: 'close:button:pointerdown',
             },
             editButton: {
-                width: 15,
-                height: 15,
+                r: 7,
                 fill: 'green',
-                transform: 'translate(8, -8)',
+                transform: 'translate(15, 0)',
                 visibility: 'hidden'
             },
             editLabel: {
                 textVerticalAnchor: 'middle',
                 textAnchor: 'middle',
                 transform: 'translate(15, 0)',
-                text: 'E',
+                text: '+',
                 visibility: 'hidden',
                 fill: 'white'
             },
             editLink: {
                 xlinkShow: 'new',
                 cursor: 'pointer',
-                event: 'edit:button:pointerdown',
+                event: 'add:button:pointerdown',
             }
         }
     }, {
@@ -280,7 +328,7 @@ function createExecutionShape() {
             tagName: 'a',
             selector: 'editLink',
             children: [{
-                tagName: 'rect',
+                tagName: 'circle',
                 selector: 'editButton',
 
             },

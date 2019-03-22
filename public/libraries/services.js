@@ -7,7 +7,7 @@ function loadSteps(callback) {
                 delete step._id;
                 steps.push(step);
             });
-            initializeSteps(steps);
+            stepsModel.setSteps(steps);
             callback(data.steps);
         });
 }
@@ -15,7 +15,7 @@ function loadSteps(callback) {
 function loadPipelines(callback) {
     $.getJSON('/api/v1/pipelines')
         .done(function(data) {
-            initializePipelines(data.pipelines);
+            pipelinesModel.setPipelines(data.pipelines);
             callback(data.pipelines);
         });
 }
@@ -74,7 +74,7 @@ function saveStep(step, callback) {
 function loadSchemas(callback) {
     $.getJSON('/api/v1/package-objects')
         .done(function(data) {
-            initializeSchemas(data['package-objects']);
+            schemasModel.setSchemas(data['package-objects']);
             if (callback) {
                 callback();
             }

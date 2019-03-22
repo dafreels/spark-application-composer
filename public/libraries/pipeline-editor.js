@@ -35,7 +35,7 @@ function initializePipelineEditor() {
         }),
         allowLink: handleLinkEvent,
         validateConnection: function (cellViewS, magnetS, cellViewT, magnetT) {
-            if (getConnectedLinks(cellViewT.model, V(magnetT).attr('port')) > 0) return false;
+            if (getConnectedLinks(cellViewT.model, V(magnetT).attr('port'), graph) > 0) return false;
             // Prevent linking from input ports.
             if (magnetS && magnetS.getAttribute('port-group') === 'in') return false;
             // Prevent linking from output ports to input ports within one element.
@@ -44,7 +44,7 @@ function initializePipelineEditor() {
             return magnetT && magnetT.getAttribute('port-group') === 'in';
         },
         validateMagnet: function (cellView, magnet) {
-            if (getConnectedLinks(cellView.model, V(magnet).attr('port')) > 0) return false;
+            if (getConnectedLinks(cellView.model, V(magnet).attr('port'), graph) > 0) return false;
             if (magnet.getAttribute('magnet') !== 'passive') return true;
         }
     });
@@ -164,11 +164,10 @@ function getCloseElements(evt) {
 }
 
 function handleNew() {
-    if (currentPipeline || isDesignerPopulated()) {
+    if (currentPipeline || isDesignerPopulated(graph)) {
         showClearFormDialog(function() {
             const select = $('#pipelines');
             select.val('none');
-            select.selectmenu('refresh');
             clearPipelineDesigner();
             showNewDialog(setupNew);
         }, cancelClearPipelines);
@@ -194,12 +193,11 @@ function cancelClearPipelines() {
     if (currentPipeline && currentPipeline.id) {
         const select = $('#pipelines');
         select.val(currentPipeline.id);
-        select.selectmenu('refresh');
     }
 }
 
 function handleCopy() {
-    if (currentPipeline || isDesignerPopulated()) {
+    if (currentPipeline || isDesignerPopulated(graph)) {
         showClearFormDialog(displayCopyPipelineDialog);
     } else {
         displayCopyPipelineDialog();
@@ -210,11 +208,10 @@ function displayCopyPipelineDialog() {
     showCopyPipelineDialog(function(name, pipelineId) {
         const select = $('#pipelines');
         select.val('none');
-        select.selectmenu('refresh');
         $('#pipelineName').text('');
         clearPipelineDesigner();
         // Get a cloned copy of the data
-        const pipeline = getPipeline(pipelineId);
+        const pipeline = pipelinesModel.getPipeline(pipelineId);
         // Remove the original id
         delete pipeline.id;
         delete pipeline._id;
@@ -228,11 +225,10 @@ function displayCopyPipelineDialog() {
  * Handles the reset button being clicked
  */
 function handleReset() {
-    if (currentPipeline || isDesignerPopulated()) {
+    if (currentPipeline || isDesignerPopulated(graph)) {
         showClearFormDialog(function() {
             const select = $('#pipelines');
             select.val('none');
-            select.selectmenu('refresh');
             $('#pipelineName').text('');
             clearPipelineDesigner();
         });
@@ -252,7 +248,7 @@ function handleReset() {
  * @returns {*}
  */
 function addStepToDesigner(id, name, x, y, stepId, loadProperties = true) {
-    const step = createStep(name, x, y, getStep(stepId)).addTo(graph);
+    const step = createStep(name, x, y, stepsModel.getStep(stepId)).addTo(graph);
     step.attributes.metaData.pipelineStepMetaData.id = id;
     if (loadProperties) {
         loadPropertiesPanel(step.attributes.metaData);
@@ -282,8 +278,8 @@ function clearPropertiesPanel() {
     $('#description').text('');
     $('#step-parameters-form div').remove();
     const selectedPipelineId = $('#pipelines').val();
-    if (isValidPipelineId(selectedPipelineId)) {
-        $('#pipelineName').text(getPipelineName(selectedPipelineId).name);
+    if (pipelinesModel.isValidPipelineId(selectedPipelineId)) {
+        $('#pipelineName').text(pipelinesModel.getPipelineName(selectedPipelineId).name);
     }
 }
 
@@ -296,17 +292,17 @@ function clearPropertiesPanel() {
  * @returns {devs.Model|Model|Model}
  */
 function createStep(name, x, y, metadata) {
-    const portTemplate = {
-        magnet: true,
-        label: {
-            markup: '<text class="label-text" font-size="12" fill="black"/>'
-        },
-        attrs: {
-            text: {
-                text: ''
-            }
-        }
-    };
+    // const portTemplate = {
+    //     magnet: true,
+    //     label: {
+    //         markup: '<text class="label-text" font-size="12" fill="black"/>'
+    //     },
+    //     attrs: {
+    //         text: {
+    //             text: ''
+    //         }
+    //     }
+    // };
     const inPort = _.assign({}, portTemplate);
     inPort.group = 'in';
     const ports = [inPort];
@@ -376,37 +372,6 @@ function createStep(name, x, y, metadata) {
             }
         }
     });
-}
-
-/**
- * Determines the number of links already attached to the port.
- * @param cell The element.
- * @param portId The id of the port.
- * @returns {number} Number of links for the element and port.
- */
-function getConnectedLinks(cell, portId) {
-    let source;
-    return _.filter(graph.getConnectedLinks(cell), function (link) {
-        source = link.get('source') || {};
-        return source.id === cell.id && source.port === portId;
-    }).length;
-}
-
-/**
- * Handles removal of links that cannot be connected.
- * @param linkView The link being drawn
- * @returns {boolean} true ig the link was properly connected
- */
-function handleLinkEvent(linkView) {
-    return linkView.targetMagnet !== null;
-}
-
-/**
- * Returns true if there are elements on the designer canvas.
- * @returns {boolean}
- */
-function isDesignerPopulated() {
-    return graph.getCells().length > 0;
 }
 
 /**
@@ -609,7 +574,7 @@ function populatePipelineData(pipeline) {
 function loadPipeline() {
     const pipelineId = $("#pipelines").val();
     if (pipelineId !== 'none') {
-        populatePipelineData(getPipeline(pipelineId));
+        populatePipelineData(pipelinesModel.getPipeline(pipelineId));
     }
 }
 
@@ -629,24 +594,30 @@ function loadPropertiesPanel(metaData) {
     const stepIdCompletion = buildParentIdCompletionArray(pipelineMetaData.id);
     // load step form
     const stepForm = $('<div id="' + stepMetaData.id + '">');
-    const formDiv = $('<div class="form-group dynamic-form">').appendTo(stepForm);
-    let label = $('<label>');
+    const formDiv = $('<div class="form-group row">').appendTo(stepForm);
+    let label = $('<label class="col-sm-3">');
     label.text('Execute If Empty:');
     label.appendTo(formDiv);
-    let input = $('<input id="executeIfEmpty"/>');
-    input.appendTo(formDiv);
-    let select = $('<select id="executeIfEmptyType" size="1">').appendTo(formDiv);
+    let input = $('<input id="executeIfEmpty" class="form-control"/>');
+    let inputDiv = $('<div class="col-sm-4">');
+    inputDiv.appendTo(formDiv);
+    input.appendTo(inputDiv);
+    let select = $('<select id="executeIfEmptyType" size="1" class="form-control">');
+    let selectDiv = $('<div class="col-sm-4" style="margin-left: 5px;">');
+    selectDiv.appendTo(formDiv);
+    select.appendTo(selectDiv);
     $(parameterTypeOptions).appendTo(select);
     input.focusin(function () {
         // TODO Never thought about doing this
-        if (select.val() === 'script') {
+        const selectVal = $('#executeIfEmptyType').val();
+        if (selectVal === 'script') {
             showCodeEditorDialog(pipelineMetaData.executeIfEmpty, 'scala',
                 function (value) {
                     pipelineMetaData.executeIfEmpty = value;
                     input.val(value);
                 });
             $(this).prop('disabled', true);
-        } else if (select.val() === 'object') {
+        } else if (selectVal === 'object') {
             // showObjectEditor(pipelineMetaData.executeIfEmpty || {},
             //     null,
             //     function(value, schemaName) {
@@ -668,30 +639,40 @@ function loadPropertiesPanel(metaData) {
     // Build out the parameters
     let paramRow;
     _.forEach(stepMetaData.params, (param) => {
-        paramRow = $('<div class="form-group dynamic-form">').appendTo(stepForm);
-        label = $('<label>');
+        paramRow = $('<div class="form-group row">').appendTo(stepForm);
+        label = $('<label class="col-sm-3">');
         label.text(param.name + ':');
         label.appendTo(paramRow);
-        input = $('<input id="' + param.name + '"/>');
-        input.appendTo(paramRow);
-        select = $('<select id="' + param.name + 'Type" size="1">').appendTo(paramRow);
-        select.appendTo(paramRow);
+        input = $('<input id="' + param.name + '" class="form-control"/>');
+        inputDiv = $('<div class="col-sm-4">');
+        inputDiv.appendTo(paramRow);
+        input.appendTo(inputDiv);
+        select = $('<select id="' + param.name + 'Type" size="1" class="form-control">').appendTo(paramRow);
+        selectDiv = $('<div class="col-sm-4" style="margin-left: 5px;">');
+        selectDiv.appendTo(paramRow);
+        select.appendTo(selectDiv);
         $(parameterTypeOptions).appendTo(select);
         input.focusin(function () {
-            const tempParam = _.find(pipelineMetaData.params, p => p.name === param.name);
-            if (select.val() === 'script') {
-                showCodeEditorDialog(tempParam.value, param.language || 'scala',
+            let tempParam = _.find(pipelineMetaData.params, p => p.name === param.name);
+            if (!tempParam) {
+                tempParam = {
+                    name: param.name
+                };
+            }
+            const selectVal = $('#' + param.name + 'Type').val();
+            if (selectVal === 'script') {
+                showCodeEditorDialog(tempParam.value || '', param.language || 'scala',
                     function (value, lang) {
                         tempParam.value = value;
                         tempParam.language = lang;
-                        input.val(value);
+                        $('#' + tempParam.name).val(value);
                     });
                 $(this).prop('disabled', true);
-            } else if (select.val() === 'object') {
+            } else if (selectVal === 'object') {
                 showObjectEditor(setStringValue(tempParam.value) || {},
                     param.className,
                     function(value, schemaName) {
-                        input.val(value);
+                        $('#' + tempParam.name).val(value);
                         tempParam.value = value;
                         tempParam.className = schemaName;
                     });
@@ -719,12 +700,11 @@ function loadPropertiesPanel(metaData) {
     }
     input.blur(handleInputChange);
     let el = $('#executeIfEmptyType');
-    el.selectmenu({ change: handleTypeSelectChange });
+    el.change(handleTypeSelectChange);
     el.val(type);
-    el.selectmenu('refresh');
     _.forEach(stepMetaData.params, function (param) {
         el = $('#' + param.name + 'Type');
-        el.selectmenu({ change: handleTypeSelectChange });
+        el.change(handleTypeSelectChange);
         input = $('#' + param.name);
         input.blur(handleInputChange);
     });
@@ -750,11 +730,10 @@ function loadPropertiesPanel(metaData) {
         // set the select value
         select = $('#' + param.name + 'Type');
         select.val(type);
-        select.selectmenu('refresh');
         // Prevent edits against the result fields
         if (param.type === 'result') {
             input.prop('disabled', true);
-            select.selectmenu( "disable" );
+            select.prop('disabled', 'disabled');
         }
     });
 }
@@ -872,7 +851,7 @@ function handleSave() {
     let currentStep;
     let stepParam;
     _.forEach(pipeline.steps, function(step) {
-        currentStep = getStep(step.stepId);
+        currentStep = stepsModel.getStep(step.stepId);
         error = null;
         _.forEach(currentStep.params, function(param) {
             stepParam = _.find(step.params, function(p) { return  p.name === param.name});
@@ -914,13 +893,11 @@ function renderPipelinesDesignerSelect() {
     sourcePipelines.empty();
     pipelines.append($("<option />").val('none').text(''));
     sourcePipelines.append($("<option />").val('none').text(''));
-    _.forEach(getPipelines(), (pipeline) => {
+    _.forEach(pipelinesModel.getPipelines(), (pipeline) => {
         pipelines.append($("<option/>").val(pipeline.id).text(pipeline.name));
         sourcePipelines.append($("<option/>").val(pipeline.id).text(pipeline.name));
     });
-    pipelines.selectmenu({
-        change: verifyLoadPipeline
-    });
+    pipelines.change(verifyLoadPipeline);
     sourcePipelines.change(function () {
         $('#copy-pipeline-id').val($('#source-pipelines :selected').text() + '-1');
     });
@@ -929,7 +906,6 @@ function renderPipelinesDesignerSelect() {
         const possibleMatches = $("#pipelines option").filter(function () { return $(this).text() === savedPipelineName });
         // Should have only matched one
         pipelines.val($(possibleMatches[0]).val());
-        pipelines.selectmenu('refresh');
         savedPipelineName = null;
     }
 }
@@ -938,7 +914,7 @@ function renderPipelinesDesignerSelect() {
  * Loads the selected pipeline to the designer canvas
  */
 function verifyLoadPipeline() {
-    if (currentPipeline || isDesignerPopulated()) {
+    if (currentPipeline || isDesignerPopulated(graph)) {
         showClearFormDialog(function() {
             clearPipelineDesigner();
             loadPipeline();
