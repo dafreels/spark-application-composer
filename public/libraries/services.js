@@ -23,9 +23,25 @@ function loadPipelines(callback) {
 function loadApplications(callback) {
     $.getJSON('/api/v1/applications')
         .done(function(data) {
-            // initializePipelines(data.applications);
+            applicationsModel.setApplications(data.applications);
             callback(data.applications);
         });
+}
+
+function saveApplication(application, callback) {
+    let type = 'POST';
+    let url = '/api/v1/applications/';
+    if (application.id) {
+        type = 'PUT';
+        url = '/api/v1/applications/' + application.id;
+    }
+    $.ajax({
+        type: type,
+        url: url,
+        contentType: "application/json",
+        data: JSON.stringify(application),
+        success: callback
+    });
 }
 
 function savePipeline(pipeline, callback) {

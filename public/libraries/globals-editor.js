@@ -22,6 +22,11 @@ class GlobalsEditor {
         });
     }
 
+    clear() {
+        this.parent.empty();
+        this.data = {};
+    }
+
     getData() {
         return this.data;
     }
@@ -147,6 +152,7 @@ class GlobalsEditor {
         GlobalsEditor.addRemoveButton(formDiv);
     }
 
+    // TODO Need to make this work
     buildBooleanRow(parent) {
         const formDiv = $('<div class="form-group row">');
         formDiv.appendTo(parent.parent);

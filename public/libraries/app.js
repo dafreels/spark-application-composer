@@ -17,6 +17,7 @@ const portTemplate = {
     }
 };
 
+const applicationsModel = new ApplicationsModel(null);
 const stepsModel = new StepsModel(null);
 const pipelinesModel = new PipelinesModel(null);
 const schemasModel = new SchemasModel(null);
@@ -113,6 +114,12 @@ function loadPipelinesUI() {
     });
 }
 
+function loadApplicationsUI() {
+    loadApplications(() => {
+        renderApplicationsSelect();
+    });
+}
+
 function loadSchemasUI() {
     loadSchemas(() => {
         renderSchemaUI();
@@ -165,6 +172,8 @@ $(document).ready(function () {
     loadStepsUI();
     // Load the pipelines data from the API and render the UIs.
     loadPipelinesUI();
+    // Load the applications data from the API and rendere the UIs
+    loadApplicationsUI();
 
     // Load the known object schemas
     loadSchemasUI();

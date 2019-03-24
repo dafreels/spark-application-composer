@@ -20,6 +20,7 @@
     <script src="libraries/bootstrap/3.4.1/bootstrap.min.js"></script>
     <script src="libraries/bootstrap/tokenfield/0.12.1/bootstrap-tokenfield.min.js"></script>
     <script src="libraries/alpacajs/1.5.24/alpaca.min.js"></script>
+    <script src="libraries/applications-model.js"></script>
     <script src="libraries/steps-model.js"></script>
     <script src="libraries/pipelines-model.js"></script>
     <script src="libraries/schemas-model.js"></script>
@@ -61,7 +62,7 @@
                     <button id="reset-application-button" class="btn btn-info">Reset</button>
                 </div>
             </div>
-            <div>
+            <div id="application-form-div" style="display: none">
                 <div id="application-edit-panel" class="panel-group" role="tablist" aria-multiselectable="true">
                     <div class="panel panel-info">
                         <div id="spark-conf-heading" class="panel-heading" role="tab">
@@ -189,7 +190,9 @@
                                             <select id="selected-pipelines" multiple class="form-control" style="height: 100%"></select>
                                         </div>
                                     </div>
+                                    <div class="form-group row"><label class="col-sm-6">Override Classes:</label></div>
                                     <div id="edit-execution-classes-form"></div>
+                                    <div class="form-group row"><label class="col-sm-6">Override Globals:</label></div>
                                     <div id="edit-execution-globals-form"></div>
                                 </div>
                                 <div class="right">

@@ -7,8 +7,13 @@ let stepPackages;
 // The required parameters array
 let requiredParameters;
 
+// The application level editors
 let globals;
 let classOverrides;
+
+// The execution level editors
+let executionGlobals;
+let executionClassOverrides;
 
 let graphEditor;
 
@@ -31,9 +36,7 @@ function initializeApplicationEditor() {
     $('#new-application-button').click(handleNewApplication);
     $('#save-application-button').click(handleSaveApplication);
     $('#add-execution-button').click(handleAddExecution);
-    // TODO Add in protection against clearing the form when there are changes present
-    // TODO Create another function to clear all of the form elements
-    $('#reset-application-button').click(clearExecutionGraph);
+    $('#reset-application-button').click(handleClearApplicationForm);
 
     $('#kyro-classes').tokenfield()
         .on('tokenfield:createdtoken', handleKryoClassesChange)
@@ -49,9 +52,8 @@ function initializeApplicationEditor() {
         .on('tokenfield:createdtoken', handleRequiredParametersChange)
         .on('tokenfield:removedtoken', handleRequiredParametersChange);
 
-    // TODO Formalize this code
-    new ClassOverridesEditor($('#edit-execution-classes-form'), {});
-    new GlobalsEditor($('#edit-execution-globals-form'), {});
+    executionGlobals = new ClassOverridesEditor($('#edit-execution-classes-form'), {});
+    executionClassOverrides =  GlobalsEditor($('#edit-execution-globals-form'), {});
 
     // Create the pipeline selection buttons
     $('#add-pipeline-button').click(function() {
@@ -84,10 +86,6 @@ function initializeApplicationEditor() {
 /**
  * Clears the canvas
  */
-function clearExecutionGraph() {
-    this.graphEditor.clear();
-}
-
 function handleAddExecution() {
     showNewDialog(function(name) {
         // TODO Use the locations of other executions on the canvas to place this execution
@@ -210,6 +208,15 @@ function handleRequiredParametersChange() {
  * End application editor settings
  */
 
+function renderApplicationsSelect() {
+    const applications = $("#applications");
+    applications.empty();
+    applications.append($("<option />").val('none').text(''));
+    _.forEach(applicationsModel.getApplications(), (application) => {
+        applications.append($("<option/>").val(application.id).text(application.name));
+    });
+}
+
 function handleNewApplication() {
     if (currentApplication) {
         showClearFormDialog(function() {
@@ -224,7 +231,36 @@ function setupNewApplication(name) {
     currentApplication = {
         name: name
     };
+    $('#application-form-div').toggle();
     $('#applicationName').text(currentApplication.name);
+}
+
+function handleClearApplicationForm() {
+    if (currentApplication) {
+        showClearFormDialog(function() {
+            clearApplicationForm();
+        });
+    }
+}
+
+function clearApplicationForm() {
+    graphEditor.clear();
+    currentApplication = null;
+    kryoClasses = null;
+    stepPackages = null;
+    requiredParameters = null;
+    executionMetaData = null;
+    $('#kyro-classes').tokenfield('setTokens', []);
+    $('#step-packages').tokenfield('setTokens', []);
+    $('#required-parameters').tokenfield('setTokens', []);
+    $('#applicationName').text('');
+    $("#applications").val('none');
+    $('#spark-conf-options').empty();
+    classOverrides.clear();
+    globals.clear();
+    executionClassOverrides.clear();
+    executionGlobals.clear();
+    $('#application-form-div').toggle();
 }
 
 /*
@@ -257,15 +293,21 @@ function populateExecutionPipelineIds() {
  * Save functions
  */
 function handleSaveApplication() {
-    console.log(JSON.stringify(generateApplicationJson(), null, 4));
+    const application = generateApplicationJson();
+    // TODO handle validation
+    saveApplication(application, function() {
+        // TODO Reload the application drop down and select the just saved application
+        console.log(JSON.stringify(application, null, 4));
+    });
+
 }
 
 function generateApplicationJson() {
-    const application = {
-        sparkConf: {
-            kryoClasses: kryoClasses,
+    if (kryoClasses && kryoClasses.length > 0) {
+        currentApplication.sparkConf = {
+            kryoClasses: kryoClasses
         }
-    };
+    }
 
     let name;
     let value;
@@ -282,33 +324,36 @@ function generateApplicationJson() {
     });
 
     if (setOptions.length > 0) {
-        application.sparkConf.setOptions = setOptions;
+        if (!currentApplication.sparkConf) {
+            currentApplication.sparkConf = {};
+        }
+        currentApplication.sparkConf.setOptions = setOptions;
     }
 
-    application.stepPackages = stepPackages;
-    application.requiredParameters = requiredParameters;
-    application.globals = globals.getData();
+    currentApplication.stepPackages = stepPackages;
+    currentApplication.requiredParameters = requiredParameters;
+    currentApplication.globals = globals.getData();
     const classOverrideSettings = classOverrides.getValue();
-    application.pipelineListener = classOverrideSettings.pipelineListener;
-    application.securityManager = classOverrideSettings.securityManager;
-    application.stepMapper = classOverrideSettings.stepMapper;
+    currentApplication.pipelineListener = classOverrideSettings.pipelineListener;
+    currentApplication.securityManager = classOverrideSettings.securityManager;
+    currentApplication.stepMapper = classOverrideSettings.stepMapper;
 
     // Get the executions
     const executions = graphEditor.getGraphMetaData();
-    application.executions = [];
-    application.pipelines = [];
+    currentApplication.executions = [];
+    currentApplication.pipelines = [];
     const pipelineIds = [];
     _.forEach(executions, (execution) => {
-        application.executions.push(execution.metaData);
+        currentApplication.executions.push(execution.metaData);
         _.forEach(execution.metaData.pipelineIds, (id) => {
             if(pipelineIds.indexOf(id) === -1) {
                 pipelineIds.push(id);
-                application.pipelines.push(pipelinesModel.getPipeline(id));
+                currentApplication.pipelines.push(pipelinesModel.getPipeline(id));
             }
         });
     });
 
-    return application;
+    return currentApplication;
 }
 
 /*

@@ -10,6 +10,11 @@ class ClassOverridesEditor {
         return this.data;
     }
 
+    clear() {
+        this.parent.empty();
+        this.data = {};
+    }
+
     buildForm() {
         const pipelineListenerDiv = $('<div class="form-group settings-form"><label>Pipeline Listener</label></div>');
         const pipelineListenerInput = $('<input type="text"/>');
@@ -28,21 +33,30 @@ class ClassOverridesEditor {
 
         const parent = this;
         pipelineListenerInput.blur(function() {
-            parent.data.pipelineListener = {
-                className: setStringValue(pipelineListenerInput.val())
-            };
+            const val = setStringValue(pipelineListenerInput.val());
+            if (val) {
+                parent.data.pipelineListener = {
+                    className: val
+                };
+            }
         });
 
         securityManagerInput.blur(function() {
-            parent.data.securityManager = {
-                className: setStringValue(securityManagerInput.val())
-            };
+            const val = setStringValue(securityManagerInput.val());
+            if (val) {
+                parent.data.securityManager = {
+                    className: val
+                };
+            }
         });
 
         stepMapperInput.blur(function() {
-            parent.data.stepMapper = {
-                className: setStringValue(stepMapperInput.val())
-            };
+            const val = setStringValue(stepMapperInput.val());
+            if (val) {
+                parent.data.stepMapper = {
+                    className: val
+                };
+            }
         });
     }
 }
