@@ -1,12 +1,5 @@
 // The current application being edited
 let currentApplication;
-// The current kryoClasses array
-let kryoClasses;
-// The step packages array
-let stepPackages;
-// The required parameters array
-let requiredParameters;
-
 // The application level editors
 let globals;
 let classOverrides;
@@ -23,6 +16,7 @@ let executionMetaData;
 function initializeApplicationEditor() {
     const select = $('#applications');
     select.append($("<option />").val('none').text(''));
+    select.change(handleSelectApplication);
 
     // TODO add the remove handler?
     graphEditor = new GraphEditor($('#executionDesigner'),
@@ -52,8 +46,8 @@ function initializeApplicationEditor() {
         .on('tokenfield:createdtoken', handleRequiredParametersChange)
         .on('tokenfield:removedtoken', handleRequiredParametersChange);
 
-    executionGlobals = new ClassOverridesEditor($('#edit-execution-classes-form'), {});
-    executionClassOverrides =  GlobalsEditor($('#edit-execution-globals-form'), {});
+    executionClassOverrides = new ClassOverridesEditor($('#edit-execution-classes-form'), {});
+    executionGlobals =  new GlobalsEditor($('#edit-execution-globals-form'), {});
 
     // Create the pipeline selection buttons
     $('#add-pipeline-button').click(function() {
@@ -90,7 +84,7 @@ function handleAddExecution() {
     showNewDialog(function(name) {
         // TODO Use the locations of other executions on the canvas to place this execution
         const x = Math.round($('#executionDesigner').width() / 2);
-        const y = 50;
+        const y = graphEditor.getNextYCoordinate();
         graphEditor.addElementToCanvas(name, x, y, {
             id: name,
             pipelineIds: [],
@@ -173,15 +167,20 @@ function createExecution(name, x, y, metadata) {
  * These functions are only for the SparkConf editor section
  */
 function handleKryoClassesChange() {
-    kryoClasses = $('#kyro-classes').tokenfield('getTokensList').split(',').map(token => token.trim());
+    if (!currentApplication.sparkConf) {
+        currentApplication.sparkConf = {}
+    }
+    currentApplication.sparkConf.kryoClasses = $('#kyro-classes').tokenfield('getTokensList').split(',').map(token => token.trim());
 }
 
-function createStepOption() {
+function createStepOption(data) {
     const formDiv = $('<div class="row">');
     $('<label>Name:</label>').appendTo(formDiv);
-    $('<input name="stepOptionName" type="text"/>').appendTo(formDiv);
+    const name = $('<input name="stepOptionName" type="text"/>');
+    name.appendTo(formDiv);
     $('<label>Value:</label>').appendTo(formDiv);
-    $('<input name="stepOptionValue" type="text"/>').appendTo(formDiv);
+    const value = $('<input name="stepOptionValue" type="text"/>');
+    value.appendTo(formDiv);
     const button = $('<button class="btn btn-info" title="Remove Parameter">');
     button.appendTo(formDiv);
     $('<i class="glyphicon glyphicon-minus-sign"></i>').appendTo(button);
@@ -189,6 +188,11 @@ function createStepOption() {
         formDiv.remove();
     });
     formDiv.appendTo($('#spark-conf-options'));
+
+    if (data) {
+        name.val(data.name);
+        value.val(data.value);
+    }
 }
 /*
  * End SparkConf Editor functions
@@ -198,11 +202,11 @@ function createStepOption() {
  * These functions are only for the application settings editor section
  */
 function handleStepPackagesChange() {
-    stepPackages = $('#step-packages').tokenfield('getTokensList').split(',').map(token => token.trim());
+    currentApplication.stepPackages = $('#step-packages').tokenfield('getTokensList').split(',').map(token => token.trim());
 }
 
 function handleRequiredParametersChange() {
-    requiredParameters = $('#required-parameters').tokenfield('getTokensList').split(',').map(token => token.trim());
+    currentApplication.requiredParameters = $('#required-parameters').tokenfield('getTokensList').split(',').map(token => token.trim());
 }
 /*
  * End application editor settings
@@ -212,9 +216,20 @@ function renderApplicationsSelect() {
     const applications = $("#applications");
     applications.empty();
     applications.append($("<option />").val('none').text(''));
+    let applicationId;
+    const applicationName = (currentApplication && currentApplication.name) ? currentApplication.name : 'none';
     _.forEach(applicationsModel.getApplications(), (application) => {
+        if (application.name === applicationName) {
+            applicationId = application.id;
+        }
         applications.append($("<option/>").val(application.id).text(application.name));
     });
+    // Select the previously saved application
+    if (applicationId) {
+        clearApplicationForm();
+        applications.val(applicationId);
+        populateApplicationForm(applicationId);
+    }
 }
 
 function handleNewApplication() {
@@ -224,6 +239,20 @@ function handleNewApplication() {
         });
     } else {
         showNewDialog(setupNewApplication);
+    }
+}
+
+function handleSelectApplication() {
+    const selectedApplication = $(this).val();
+    if (currentApplication) {
+        const previouslySelected = currentApplication.id || 'none';
+        showClearFormDialog(function () {
+            populateApplicationForm(selectedApplication);
+        }, function () {
+            $('#applications').val(previouslySelected);
+        });
+    } else {
+        populateApplicationForm(selectedApplication);
     }
 }
 
@@ -243,12 +272,57 @@ function handleClearApplicationForm() {
     }
 }
 
+function populateApplicationForm(applicationId) {
+    if (applicationId === 'none') {
+        return;
+    }
+
+    currentApplication = applicationsModel.getApplication(applicationId);
+    var $applicationFormDiv = $('#application-form-div');
+    if ($applicationFormDiv.css('display') === 'none') {
+        $applicationFormDiv.toggle();
+    }
+    $('#applicationName').text(currentApplication.name);
+    let kryoClasses = [];
+    if (currentApplication.sparkConf) {
+        kryoClasses = currentApplication.sparkConf.kryoClasses || [];
+        // Populate any parameters
+        _.forEach(currentApplication.sparkConf.setOptions, (option) => createStepOption(option));
+    }
+    $('#kyro-classes').tokenfield('setTokens', kryoClasses);
+    $('#step-packages').tokenfield('setTokens', currentApplication.stepPackages || []);
+    $('#required-parameters').tokenfield('setTokens', currentApplication.requiredParameters || []);
+
+    classOverrides.setValue(currentApplication);
+    globals.setValue(currentApplication.globals || {});
+
+    const addedElements = [];
+    const elements = {};
+    let children;
+    // Add all executions to the canvas
+    _.forEach(currentApplication.executions, (execution) => {
+        if (addedElements.indexOf(execution.id) === -1) {
+            elements[execution.id] = graphEditor.addElementToCanvas(execution.id, 0, 0, execution);
+            addedElements.push(execution.id);
+            // Link to children
+            children = _.filter(currentApplication.executions, child => child.parents.indexOf(execution.id) !== -1);
+            _.forEach(children, (child) => {
+                if (addedElements.indexOf(child.id) === -1) {
+                    elements[child.id] = graphEditor.addElementToCanvas(child.id, 0, 0, child);
+                    addedElements.push(child.id);
+                }
+                // Create a link between this child and the parent
+                graphEditor.createLink(elements[execution.id], elements[child.id]);
+            });
+        }
+    });
+    // Perform a layout
+    graphEditor.performAutoLayout();
+}
+
 function clearApplicationForm() {
     graphEditor.clear();
     currentApplication = null;
-    kryoClasses = null;
-    stepPackages = null;
-    requiredParameters = null;
     executionMetaData = null;
     $('#kyro-classes').tokenfield('setTokens', []);
     $('#step-packages').tokenfield('setTokens', []);
@@ -260,6 +334,8 @@ function clearApplicationForm() {
     globals.clear();
     executionClassOverrides.clear();
     executionGlobals.clear();
+    $('#available-pipelines').empty();
+    $('#selected-pipelines').empty();
     $('#application-form-div').toggle();
 }
 
@@ -269,12 +345,17 @@ function clearApplicationForm() {
 function loadExecutionEditorPanel(metaData) {
     executionMetaData = metaData;
     const pipelines = pipelinesModel.getPipelines();
-    // TODO Filter pipelines by what is already in the execution list/application list
     const availableSelect = $('#available-pipelines');
     availableSelect.empty();
     const selectedPipelines = $('#selected-pipelines');
     selectedPipelines.empty();
-    _.forEach(pipelines, pipeline => $('<option value="' + pipeline.id + '">' + pipeline.name + '</option>').appendTo(availableSelect));
+    _.forEach(_.filter(pipelines, p => metaData.pipelineIds.indexOf(p.id) === -1), pipeline => $('<option value="' + pipeline.id + '">' + pipeline.name + '</option>').appendTo(availableSelect));
+    _.forEach(_.filter(pipelines, p => metaData.pipelineIds.indexOf(p.id) !== -1), pipeline => $('<option value="' + pipeline.id + '">' + pipeline.name + '</option>').appendTo(selectedPipelines));
+    // Populate the class overrides and globals
+    executionClassOverrides.clear();
+    executionClassOverrides.setValue(metaData);
+    executionGlobals.clear();
+    executionGlobals.setValue(metaData.globals || {});
 }
 
 function populateExecutionPipelineIds() {
@@ -294,21 +375,45 @@ function populateExecutionPipelineIds() {
  */
 function handleSaveApplication() {
     const application = generateApplicationJson();
-    // TODO handle validation
-    saveApplication(application, function() {
-        // TODO Reload the application drop down and select the just saved application
-        console.log(JSON.stringify(application, null, 4));
-    });
+    const validations = validateApplication(application);
+    if (validations.length === 0) {
+        saveApplication(application, function () {
+            loadApplicationsUI();
+        });
+    } else {
+        showValidationErrorDialog(validations);
+    }
+}
 
+function validateApplication(application) {
+    const validations = [];
+
+    if (!application.name || application.name.trim().length < 3) {
+        validations.push({
+            header: 'Name',
+            messages: ['Name is required to be at least 3 characters!']
+        });
+    }
+    // validate the executions
+    let executionValidation;
+    _.forEach(application.executions, (execution) => {
+        if ((!execution.pipelineIds || execution.pipelineIds.length === 0) &&
+            (!execution.pipelines || execution.pipelines.length === 0))  {
+            if (!executionValidation) {
+                executionValidation = {
+                    header: 'Executions',
+                    messages: []
+                };
+                validations.push(executionValidation);
+            }
+            executionValidation.messages.push('Execution named ' + execution.id + ' needs to define at least one pipeline!');
+        }
+    });
+    // TODO Add additional validations
+    return validations;
 }
 
 function generateApplicationJson() {
-    if (kryoClasses && kryoClasses.length > 0) {
-        currentApplication.sparkConf = {
-            kryoClasses: kryoClasses
-        }
-    }
-
     let name;
     let value;
     const setOptions = [];
@@ -330,8 +435,6 @@ function generateApplicationJson() {
         currentApplication.sparkConf.setOptions = setOptions;
     }
 
-    currentApplication.stepPackages = stepPackages;
-    currentApplication.requiredParameters = requiredParameters;
     currentApplication.globals = globals.getData();
     const classOverrideSettings = classOverrides.getValue();
     currentApplication.pipelineListener = classOverrideSettings.pipelineListener;

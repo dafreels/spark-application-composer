@@ -1,9 +1,5 @@
 const pipelinesContainerId = 'pipelines-editor';
 
-const stepSize = {
-    width: 275,
-    height: 50
-};
 const controlCharacters = ['!', '@', '#'];
 
 let graph;

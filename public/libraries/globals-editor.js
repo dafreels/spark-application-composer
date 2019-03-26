@@ -25,14 +25,30 @@ class GlobalsEditor {
     clear() {
         this.parent.empty();
         this.data = {};
+        this.buildNewDropDown();
     }
 
     getData() {
         return this.data;
     }
 
+    setValue(data) {
+        this.data = data;
+        this.populateForm();
+    }
+
     populateForm() {
-        // TODO Use the provided data to fill out the form
+        _.forOwn(this.data, (value, key) => {
+            if (_.isNumber(this.data[key])) {
+                this.buildNumberRow(this, key);
+            } else if (_.isObject(this.data[key])) {
+                this.buildEditorRow(this, !value.className, key);
+            } else if (_.isBoolean(this.data[key])) {
+                this.buildBooleanRow(this, key);
+            } else {
+                this.buildStringRow(this, key);
+            }
+        });
     }
 
     buildNewDropDown() {
@@ -104,7 +120,7 @@ class GlobalsEditor {
         });
     }
 
-    buildStringRow(parent) {
+    buildStringRow(parent, propertyName) {
         const formDiv = $('<div class="form-group row">');
         formDiv.appendTo(parent.parent);
         $('<label class="col-sm-2">Name:</label>').appendTo(formDiv);
@@ -126,9 +142,14 @@ class GlobalsEditor {
         });
 
         GlobalsEditor.addRemoveButton(formDiv);
+
+        if (parent.data && propertyName) {
+            nameInput.val(propertyName);
+            valueInput.val(parent.data[propertyName]);
+        }
     }
 
-    buildNumberRow(parent) {
+    buildNumberRow(parent, propertyName) {
         const formDiv = $('<div class="form-group row">');
         formDiv.appendTo(parent.parent);
         $('<label class="col-sm-2">Name:</label>').appendTo(formDiv);
@@ -150,51 +171,64 @@ class GlobalsEditor {
         });
 
         GlobalsEditor.addRemoveButton(formDiv);
+
+        if (parent.data && propertyName) {
+            nameInput.val(propertyName);
+            valueInput.val(parent.data[propertyName]);
+        }
     }
 
-    // TODO Need to make this work
-    buildBooleanRow(parent) {
+    buildBooleanRow(parent, propertyName) {
         const formDiv = $('<div class="form-group row">');
         formDiv.appendTo(parent.parent);
         $('<label class="col-sm-2">Name:</label>').appendTo(formDiv);
         const nameInput = $('<input class="col-sm-2" type="text"/>');
         nameInput.appendTo(formDiv);
-        $('<label class="col-sm-2">Value:</label>').appendTo(formDiv);
 
-        const radioDiv = $('<div class="btn-group col-sm-4" data-toggle="buttons">');
+        const radioId = 'globalsRadio_' + Math.floor(Math.random() * Math.floor(1000));
+
+        const radioDiv = $('<div class="col-sm-4">');
         radioDiv.appendTo(formDiv);
-        const trueLabel = $('<label class="btn btn-info">');
-        trueLabel.appendTo(radioDiv);
-        const trueInput = $('<input type="radio" value="true"/>');
+        const trueLabel = $('<label class="radio-inline">');
+        const trueInput = $('<input name="' + radioId + '" type="radio" value="true"/>');
+        trueInput.uniqueId();
         trueInput.appendTo(trueLabel);
         trueLabel.append('True');
+        trueLabel.appendTo(radioDiv);
 
-        const falseLabel = $('<label class="btn btn-info">');
-        falseLabel.appendTo(radioDiv);
-        const falseInput = $('<input type="radio" value="false"/>');
+        const falseLabel = $('<label class="radio-inline">');
+        const falseInput = $('<input name="' + radioId + '" type="radio" value="false"/>');
         falseInput.appendTo(falseLabel);
         falseLabel.append('False');
+        falseLabel.appendTo(radioDiv);
 
         let currentName;
         nameInput.blur(function() {
+            if (currentName && currentName !== nameInput.val()) {
+                delete parent.data[currentName];
+            }
             currentName = nameInput.val();
-            // data[currentName] = radioDiv.find('input:checked').val();
+            data[currentName] = $('input[name="' + radioId + '"]:checked').val();
         });
 
         trueInput.change(function() {
-            console.log('True: ' + $(this).is(':checked'));
-            // data[nameInput.val()] = true;
+            parent.data[nameInput.val()] = $(this).val();
         });
 
         falseInput.change(function() {
-            console.log('False: ' + $(this).is(':checked'));
-            // data[nameInput.val()] = false;
+            parent.data[nameInput.val()] = $(this).val();
         });
 
         GlobalsEditor.addRemoveButton(formDiv);
+
+        if (parent.data && propertyName) {
+            currentName = propertyName;
+            nameInput.val(propertyName);
+            $('input[name="' + radioId + '"]').filter('[value='+ parent.data[propertyName] +']').prop('checked', true);
+        }
     }
 
-    buildEditorRow(parent, code) {
+    buildEditorRow(parent, code, propertyName) {
         const formDiv = $('<div class="row">');
         formDiv.appendTo(parent.parent);
         $('<label class="col-sm-2">Name:</label>').appendTo(formDiv);
@@ -214,18 +248,22 @@ class GlobalsEditor {
         } else {
             button.click(function() {
                 const value = parent.data[nameInput.val()];
-                let code = {};
+                let codeObject = {};
                 let className;
                 if (value) {
-                    code = value.object;
+                    codeObject = value.object;
                     className = value.className;
                 }
-                showObjectEditor(code, className, function(value, cn) {
+                showObjectEditor(codeObject, className, function(value, cn) {
                     GlobalsEditor.setFieldValue(nameInput.val(), {className: cn, object: value}, parent.data);
                 });
             });
         }
 
         GlobalsEditor.addRemoveButton(formDiv);
+
+        if (parent.data && propertyName) {
+            nameInput.val(propertyName);
+        }
     }
 }

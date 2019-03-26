@@ -17,6 +17,11 @@ const portTemplate = {
     }
 };
 
+const stepSize = {
+    width: 275,
+    height: 50
+};
+
 const applicationsModel = new ApplicationsModel(null);
 const stepsModel = new StepsModel(null);
 const pipelinesModel = new PipelinesModel(null);

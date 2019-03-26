@@ -12,9 +12,10 @@ class GraphEditor {
         this.elementSelectHandler = elementSelectHandler;
         this.elements = {};
         this.currentHighlightedElement = null;
+        this.graphElement = graphElement;
         this.graph = new joint.dia.Graph;
         this.paper = new joint.dia.Paper({
-            el: graphElement,
+            el: this.graphElement,
             model: this.graph,
             height: 800,
             width: '95%',
@@ -53,6 +54,45 @@ class GraphEditor {
         });
     }
 
+    /**
+     * Find the next Y coordinate based on the
+     * @returns {number}
+     */
+    getNextYCoordinate() {
+        let elementY;
+        let largestY = 0;
+        _.forOwn(this.elements, (element) => {
+            elementY = element.attributes.position.y;
+            if (elementY >= largestY) {
+                largestY = elementY;
+            }
+        });
+
+        if (largestY > 0) {
+            return largestY += 55;
+        }
+
+        return 50;
+    }
+
+    /**
+     * Do an automatic layout on the elements of the canvas
+     */
+    performAutoLayout() {
+        joint.layout.DirectedGraph.layout(this.graph, {
+            setLinkVertices: false,
+            marginX: 10,
+            marginY: 10,
+            nodeSep: 50,
+            edgeSep: 50,
+            rankDir: "TB"
+        });
+    }
+
+    /**
+     * Returns the elements of the graph as an array of JSON objects.
+     * @returns {Array} An array of JSON objects repesenting the graph.
+     */
     getGraphMetaData() {
         const executions = [];
         let links;
@@ -85,6 +125,45 @@ class GraphEditor {
         execution.addTo(this.graph);
         this.elements[execution.id] = execution;
         return execution;
+    }
+
+    /**
+     * Given two models, create a link between them.
+     * @param source The source model
+     * @param target The target model
+     * @param port An optional port name to link. Defaults to 'out'
+     */
+    createLink(source, target, port) {
+        const outPorts = _.filter(source.getPorts(), p => p.group === 'out');
+        let outPortId;
+        if (port) {
+            outPortId = _.find(outPorts, p => p.attrs.text.text === port).id;
+        } else {
+            const outport = _.find(outPorts, p => p.group === 'out');
+            if (outport) {
+                outPortId = outport.id;
+            }
+        }
+        if (!outPortId) {
+            port = _.assign({}, portTemplate);
+            port.group = 'out';
+            port.name = 'dynamicPort_' + Math.floor(Math.random() * Math.floor(1000));
+            source.addPorts([port]);
+            outPortId = _.find(source.getPorts(), p => p.group === 'out' && p.name === port.name).id;
+        }
+        const inPortId = _.find(target.getPorts(), p => p.group === 'in').id;
+        const link = new joint.dia.Link({
+            attrs: {'.marker-target': {d: 'M 10 0 L 0 5 L 10 10 z'}},
+            source: {
+                id: source.id,
+                port: outPortId
+            },
+            target: {
+                id: target.id,
+                port: inPortId
+            }
+        });
+        this.graph.addCell(link);
     }
 
     /**
