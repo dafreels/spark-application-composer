@@ -19,4 +19,8 @@ class SchemasModel {
         const schema = _.find(this.schemas, s => s.id === name);
         return cloneObject(schema);
     }
+
+    count() {
+        return this.schemas.length;
+    }
 }

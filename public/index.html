@@ -46,13 +46,49 @@
 </head>
 <body>
 <div id="tabs">
-    <ul class="nav nav-tabs" role="tablist">
-        <li role="presentation" class="active"><a href="#tabs-1" aria-controls="tabs-1" role="tab" data-toggle="tab">Application Editor</a></li>
-        <li role="presentation"><a href="#tabs-2" aria-controls="tabs-2" role="tab" data-toggle="tab">Pipeline Editor</a></li>
-        <li role="presentation"><a href="#tabs-3" aria-controls="tabs-3" role="tab" data-toggle="tab">Step Editor</a></li>
-    </ul>
+    <nav class="navbar navbar-inverse">
+        <div class="container-fluid">
+            <ul class="nav navbar-nav">
+                <li role="presentation" class="active"><a href="#home" aria-controls="home" role="tab" data-toggle="tab">Home</a></li>
+                <li role="presentation"><a href="#tabs-1" aria-controls="tabs-1" role="tab" data-toggle="tab">Application Editor</a></li>
+                <li role="presentation"><a href="#tabs-2" aria-controls="tabs-2" role="tab" data-toggle="tab">Pipeline Editor</a></li>
+                <li role="presentation"><a href="#tabs-3" aria-controls="tabs-3" role="tab" data-toggle="tab">Step Editor</a></li>
+            </ul>
+            <div class="pull-right" style="margin-top: 8px">
+                <button id="load-content-button" class="btn btn-primary">Load Metadata</button>
+            </div>
+        </div>
+    </nav>
     <div class="tab-content">
-        <div id="tabs-1" role="tabpanel" class="tab-pane active">
+        <div id="home" role="tabpanel" class="tab-pane active">
+                <div style="display: grid; grid-template-rows: 1fr 1fr; grid-template-columns: 1fr 1fr 1fr 1fr; grid-gap: 8px; margin: 0 10px 0 10px;">
+                    <div class="panel panel-success" style="margin-right: 8px">
+                        <div class="panel-heading"><h3>Applications</h3></div>
+                        <div class="panel-body">
+                            <h3 id="application-counts"></h3>
+                        </div>
+                    </div>
+                    <div class="panel panel-success" style="margin-right: 8px">
+                        <div class="panel-heading"><h3>Pipelines</h3></div>
+                        <div class="panel-body">
+                            <h3 id="pipeline-counts"></h3>
+                        </div>
+                    </div>
+                    <div class="panel panel-success" style="margin-right: 8px">
+                        <div class="panel-heading"><h3>Steps</h3></div>
+                        <div class="panel-body">
+                            <h3 id="step-counts"></h3>
+                        </div>
+                    </div>
+                    <div class="panel panel-success" style="margin-right: 8px">
+                        <div class="panel-heading"><h3>Object Schemas</h3></div>
+                        <div class="panel-body">
+                            <h3 id="schema-counts"></h3>
+                        </div>
+                    </div>
+                </div>
+        </div>
+        <div id="tabs-1" role="tabpanel" class="tab-pane">
             <div style="height: 10%; width:99%; margin: 0 0 8px 5px;">
                 <div class="top-name">
                     <label id="application-label">Application:</label><span id="applicationName"></span>
@@ -147,8 +183,13 @@
                             <div style="height: 25px;width: 100%;text-align: right;margin-right: 8px;">
                                 <button id="add-execution-button"
                                         class="btn btn-info"
-                                        title="Add Parameter">
+                                        title="Add Execution">
                                     <i class="glyphicon glyphicon-plus-sign"></i>
+                                </button>
+                                <button id="layout-executions-button"
+                                        class="btn btn-info"
+                                        title="Auto Layout Executions">
+                                    <i class="glyphicon glyphicon-th"></i>
                                 </button>
                             </div>
                             <div class="panel-body">

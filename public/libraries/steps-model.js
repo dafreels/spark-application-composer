@@ -19,4 +19,8 @@ class StepsModel {
     getSteps() {
         return cloneObject(this.steps);
     }
+
+    count() {
+        return this.steps.length;
+    }
 }

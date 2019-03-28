@@ -40,7 +40,12 @@ function saveApplication(application, callback) {
         url: url,
         contentType: "application/json",
         data: JSON.stringify(application),
-        success: callback
+        success: function(data) {
+            callback(null, data);
+        },
+        error: function (req, status, error) {
+            callback(error);
+        }
     });
 }
 
@@ -56,20 +61,32 @@ function savePipeline(pipeline, callback) {
         url: url,
         contentType: "application/json",
         data: JSON.stringify(pipeline),
-        success: callback
+        success: function(data) {
+            callback(null, data);
+        },
+        error: function (req, status, error) {
+            callback(error);
+        }
     });
 }
 
 function saveBulkSteps(steps, callback) {
-    if (_.isArray(JSON.parse(steps))) {
-        $.ajax({
-            type: 'POST',
-            url: '/api/v1/steps/',
-            contentType: "application/json",
-            data: steps,
-            success: callback
-        });
+    let body = steps;
+    if (_.isObject(steps)) {
+        body = JSON.stringify(steps);
     }
+    $.ajax({
+        type: 'PUT',
+        url: '/api/v1/steps/',
+        contentType: "application/json",
+        data: body,
+        success: function(data) {
+            callback(null, data);
+        },
+        error: function (req, status, error) {
+            callback(error);
+        }
+    });
 }
 
 function saveStep(step, callback) {
@@ -84,7 +101,12 @@ function saveStep(step, callback) {
         url: url,
         contentType: "application/json",
         data: JSON.stringify(step),
-        success: callback
+        success: function(data) {
+            callback(null, data);
+        },
+        error: function (req, status, error) {
+            callback(error);
+        }
     });
 }
 function loadSchemas(callback) {
@@ -95,4 +117,23 @@ function loadSchemas(callback) {
                 callback();
             }
         });
+}
+
+function saveSchemas(schemas, callback) {
+    let body = schemas;
+    if (_.isObject(schemas)) {
+        body = JSON.stringify(schemas);
+    }
+    $.ajax({
+        type: 'POST',
+        url: '/api/v1/package-objects/',
+        contentType: "application/json",
+        data: body,
+        success: function(data) {
+            callback(null, data);
+        },
+        error: function (req, status, error) {
+            callback(error);
+        }
+    });
 }

@@ -29,8 +29,9 @@ function initializeApplicationEditor() {
 
     $('#new-application-button').click(handleNewApplication);
     $('#save-application-button').click(handleSaveApplication);
-    $('#add-execution-button').click(handleAddExecution);
     $('#reset-application-button').click(handleClearApplicationForm);
+    $('#add-execution-button').click(handleAddExecution);
+    $('#layout-executions-button').click(handleExecutionLayout);
 
     $('#kyro-classes').tokenfield()
         .on('tokenfield:createdtoken', handleKryoClassesChange)
@@ -77,9 +78,6 @@ function initializeApplicationEditor() {
 /*
  * Graph functions
  */
-/**
- * Clears the canvas
- */
 function handleAddExecution() {
     showNewDialog(function(name) {
         // TODO Use the locations of other executions on the canvas to place this execution
@@ -92,6 +90,10 @@ function handleAddExecution() {
             parents: []
         });
     });
+}
+
+function handleExecutionLayout() {
+    graphEditor.performAutoLayout();
 }
 
 /**

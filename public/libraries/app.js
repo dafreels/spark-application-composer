@@ -110,24 +110,54 @@ function loadStepsUI() {
     loadSteps(() => {
         loadPipelineDesignerStepsUI();
         renderStepSelectionUI();
+        $('#step-counts').text(stepsModel.count());
     });
 }
 
 function loadPipelinesUI() {
     loadPipelines(() => {
         renderPipelinesDesignerSelect();
+        $('#pipeline-counts').text(pipelinesModel.count());
     });
 }
 
 function loadApplicationsUI() {
     loadApplications(() => {
         renderApplicationsSelect();
+        $('#application-counts').text(applicationsModel.count());
     });
 }
 
 function loadSchemasUI() {
     loadSchemas(() => {
         renderSchemaUI();
+        $('#schema-counts').text(schemasModel.count());
+    });
+}
+
+function handleLoadContent() {
+    showCodeEditorDialog('', 'json', function(value) {
+        // TODO Wrap in a try and show an alert if the JSON is not valid
+        const metadata = JSON.parse(value);
+        if (metadata.steps && metadata.steps.length > 0) {
+            saveBulkSteps(metadata.steps, function (err) {
+                if(err) {
+                    console.log('Steps load received an error: ' + err);
+                }
+                loadStepsUI();
+            });
+        }
+        if (metadata.pkgObjs && metadata.pkgObjs.length > 0) {
+            const pkgObjs = [];
+            // Convert the string schema to a JSON object
+            _.forEach(metadata.pkgObjs, pkg => pkgObjs.push({id: pkg.id, schema: JSON.parse(pkg.schema)}));
+            saveSchemas(pkgObjs, function (err) {
+                if (err) {
+                    console.log('Schemas load received an error: ' + err);
+                }
+                loadSchemasUI();
+            });
+        }
     });
 }
 
@@ -182,6 +212,9 @@ $(document).ready(function () {
 
     // Load the known object schemas
     loadSchemasUI();
+
+    // Register the load content button
+    $('#load-content-button').click(handleLoadContent);
 });
 
 /**

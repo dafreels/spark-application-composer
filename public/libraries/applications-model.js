@@ -15,4 +15,8 @@ class ApplicationsModel {
     getApplications() {
         return cloneObject(this.applications);
     }
+
+    count() {
+        return this.applications.length;
+    }
 }

@@ -18,7 +18,7 @@ function initializeStepsEditor() {
 function handleBulkAdd() {
     showCodeEditorDialog('[]', 'json',
         function(code) {
-            saveBulkSteps(code, function() {
+            saveBulkSteps(JSON.parse(code), function() {
                 currentEditorStepId = null;
                 loadStepsUI();
                 clearStepForm(true);

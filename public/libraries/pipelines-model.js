@@ -27,4 +27,8 @@ class PipelinesModel {
         }
         return null;
     }
+
+    count() {
+        return this.pipelines.length;
+    }
 }
