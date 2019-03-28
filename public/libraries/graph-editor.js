@@ -43,6 +43,7 @@ class GraphEditor {
         this.paper.on('cell:mouseover', this.handleExecutionMouseOver);
         this.paper.on('cell:mouseout', this.handleExecutionMouseOut);
         this.paper.on('close:button:pointerdown', function (evt) {
+            parent.removeElement(evt);
             if (parent.removeHandler) {
                 parent.removeHandler(evt);
             }
@@ -52,6 +53,16 @@ class GraphEditor {
                 parent.addHandler(evt);
             }
         });
+    }
+
+    /**
+     * Remove the element from the canvas and any links.
+     * @param element The element to remove.
+     */
+    removeElement(element) {
+        _.forEach(this.graph.getConnectedLinks(element), link => link.remove());
+        this.elements[element.model.id].remove();
+        delete this.elements[element.model.id];
     }
 
     /**
@@ -91,7 +102,7 @@ class GraphEditor {
 
     /**
      * Returns the elements of the graph as an array of JSON objects.
-     * @returns {Array} An array of JSON objects repesenting the graph.
+     * @returns {Array} An array of JSON objects representing the graph.
      */
     getGraphMetaData() {
         const executions = [];
@@ -113,7 +124,7 @@ class GraphEditor {
     }
 
     /**
-     * Adds a new execution to the canvas
+     * Adds a new element to the canvas
      * @param name The name to display
      * @param x The x coordinates on the canvas
      * @param y The y coordinates on the canvas
@@ -121,10 +132,9 @@ class GraphEditor {
      * @returns {*}
      */
     addElementToCanvas(name, x, y, metadata) {
-        const execution = this.createElementHandler(name, x, y, metadata || {});
-        execution.addTo(this.graph);
-        this.elements[execution.id] = execution;
-        return execution;
+        const element = this.createElementHandler(name, x, y, metadata || {});
+        this.elements[element.id] = element.addTo(this.graph);
+        return this.elements[element.id];
     }
 
     /**
