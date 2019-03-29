@@ -17,7 +17,8 @@ class PipelinesModel {
     }
 
     isValidPipelineId(id) {
-        return this.getPipeline(id) !== undefined;
+        const pipeline = this.getPipeline(id)
+        return pipeline !== undefined && pipeline !== null;
     }
 
     getPipelineName(id) {

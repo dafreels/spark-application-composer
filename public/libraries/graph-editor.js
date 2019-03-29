@@ -23,7 +23,7 @@ class GraphEditor {
             defaultLink: new joint.dia.Link({
                 attrs: {'.marker-target': {d: 'M 10 0 L 0 5 L 10 10 z'}}
             }),
-            allowLink: this.handleLinkEvent,
+            allowLink: GraphEditor.handleLinkEvent,
             validateConnection: function (cellViewS, magnetS, cellViewT, magnetT) {
                 if (parent.getConnectedLinks(cellViewT.model, V(magnetT).attr('port'), parent.graph) > 0) return false;
                 // Prevent linking from input ports.
@@ -40,8 +40,8 @@ class GraphEditor {
         });
 
         this.paper.on('cell:pointerclick', this.handleElementSelect());
-        this.paper.on('cell:mouseover', this.handleExecutionMouseOver);
-        this.paper.on('cell:mouseout', this.handleExecutionMouseOut);
+        this.paper.on('cell:mouseover', GraphEditor.handleExecutionMouseOver);
+        this.paper.on('cell:mouseout', GraphEditor.handleExecutionMouseOut);
         this.paper.on('close:button:pointerdown', function (evt) {
             parent.removeElement(evt);
             if (parent.removeHandler) {
@@ -138,6 +138,15 @@ class GraphEditor {
     }
 
     /**
+     * Allows access to the element on the canvas
+     * @param id The id of the canvas element
+     * @returns {*}
+     */
+    getElement(id) {
+        return this.elements[id];
+    }
+
+    /**
      * Given two models, create a link between them.
      * @param source The source model
      * @param target The target model
@@ -177,6 +186,31 @@ class GraphEditor {
     }
 
     /**
+     * Given an element, retrieve the target links.
+     * @param element The element to query
+     * @returns {*}
+     */
+    getTargetLinks(element) {
+        if (element) {
+            return _.filter(this.graph.getConnectedLinks(element), function (l) {
+                return l.get('target').id === element.id;
+            });
+        }
+        return [];
+    }
+
+    /**
+     * Returns the source links for an element
+     * @param element The element
+     * @returns {*} An array of source links
+     */
+    getSourceLinks(element) {
+        return _.filter(this.graph.getConnectedLinks(element), function (l) {
+            return l.get('source').id === element.id;
+        });
+    }
+
+    /**
      * Clears the canvas
      */
     clear() {
@@ -203,7 +237,7 @@ class GraphEditor {
      * @param linkView The link being drawn
      * @returns {boolean} true ig the link was properly connected
      */
-    handleLinkEvent(linkView) {
+    static handleLinkEvent(linkView) {
         return linkView.targetMagnet !== null;
     }
 
@@ -236,7 +270,7 @@ class GraphEditor {
      * Helper function that displays the close button when the mouse pointer is over the cell
      * @param evt The underlying cell
      */
-    handleExecutionMouseOver(evt) {
+    static handleExecutionMouseOver(evt) {
         const close = GraphEditor.getExecutionElements(evt);
         if (close.populated) {
             close.closeButton.setAttribute('visibility', 'visible');
@@ -252,7 +286,7 @@ class GraphEditor {
      * Helper function that hides the close button when the mouse pointer leaves the cell
      * @param evt The underlying cell
      */
-    handleExecutionMouseOut(evt) {
+    static handleExecutionMouseOut(evt) {
         const close = GraphEditor.getExecutionElements(evt);
         if (close.populated) {
             close.closeButton.setAttribute('visibility', 'hidden');
