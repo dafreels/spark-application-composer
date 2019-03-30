@@ -166,7 +166,7 @@ class GraphEditor {
         if (!outPortId) {
             port = _.assign({}, portTemplate);
             port.group = 'out';
-            port.name = 'dynamicPort_' + Math.floor(Math.random() * Math.floor(1000));
+            port.name = getCustomId('dynamicPort');
             source.addPorts([port]);
             outPortId = _.find(source.getPorts(), p => p.group === 'out' && p.name === port.name).id;
         }

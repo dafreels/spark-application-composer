@@ -185,13 +185,12 @@ class GlobalsEditor {
         const nameInput = $('<input class="col-sm-2" type="text"/>');
         nameInput.appendTo(formDiv);
 
-        const radioId = 'globalsRadio_' + Math.floor(Math.random() * Math.floor(1000));
+        const radioId = getCustomId('globalsRadio');
 
         const radioDiv = $('<div class="col-sm-4">');
         radioDiv.appendTo(formDiv);
         const trueLabel = $('<label class="radio-inline">');
         const trueInput = $('<input name="' + radioId + '" type="radio" value="true"/>');
-        trueInput.uniqueId();
         trueInput.appendTo(trueLabel);
         trueLabel.append('True');
         trueLabel.appendTo(radioDiv);

@@ -161,8 +161,7 @@ function createParameterForm() {
     $('<option value="script-javascript">Javascript Script</option>').appendTo(select);
     $('<option value="result">Branch Result</option>').appendTo(select);
     $('<option value="object">Object</option>').appendTo(select);
-    const requiredButton = $('<button type="button" class="btn btn-info" data-toggle="button" aria-pressed="false">Required</button>');
-    requiredButton.uniqueId();
+    const requiredButton = $('<button id="'+ getCustomId('cb') +'" type="button" class="btn btn-info" data-toggle="button" aria-pressed="false">Required</button>');
     column = $('<div class="col col-sm-2 cb-margin">');
     requiredButton.appendTo(column);
     column.appendTo(formDiv);
@@ -345,6 +344,8 @@ function stepNeedsSave() {
             return true;
         } else if (step.type !== originalStep.type) {
             return true;
+        } else if (step.category !== originalStep.category) {
+            return true;
         } else if (step.engineMeta.spark !== originalStep.engineMeta.spark) {
             return true;
         } else {
@@ -390,7 +391,7 @@ function stepNeedsSave() {
             return diff;
         }
     }
-    var changed = !_.isEmpty(step.engineMeta.spark);
+    let changed = !_.isEmpty(step.engineMeta.spark);
     _.forEach(_.keys(step).filter(p => p !== 'engineMeta' && p !== 'type'), function(property) {
         if (!_.isEmpty(step[property])) {
             changed = true;

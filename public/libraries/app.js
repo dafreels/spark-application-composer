@@ -88,22 +88,8 @@ function getConnectedLinks(cell, portId, graph) {
     }).length;
 }
 
-/**
- * Handles removal of links that cannot be connected.
- * @param linkView The link being drawn
- * @returns {boolean} true ig the link was properly connected
- */
-function handleLinkEvent(linkView) {
-    return linkView.targetMagnet !== null;
-}
-
-/**
- * Returns true if there are elements on the designer canvas.
- * @param graph The graph where the elements are stored
- * @returns {boolean}
- */
-function isDesignerPopulated(graph) {
-    return graph.getCells().length > 0;
+function getCustomId(prefix) {
+    return prefix +'_' + Math.floor(Math.random() * Math.floor(1000));
 }
 
 function loadStepsUI() {
