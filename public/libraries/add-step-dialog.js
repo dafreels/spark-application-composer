@@ -24,7 +24,16 @@ function handleAddStepCancel() {
 function handleAddStep() {
     const idField = $('#add-step-id');
     // TODO Make sure the id isn't already being used in the pipeline
-    addStepToDesigner(idField.val(), draggingStep.name, draggingStep.x - (stepSize.width / 2), draggingStep.y, draggingStep.stepMetaDataId);
+    const id = idField.val();
+    const step = pipelineGraphEditor.addElementToCanvas(draggingStep.name,
+        draggingStep.x - (stepSize.width / 2),
+        draggingStep.y,
+        stepsModel.getStep(draggingStep.stepMetaDataId));
+    step.attributes.metaData.id = id;
+    step.attributes.metaData.pipelineStepMetaData.id = id;
+    loadPropertiesPanel(step.attributes.metaData);
+    // currentSteps[step.id] = step;
+    diagramStepToStepMetaLookup[id] = step;
     idField.val('');
     draggingStep = null;
     $('#dialog-step-form').modal('hide');

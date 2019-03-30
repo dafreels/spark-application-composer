@@ -1,17 +1,26 @@
-let stepData;
 
-function initializeSteps(steps) {
-    stepData = steps;
-}
-
-function getStep(id) {
-    const step = _.find(stepData, s => s.id === id);
-    if (step) {
-        return cloneObject(step);
+class StepsModel {
+    constructor(steps) {
+        this.steps = steps;
     }
-    return null;
-}
 
-function getSteps() {
-    return cloneObject(stepData);
+    setSteps(steps) {
+        this.steps = steps;
+    }
+
+    getStep(id) {
+        const step = _.find(this.steps, s => s.id === id);
+        if (step) {
+            return cloneObject(step);
+        }
+        return null;
+    }
+
+    getSteps() {
+        return cloneObject(this.steps);
+    }
+
+    count() {
+        return this.steps.length;
+    }
 }

@@ -1,17 +1,7 @@
 const pipelinesContainerId = 'pipelines-editor';
 
-const stepSize = {
-    width: 275,
-    height: 50
-};
 const controlCharacters = ['!', '@', '#'];
 
-let graph;
-let paper;
-// Contains the element information that the user has selected
-let currentHighlightedElement;
-// Contains the current list of step elements on the designer canvas. The id is the element id of the canvas element.
-let currentSteps = {};
 // Contains a lookup from the unique step id within the pipeline back to the designer canvas element
 let diagramStepToStepMetaLookup = {};
 // Contains the metadata from the pipeline
@@ -19,52 +9,37 @@ let currentPipeline;
 // Only used during the save operation
 let savedPipelineName;
 
+let pipelineGraphEditor;
+
 /**
  * Initialize the pipeline designer drawing canvas
  */
 function initializePipelineEditor() {
-    graph = new joint.dia.Graph;
-    paper = new joint.dia.Paper({
-        el: $('#pipelineDesigner'),
-        model: graph,
-        height: 1600,
-        width: '100%',
-        gridSize: 1,
-        defaultLink: new joint.dia.Link({
-            attrs: {'.marker-target': {d: 'M 10 0 L 0 5 L 10 10 z'}}
-        }),
-        allowLink: handleLinkEvent,
-        validateConnection: function (cellViewS, magnetS, cellViewT, magnetT) {
-            if (getConnectedLinks(cellViewT.model, V(magnetT).attr('port')) > 0) return false;
-            // Prevent linking from input ports.
-            if (magnetS && magnetS.getAttribute('port-group') === 'in') return false;
-            // Prevent linking from output ports to input ports within one element.
-            if (cellViewS === cellViewT) return false;
-            // Prevent linking to input ports.
-            return magnetT && magnetT.getAttribute('port-group') === 'in';
-        },
-        validateMagnet: function (cellView, magnet) {
-            if (getConnectedLinks(cellView.model, V(magnet).attr('port')) > 0) return false;
-            if (magnet.getAttribute('magnet') !== 'passive') return true;
-        }
-    });
-
-    paper.on('cell:pointerclick', handleElementSelect);
-    paper.on('cell:mouseover', handleElementMouseOver);
-    paper.on('cell:mouseout', handleElementMouseOut);
-    paper.on('close:button:pointerdown', handleElementRemove);
+    pipelineGraphEditor = new GraphEditor($('#pipelineDesigner'),
+        createStep,
+        handleElementRemove,
+        null,
+        loadPropertiesPanel);
 
     // Pipeline Designer
     $('#save-button').click(handleSave);
     $('#new-button').click(handleNew);
     $('#copy-button').click(handleCopy);
     $('#reset-button').click(handleReset);
+    $('#layout-pipeline-button').click(function() {
+        pipelineGraphEditor.performAutoLayout();
+    });
 }
 
 function allowStepDrop(ev) {
     ev.preventDefault();
 }
 
+/**
+ * This function is called when a step is being dragged to the canvas. Even though it shows no references, it is being
+ * called by HTML code.
+ * @param ev The element being dragged.
+ */
 function dragStep(ev) {
     ev.dataTransfer.setData("text", $(ev.target).text());
     ev.dataTransfer.setData("id", ev.target.id.split('_')[1]);
@@ -85,90 +60,19 @@ function dropStep(ev) {
 }
 
 /**
- * Called when the user clicks the step in the designer.
- * @param evt The event from the click.
- */
-function handleElementSelect(evt) {
-    if (currentHighlightedElement) {
-        currentHighlightedElement.unhighlight();
-    }
-    currentHighlightedElement = evt;
-    evt.highlight();
-    loadPropertiesPanel(evt.model.attributes.metaData);
-}
-
-/**
  * Removes an element and any links from the designer canvas.
  * @param evt The element to remove
  */
 function handleElementRemove(evt) {
     const id = evt.model.attributes.metaData.pipelineStepMetaData.id;
-    const canvasElement = diagramStepToStepMetaLookup[id];
-    _.forEach(graph.getConnectedLinks(canvasElement), link => link.remove());
-    canvasElement.remove();
-    delete currentSteps[canvasElement.id];
     delete diagramStepToStepMetaLookup[id];
 }
 
-/**
- * Helper function that displays the close button when the mouse pointer is over the cell
- * @param evt The underlying cell
- */
-function handleElementMouseOver(evt) {
-    const close = getCloseElements(evt);
-    if (close.populated) {
-        close.closeButton.setAttribute('visibility', 'visible');
-        close.closeLabel.setAttribute('visibility', 'visible');
-    }
-}
-
-/**
- * Helper function that hides the close button when the mouse pointer leaves the cell
- * @param evt The underlying cell
- */
-function handleElementMouseOut(evt) {
-    const close = getCloseElements(evt);
-    if (close.populated) {
-        close.closeButton.setAttribute('visibility', 'hidden');
-        close.closeLabel.setAttribute('visibility', 'hidden');
-    }
-}
-
-/**
- * Utility function to locate the 'close button elements'
- */
-function getCloseElements(evt) {
-    const elements = {
-        populated: false
-    };
-    for (let i = 0; i < evt.el.children.length; i++) {
-        if (evt.el.children[i].attributes && evt.el.children[i].attributes['joint-selector']) {
-            if (evt.el.children[i].attributes['joint-selector'].value === 'link') {
-                switch(evt.el.children[i].children[0].attributes['joint-selector'].value) {
-                    case 'closeButton':
-                        elements.populated = true;
-                        elements.closeButton = evt.el.children[i].children[0];
-                        elements.closeLabel = evt.el.children[i].children[1];
-                        break;
-                    case 'closeLabel':
-                        elements.populated = true;
-                        elements.closeButton = evt.el.children[i].children[1];
-                        elements.closeLabel = evt.el.children[i].children[0];
-                        break;
-                }
-            }
-        }
-    }
-
-    return elements;
-}
-
 function handleNew() {
-    if (currentPipeline || isDesignerPopulated()) {
+    if (currentPipeline || pipelineGraphEditor.isCanvasPopulated()) {
         showClearFormDialog(function() {
             const select = $('#pipelines');
             select.val('none');
-            select.selectmenu('refresh');
             clearPipelineDesigner();
             showNewDialog(setupNew);
         }, cancelClearPipelines);
@@ -194,12 +98,11 @@ function cancelClearPipelines() {
     if (currentPipeline && currentPipeline.id) {
         const select = $('#pipelines');
         select.val(currentPipeline.id);
-        select.selectmenu('refresh');
     }
 }
 
 function handleCopy() {
-    if (currentPipeline || isDesignerPopulated()) {
+    if (currentPipeline || pipelineGraphEditor.isCanvasPopulated()) {
         showClearFormDialog(displayCopyPipelineDialog);
     } else {
         displayCopyPipelineDialog();
@@ -210,11 +113,10 @@ function displayCopyPipelineDialog() {
     showCopyPipelineDialog(function(name, pipelineId) {
         const select = $('#pipelines');
         select.val('none');
-        select.selectmenu('refresh');
         $('#pipelineName').text('');
         clearPipelineDesigner();
         // Get a cloned copy of the data
-        const pipeline = getPipeline(pipelineId);
+        const pipeline = pipelinesModel.getPipeline(pipelineId);
         // Remove the original id
         delete pipeline.id;
         delete pipeline._id;
@@ -228,11 +130,10 @@ function displayCopyPipelineDialog() {
  * Handles the reset button being clicked
  */
 function handleReset() {
-    if (currentPipeline || isDesignerPopulated()) {
+    if (currentPipeline || pipelineGraphEditor.isCanvasPopulated()) {
         showClearFormDialog(function() {
             const select = $('#pipelines');
             select.val('none');
-            select.selectmenu('refresh');
             $('#pipelineName').text('');
             clearPipelineDesigner();
         });
@@ -242,33 +143,11 @@ function handleReset() {
 }
 
 /**
- * Adds a new step to the designer canvas
- * @param id The unique id of the step within the pipeline
- * @param name The name to display
- * @param x The x coordiantes on the canvas
- * @param y The y coordinates on the canvas
- * @param stepId The id of the step metadata
- * @param loadProperties Determines whether the loadProperties function should be called after the step has been added to the designer
- * @returns {*}
- */
-function addStepToDesigner(id, name, x, y, stepId, loadProperties = true) {
-    const step = createStep(name, x, y, getStep(stepId)).addTo(graph);
-    step.attributes.metaData.pipelineStepMetaData.id = id;
-    if (loadProperties) {
-        loadPropertiesPanel(step.attributes.metaData);
-    }
-    currentSteps[step.id] = step;
-    diagramStepToStepMetaLookup[id] = step;
-    return step;
-}
-
-/**
  * Clears the canvas
  */
 function clearPipelineDesigner() {
-    graph.clear();
+    pipelineGraphEditor.clear();
     currentPipeline = null;
-    currentSteps = {};
     diagramStepToStepMetaLookup = {};
     clearPropertiesPanel();
 }
@@ -282,8 +161,8 @@ function clearPropertiesPanel() {
     $('#description').text('');
     $('#step-parameters-form div').remove();
     const selectedPipelineId = $('#pipelines').val();
-    if (isValidPipelineId(selectedPipelineId)) {
-        $('#pipelineName').text(getPipelineName(selectedPipelineId).name);
+    if (pipelinesModel.isValidPipelineId(selectedPipelineId)) {
+        $('#pipelineName').text(pipelinesModel.getPipelineName(selectedPipelineId).name);
     }
 }
 
@@ -296,17 +175,6 @@ function clearPropertiesPanel() {
  * @returns {devs.Model|Model|Model}
  */
 function createStep(name, x, y, metadata) {
-    const portTemplate = {
-        magnet: true,
-        label: {
-            markup: '<text class="label-text" font-size="12" fill="black"/>'
-        },
-        attrs: {
-            text: {
-                text: ''
-            }
-        }
-    };
     const inPort = _.assign({}, portTemplate);
     inPort.group = 'in';
     const ports = [inPort];
@@ -379,37 +247,6 @@ function createStep(name, x, y, metadata) {
 }
 
 /**
- * Determines the number of links already attached to the port.
- * @param cell The element.
- * @param portId The id of the port.
- * @returns {number} Number of links for the element and port.
- */
-function getConnectedLinks(cell, portId) {
-    let source;
-    return _.filter(graph.getConnectedLinks(cell), function (link) {
-        source = link.get('source') || {};
-        return source.id === cell.id && source.port === portId;
-    }).length;
-}
-
-/**
- * Handles removal of links that cannot be connected.
- * @param linkView The link being drawn
- * @returns {boolean} true ig the link was properly connected
- */
-function handleLinkEvent(linkView) {
-    return linkView.targetMagnet !== null;
-}
-
-/**
- * Returns true if there are elements on the designer canvas.
- * @returns {boolean}
- */
-function isDesignerPopulated() {
-    return graph.getCells().length > 0;
-}
-
-/**
  * Helper function to return the special character for parameter values.
  * @param selectVal The value from the select.
  * @returns {string}
@@ -442,14 +279,15 @@ function generatePipeline() {
     let step;
     let links;
     // Create the steps array
+    const currentSteps = pipelineGraphEditor.getGraphMetaData();
     _.forOwn(currentSteps, function (value) {
-        pipelineStepMetaData = value.attributes.metaData.pipelineStepMetaData;
-        stepMeta = value.attributes.metaData.stepMetaData;
+        pipelineStepMetaData = value.metaData.pipelineStepMetaData;
+        stepMeta = value.metaData.stepMetaData;
         step = _.assign({}, stepMeta);
         step.stepId = stepMeta.id;
         step.id = pipelineStepMetaData.id;
         step.executeIfEmpty = pipelineStepMetaData.executeIfEmpty;
-        step.params = []; // pipelineStepMetaData.params;
+        step.params = [];
         // Initialize the parameters
         let pipelineParam;
         _.forEach(stepMeta.params, (param) => {
@@ -458,12 +296,10 @@ function generatePipeline() {
         });
         ids.push(step.id);
         // Get the links for this step
-        links = _.filter(graph.getConnectedLinks(value), function (l) {
-            return l.get('source').id === value.id;
-        });
+        links = pipelineGraphEditor.getSourceLinks(diagramStepToStepMetaLookup[pipelineStepMetaData.id]);
         // Find the next step id
         if (step.type !== 'branch' && links.length === 1) {
-            step.nextStepId = currentSteps[links[0].get('target').id].attributes.metaData.pipelineStepMetaData.id;
+            step.nextStepId = pipelineGraphEditor.getElement(links[0].get('target').id).attributes.metaData.pipelineStepMetaData.id;
             nextStepIds.push(step.nextStepId);
         } else if (step.type === 'branch') {
             let port;
@@ -471,7 +307,7 @@ function generatePipeline() {
             _.forEach(links, function(link) {
                 port = value.getPort(link.get('source').port).attrs.text.text;
                 param = _.find(step.params, function(p) { return p.name === port }) || {};
-                param.value = currentSteps[link.get('target').id].attributes.metaData.pipelineStepMetaData.id;
+                param.value = pipelineGraphEditor.getElement(link.get('target').id).attributes.metaData.pipelineStepMetaData.id;
                 nextStepIds.push(param.value);
             });
         }
@@ -521,35 +357,6 @@ function getNextStepIds(step) {
     return ids;
 }
 
-/**
- * Given two models, create a link between them.
- * @param source The source model
- * @param target The target model
- * @param port An optional port name to link. Defaults to 'out'
- */
-function createLink(source, target, port) {
-    const outPorts = _.filter(source.getPorts(), p => p.group === 'out');
-    let outPortId;
-    if (port) {
-        outPortId = _.find(outPorts, p => p.attrs.text.text === port).id;
-    } else {
-        outPortId = _.find(outPorts, p => p.group === 'out').id;
-    }
-    const inPortId = _.find(target.getPorts(), p => p.group === 'in').id;
-    const link = new joint.dia.Link({
-        attrs: {'.marker-target': {d: 'M 10 0 L 0 5 L 10 10 z'}},
-        source: {
-            id: source.id,
-            port: outPortId
-        },
-        target: {
-            id: target.id,
-            port: inPortId
-        }
-    });
-    graph.addCell(link);
-}
-
 function populatePipelineData(pipeline) {
     currentPipeline = pipeline;
     $('#pipelineName').text(currentPipeline.name);
@@ -565,7 +372,8 @@ function populatePipelineData(pipeline) {
     _.forEach(currentPipeline.steps, function (step) {
         if (!stepIdLookup[step.id]) {
             // Add the steps to the designer
-            gstep = addStepToDesigner(step.id, step.displayName, x, y, step.stepId, false);
+            gstep = pipelineGraphEditor.addElementToCanvas(step.displayName, x, y, stepsModel.getStep(step.stepId));
+            diagramStepToStepMetaLookup[step.id] = gstep;
             gstep.attributes.metaData.pipelineStepMetaData = step;
             y += 100;
             stepIdLookup[step.id] = step.stepId;
@@ -577,7 +385,8 @@ function populatePipelineData(pipeline) {
                     if (param.value) {
                         pipelineStep = cloneObject(_.find(currentPipeline.steps, step => step.id === param.value));
                         // pipelineStep = getPipelineStep(currentPipeline.id, param.value);
-                        gstep = addStepToDesigner(pipelineStep.id, pipelineStep.displayName, childX, y, pipelineStep.stepId, false);
+                        gstep = pipelineGraphEditor.addElementToCanvas(pipelineStep.displayName, childX, y, pipelineStep.stepId);
+                        diagramStepToStepMetaLookup[pipelineStep.id] = gstep;
                         gstep.attributes.metaData.pipelineStepMetaData = pipelineStep;
                         stepIdLookup[pipelineStep.id] = pipelineStep.stepId;
                         childX += (stepSize.width + 10);
@@ -590,17 +399,19 @@ function populatePipelineData(pipeline) {
     // Create the links between steps
     _.forEach(currentPipeline.steps, (step) => {
         if (step.nextStepId) {
-            createLink(diagramStepToStepMetaLookup[step.id],
+            pipelineGraphEditor.createLink(diagramStepToStepMetaLookup[step.id],
                 diagramStepToStepMetaLookup[step.nextStepId]);
         } else if (step.type === 'branch') {
             _.forEach(_.filter(step.params, p => p.type === 'result' && p.value), (param) => {
-                createLink(diagramStepToStepMetaLookup[step.id],
+                pipelineGraphEditor.createLink(diagramStepToStepMetaLookup[step.id],
                     diagramStepToStepMetaLookup[param.value], param.name);
             });
         }
     });
 
     loadPropertiesPanel(diagramStepToStepMetaLookup[currentPipeline.steps[0].id].attributes.metaData);
+
+    pipelineGraphEditor.performAutoLayout();
 }
 
 /**
@@ -609,7 +420,7 @@ function populatePipelineData(pipeline) {
 function loadPipeline() {
     const pipelineId = $("#pipelines").val();
     if (pipelineId !== 'none') {
-        populatePipelineData(getPipeline(pipelineId));
+        populatePipelineData(pipelinesModel.getPipeline(pipelineId));
     }
 }
 
@@ -629,24 +440,30 @@ function loadPropertiesPanel(metaData) {
     const stepIdCompletion = buildParentIdCompletionArray(pipelineMetaData.id);
     // load step form
     const stepForm = $('<div id="' + stepMetaData.id + '">');
-    const formDiv = $('<div class="form-group dynamic-form">').appendTo(stepForm);
-    let label = $('<label>');
+    const formDiv = $('<div class="form-group row">').appendTo(stepForm);
+    let label = $('<label class="col-sm-3">');
     label.text('Execute If Empty:');
     label.appendTo(formDiv);
-    let input = $('<input id="executeIfEmpty"/>');
-    input.appendTo(formDiv);
-    let select = $('<select id="executeIfEmptyType" size="1">').appendTo(formDiv);
+    let input = $('<input id="executeIfEmpty" class="form-control"/>');
+    let inputDiv = $('<div class="col-sm-4">');
+    inputDiv.appendTo(formDiv);
+    input.appendTo(inputDiv);
+    let select = $('<select id="executeIfEmptyType" size="1" class="form-control">');
+    let selectDiv = $('<div class="col-sm-4" style="margin-left: 5px;">');
+    selectDiv.appendTo(formDiv);
+    select.appendTo(selectDiv);
     $(parameterTypeOptions).appendTo(select);
     input.focusin(function () {
         // TODO Never thought about doing this
-        if (select.val() === 'script') {
+        const selectVal = $('#executeIfEmptyType').val();
+        if (selectVal === 'script') {
             showCodeEditorDialog(pipelineMetaData.executeIfEmpty, 'scala',
                 function (value) {
                     pipelineMetaData.executeIfEmpty = value;
                     input.val(value);
                 });
             $(this).prop('disabled', true);
-        } else if (select.val() === 'object') {
+        } else if (selectVal === 'object') {
             // showObjectEditor(pipelineMetaData.executeIfEmpty || {},
             //     null,
             //     function(value, schemaName) {
@@ -668,30 +485,40 @@ function loadPropertiesPanel(metaData) {
     // Build out the parameters
     let paramRow;
     _.forEach(stepMetaData.params, (param) => {
-        paramRow = $('<div class="form-group dynamic-form">').appendTo(stepForm);
-        label = $('<label>');
+        paramRow = $('<div class="form-group row">').appendTo(stepForm);
+        label = $('<label class="col-sm-3">');
         label.text(param.name + ':');
         label.appendTo(paramRow);
-        input = $('<input id="' + param.name + '"/>');
-        input.appendTo(paramRow);
-        select = $('<select id="' + param.name + 'Type" size="1">').appendTo(paramRow);
-        select.appendTo(paramRow);
+        input = $('<input id="' + param.name + '" class="form-control"/>');
+        inputDiv = $('<div class="col-sm-4">');
+        inputDiv.appendTo(paramRow);
+        input.appendTo(inputDiv);
+        select = $('<select id="' + param.name + 'Type" size="1" class="form-control">').appendTo(paramRow);
+        selectDiv = $('<div class="col-sm-4" style="margin-left: 5px;">');
+        selectDiv.appendTo(paramRow);
+        select.appendTo(selectDiv);
         $(parameterTypeOptions).appendTo(select);
         input.focusin(function () {
-            const tempParam = _.find(pipelineMetaData.params, p => p.name === param.name);
-            if (select.val() === 'script') {
-                showCodeEditorDialog(tempParam.value, param.language || 'scala',
+            let tempParam = _.find(pipelineMetaData.params, p => p.name === param.name);
+            if (!tempParam) {
+                tempParam = {
+                    name: param.name
+                };
+            }
+            const selectVal = $('#' + param.name + 'Type').val();
+            if (selectVal === 'script') {
+                showCodeEditorDialog(tempParam.value || '', param.language || 'scala',
                     function (value, lang) {
                         tempParam.value = value;
                         tempParam.language = lang;
-                        input.val(value);
+                        $('#' + tempParam.name).val(value);
                     });
                 $(this).prop('disabled', true);
-            } else if (select.val() === 'object') {
+            } else if (selectVal === 'object') {
                 showObjectEditor(setStringValue(tempParam.value) || {},
                     param.className,
                     function(value, schemaName) {
-                        input.val(value);
+                        $('#' + tempParam.name).val(value);
                         tempParam.value = value;
                         tempParam.className = schemaName;
                     });
@@ -719,12 +546,11 @@ function loadPropertiesPanel(metaData) {
     }
     input.blur(handleInputChange);
     let el = $('#executeIfEmptyType');
-    el.selectmenu({ change: handleTypeSelectChange });
+    el.change(handleTypeSelectChange);
     el.val(type);
-    el.selectmenu('refresh');
     _.forEach(stepMetaData.params, function (param) {
         el = $('#' + param.name + 'Type');
-        el.selectmenu({ change: handleTypeSelectChange });
+        el.change(handleTypeSelectChange);
         input = $('#' + param.name);
         input.blur(handleInputChange);
     });
@@ -750,40 +576,35 @@ function loadPropertiesPanel(metaData) {
         // set the select value
         select = $('#' + param.name + 'Type');
         select.val(type);
-        select.selectmenu('refresh');
         // Prevent edits against the result fields
         if (param.type === 'result') {
             input.prop('disabled', true);
-            select.selectmenu( "disable" );
+            select.prop('disabled', 'disabled');
         }
     });
 }
 
+/**
+ * This function is used to build up the step name suggestion list.
+ * @param stepId The id of the step.
+ * @returns {Array|*}
+ */
 function buildParentIdCompletionArray(stepId) {
-    let links = getTargetLinks(diagramStepToStepMetaLookup[stepId]);
+    let links = pipelineGraphEditor.getTargetLinks(diagramStepToStepMetaLookup[stepId]);
     const stepIds = [];
     let nextLinks;
     let currentStep;
     while(links && links.length > 0) {
         nextLinks = [];
         _.forEach(links, (l) => {
-            currentStep = currentSteps[l.get('source').id];
+            currentStep = pipelineGraphEditor.getElement(l.get('source').id);
             stepIds.push(currentStep.attributes.metaData.pipelineStepMetaData.id);
-            nextLinks = _.union(nextLinks, getTargetLinks(currentStep))
+            nextLinks = _.union(nextLinks, pipelineGraphEditor.getTargetLinks(currentStep))
         });
         links = nextLinks;
     }
 
     return _.uniq(stepIds);
-}
-
-function getTargetLinks(el) {
-    if (el) {
-        return _.filter(graph.getConnectedLinks(el), function (l) {
-            return l.get('target').id === el.id;
-        });
-    }
-    return [];
 }
 
 function getType(value, defaultType) {
@@ -872,7 +693,7 @@ function handleSave() {
     let currentStep;
     let stepParam;
     _.forEach(pipeline.steps, function(step) {
-        currentStep = getStep(step.stepId);
+        currentStep = stepsModel.getStep(step.stepId);
         error = null;
         _.forEach(currentStep.params, function(param) {
             stepParam = _.find(step.params, function(p) { return  p.name === param.name});
@@ -914,13 +735,11 @@ function renderPipelinesDesignerSelect() {
     sourcePipelines.empty();
     pipelines.append($("<option />").val('none').text(''));
     sourcePipelines.append($("<option />").val('none').text(''));
-    _.forEach(getPipelines(), (pipeline) => {
+    _.forEach(pipelinesModel.getPipelines(), (pipeline) => {
         pipelines.append($("<option/>").val(pipeline.id).text(pipeline.name));
         sourcePipelines.append($("<option/>").val(pipeline.id).text(pipeline.name));
     });
-    pipelines.selectmenu({
-        change: verifyLoadPipeline
-    });
+    pipelines.change(verifyLoadPipeline);
     sourcePipelines.change(function () {
         $('#copy-pipeline-id').val($('#source-pipelines :selected').text() + '-1');
     });
@@ -929,7 +748,6 @@ function renderPipelinesDesignerSelect() {
         const possibleMatches = $("#pipelines option").filter(function () { return $(this).text() === savedPipelineName });
         // Should have only matched one
         pipelines.val($(possibleMatches[0]).val());
-        pipelines.selectmenu('refresh');
         savedPipelineName = null;
     }
 }
@@ -938,7 +756,7 @@ function renderPipelinesDesignerSelect() {
  * Loads the selected pipeline to the designer canvas
  */
 function verifyLoadPipeline() {
-    if (currentPipeline || isDesignerPopulated()) {
+    if (currentPipeline || pipelineGraphEditor.isCanvasPopulated()) {
         showClearFormDialog(function() {
             clearPipelineDesigner();
             loadPipeline();

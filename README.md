@@ -1,5 +1,15 @@
 # Spark Application Composer
-Allows the management of applications built for the Spark Pipeline Driver project.
+Allows the management of applications built with the [Spark Pipeline Driver](https://github.com/Acxiom/spark-pipeline-driver) project.
+
+## Steps Editor
+The steps editor is used to create and update the steps used to build the pipelines. A bulk load option is available to
+dump JSON metadata that is generated either by hand or using the [Application Utilities](https://github.com/Acxiom/spark-pipeline-driver/tree/develop/application-utils).
+
+## Pipeline Editor
+The pipeline editor is used to combine steps in a way that can process data using Spark.
+
+## Application Editor
+The application editor is used to build a complete execution in Spark.
 
 ## Building
 This project requires [NodeJS](https://nodejs.org/en/).
@@ -34,4 +44,4 @@ http://localhost:8000
 
 ## Generating Step Metadata
 A [tool](https://github.com/Acxiom/spark-pipeline-driver/tree/develop/application-utils) is provided that allows producing step metadata form jar files that contain steps that have been properly
-annotated.
+annotated. This data can be loaded into the system using the "Load Metadata" button on the home page.

@@ -14,7 +14,7 @@
                     "type": "string"
                 },
                 "schema": {
-                    "type": "string"
+                    "type": "object"
                 }
             }
         }

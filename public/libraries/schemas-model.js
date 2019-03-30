@@ -1,18 +1,26 @@
-let schemaData;
 
-function initializeSchemas(schemas) {
-    // TODO Refactor after API has been built
-    schemaData = [{
-        name: 'com.acxiom.pipeline.steps.Transformations',
-        schema: schemas
-    }];
-}
+class SchemasModel {
+    constructor(schemas) {
+        this.setSchemas(schemas);
+    }
 
-function getSchemas() {
-    return cloneObject(schemaData);
-}
+    setSchemas(schemas) {
+        this.schemas = _.map(schemas, (schema) => {
+            delete schema._id;
+            return schema;
+        });
+    }
 
-function getSchema(name) {
-    const schema = _.find(schemaData, s => s.name === name);
-    return cloneObject(schema);
+    getSchemas() {
+        return cloneObject(this.schemas);
+    }
+
+    getSchema(name) {
+        const schema = _.find(this.schemas, s => s.id === name);
+        return cloneObject(schema);
+    }
+
+    count() {
+        return this.schemas.length;
+    }
 }
