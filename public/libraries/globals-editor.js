@@ -253,7 +253,7 @@ class GlobalsEditor {
                     codeObject = value.object;
                     className = value.className;
                 }
-                showObjectEditor(codeObject, className, function(value, cn) {
+                objectEditorDialog.showObjectEditor(codeObject, className, function(value, cn) {
                     GlobalsEditor.setFieldValue(nameInput.val(), {className: cn, object: value}, parent.data);
                 });
             });

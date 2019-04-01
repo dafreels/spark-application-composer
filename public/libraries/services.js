@@ -137,3 +137,22 @@ function saveSchemas(schemas, callback) {
         }
     });
 }
+
+function validateObject(schemaId, obj, callback) {
+    let body = obj;
+    if (_.isObject(obj)) {
+        body = JSON.stringify(obj);
+    }
+    $.ajax({
+        type: 'PATCH',
+        url: '/api/v1/package-objects/' + schemaId + '/validate-object',
+        contentType: "application/json",
+        data: body,
+        success: function(data) {
+            callback(null, data);
+        },
+        error: function (req, status, error) {
+            callback(error);
+        }
+    });
+}
