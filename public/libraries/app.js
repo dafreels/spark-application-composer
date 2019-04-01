@@ -26,6 +26,7 @@ const applicationsModel = new ApplicationsModel(null);
 const stepsModel = new StepsModel(null);
 const pipelinesModel = new PipelinesModel(null);
 const schemasModel = new SchemasModel(null);
+let objectEditorDialog;
 
 function generateStepContainers(containerId, parentContainer, stepSelectHandler, dragHandler) {
     const steps = _.sortBy(stepsModel.getSteps(), ['category']);
@@ -73,20 +74,20 @@ function generateStepContainers(containerId, parentContainer, stepSelectHandler,
     });
 }
 
-/**
- * Determines the number of links already attached to the port.
- * @param cell The element.
- * @param portId The id of the port.
- * @param graph The graph where the links are stored
- * @returns {number} Number of links for the element and port.
- */
-function getConnectedLinks(cell, portId, graph) {
-    let source;
-    return _.filter(graph.getConnectedLinks(cell), function (link) {
-        source = link.get('source') || {};
-        return source.id === cell.id && source.port === portId;
-    }).length;
-}
+// /**
+//  * Determines the number of links already attached to the port.
+//  * @param cell The element.
+//  * @param portId The id of the port.
+//  * @param graph The graph where the links are stored
+//  * @returns {number} Number of links for the element and port.
+//  */
+// function getConnectedLinks(cell, portId, graph) {
+//     let source;
+//     return _.filter(graph.getConnectedLinks(cell), function (link) {
+//         source = link.get('source') || {};
+//         return source.id === cell.id && source.port === portId;
+//     }).length;
+// }
 
 function getCustomId(prefix) {
     return prefix +'_' + Math.floor(Math.random() * Math.floor(1000));
@@ -96,28 +97,52 @@ function loadStepsUI() {
     loadSteps(() => {
         loadPipelineDesignerStepsUI();
         renderStepSelectionUI();
-        $('#step-counts').text(stepsModel.count());
+        const count = stepsModel.count();
+        if (count > 0) {
+            const heading = $('#step-count-heading');
+            heading.removeClass('panel-warning');
+            heading.addClass('panel-success');
+        }
+        $('#step-counts').text(count);
     });
 }
 
 function loadPipelinesUI() {
     loadPipelines(() => {
         renderPipelinesDesignerSelect();
-        $('#pipeline-counts').text(pipelinesModel.count());
+        const count = pipelinesModel.count();
+        if (count > 0) {
+            const heading = $('#pipeline-count-heading');
+            heading.removeClass('panel-warning');
+            heading.addClass('panel-success');
+        }
+        $('#pipeline-counts').text(count);
     });
 }
 
 function loadApplicationsUI() {
     loadApplications(() => {
         renderApplicationsSelect();
-        $('#application-counts').text(applicationsModel.count());
+        const count = applicationsModel.count();
+        if (count > 0) {
+            const heading = $('#application-count-heading');
+            heading.removeClass('panel-warning');
+            heading.addClass('panel-success');
+        }
+        $('#application-counts').text(count);
     });
 }
 
 function loadSchemasUI() {
     loadSchemas(() => {
-        renderSchemaUI();
-        $('#schema-counts').text(schemasModel.count());
+        objectEditorDialog.updateSchemas();
+        const count = schemasModel.count();
+        if (count > 0) {
+            const heading = $('#schema-count-heading');
+            heading.removeClass('panel-warning');
+            heading.addClass('panel-success');
+        }
+        $('#schema-counts').text(count);
     });
 }
 
@@ -182,7 +207,7 @@ $(document).ready(function () {
     initializeNewDialog();
     initializeAlertDialog();
     initializeCopyPipelineDialog();
-    initializeObjectEditor();
+    objectEditorDialog = new ObjectEditor();
 
     // Initialize the editors
     initializeStepsEditor();

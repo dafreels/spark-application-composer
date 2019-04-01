@@ -189,7 +189,7 @@ function createParameterForm() {
                 });
             $(this).prop('disabled', true);
         } else if (select.val() === 'object') {
-            showObjectEditor(defaultValues[formDiv.find('input[name="stepParamName"]').val()] || {},
+            objectEditorDialog.showObjectEditor(defaultValues[formDiv.find('input[name="stepParamName"]').val()] || {},
                 formDiv.find('input[name="stepParamClassName"]').val(),
                 function(value, schemaName) {
                     defaultValues[formDiv.find('input[name="stepParamName"]').val()] = value;

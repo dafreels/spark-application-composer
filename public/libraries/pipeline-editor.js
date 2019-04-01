@@ -515,7 +515,7 @@ function loadPropertiesPanel(metaData) {
                     });
                 $(this).prop('disabled', true);
             } else if (selectVal === 'object') {
-                showObjectEditor(setStringValue(tempParam.value) || {},
+                objectEditorDialog.showObjectEditor(setStringValue(tempParam.value) || {},
                     param.className,
                     function(value, schemaName) {
                         $('#' + tempParam.name).val(value);

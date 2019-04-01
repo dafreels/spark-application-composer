@@ -4,7 +4,7 @@ const BaseModel = require('./lib/base.model');
 
 const options = {
     onconfig: function (config, next) {
-        BaseModel.initialStorageParameters(config.get('storage'));
+        BaseModel.initialStorageParameters(config);
         next(null, config);
     }
 };
