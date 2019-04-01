@@ -21,7 +21,10 @@ RUN apk --no-cache add \
     npm install && \
     npm prune --production
 
+# Build the release image
 FROM alpine:latest as release
+
+WORKDIR /opt/spark-application-composer
 
 RUN apk --no-cache add \
     nodejs \
