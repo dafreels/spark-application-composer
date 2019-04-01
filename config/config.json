@@ -1,4 +1,5 @@
 {
+    "storageType": "file",
     "middleware": {
         "json": {
             "enabled": true,
@@ -30,7 +31,9 @@
                 "arguments": [
                     "path:./schemas",
                     {
-                        "extensions": ["json"]
+                        "extensions": [
+                            "json"
+                        ]
                     }
                 ]
             }
@@ -58,8 +61,5 @@
                 ]
             }
         }
-    },
-    "storage": {
-        "type": "file"
     }
 }

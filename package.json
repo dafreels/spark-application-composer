@@ -2,7 +2,12 @@
     "name": "spark-application-composer",
     "version": "0.1.0",
     "description": "Allows the management of applications built for the Spark Pipeline Driver project.",
-    "author": "David Freels Sr",
+    "author": "David Freels Sr, Ed Balogh",
+    "license": "Apache-2.0",
+    "repository": {
+        "type" : "git",
+        "url" : "https://github.com/dafreels/spark-application-composer.git"
+    },
     "main": "index.js",
     "scripts": {
         "test": "grunt test",
