@@ -76,7 +76,7 @@ function saveBulkSteps(steps, callback) {
         body = JSON.stringify(steps);
     }
     $.ajax({
-        type: 'PUT',
+        type: 'POST',
         url: '/api/v1/steps/',
         contentType: "application/json",
         data: body,

@@ -9,6 +9,12 @@ class ObjectEditor {
         this.editObjectSaveFunction = null;
         this.editObjectCancelFunction = null;
         this.editObjectForm = null;
+
+        const parent = this;
+        $('#objectEditorSchema').change(function() {
+            parent.schemaId = $(this).val();
+            parent.generateForm(schemasModel.getSchema(parent.schemaId).schema);
+        });
     }
 
     showObjectEditor(data, schemaId, saveFunction, cancelFunction) {

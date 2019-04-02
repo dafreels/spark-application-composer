@@ -159,10 +159,7 @@ function handleLoadContent() {
             });
         }
         if (metadata.pkgObjs && metadata.pkgObjs.length > 0) {
-            const pkgObjs = [];
-            // Convert the string schema to a JSON object
-            _.forEach(metadata.pkgObjs, pkg => pkgObjs.push({id: pkg.id, schema: JSON.parse(pkg.schema)}));
-            saveSchemas(pkgObjs, function (err) {
+            saveSchemas(metadata.pkgObjs, function (err) {
                 if (err) {
                     console.log('Schemas load received an error: ' + err);
                 }
