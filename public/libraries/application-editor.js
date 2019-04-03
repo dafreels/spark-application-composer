@@ -27,6 +27,7 @@ function initializeApplicationEditor() {
     globals = new GlobalsEditor($('#globals'), {});
     classOverrides = new ClassOverridesEditor($('#application-setup-panel'), {});
 
+    $('#export-application-button').click(handleExportApplication);
     $('#new-application-button').click(handleNewApplication);
     $('#save-application-button').click(handleSaveApplication);
     $('#reset-application-button').click(handleClearApplicationForm);
@@ -252,8 +253,10 @@ function handleSelectApplication() {
             populateApplicationForm(selectedApplication);
         }, function () {
             $('#applications').val(previouslySelected);
+            $('#export-application-button').removeClass('disabled');
         });
     } else {
+        $('#export-application-button').removeClass('disabled');
         populateApplicationForm(selectedApplication);
     }
 }
@@ -262,6 +265,7 @@ function setupNewApplication(name) {
     currentApplication = {
         name: name
     };
+    $('#export-application-button').removeClass('disabled');
     $('#application-form-div').toggle();
     $('#applicationName').text(currentApplication.name);
 }
@@ -339,6 +343,7 @@ function clearApplicationForm() {
     $('#available-pipelines').empty();
     $('#selected-pipelines').empty();
     $('#application-form-div').toggle();
+    $('#export-application-button').addClass('disabled');
 }
 
 /*
@@ -385,6 +390,23 @@ function handleSaveApplication() {
     } else {
         showValidationErrorDialog(validations);
     }
+}
+
+function handleExportApplication() {
+    const application = generateApplicationJson();
+    const fileName = application.name.replace(' ', '_') + '.json';
+    // Remove unused data
+    delete application._id;
+    delete application.id;
+    delete application.name;
+    delete application.creationDate;
+    delete application.modifiedDate;
+    const link = document.createElement('a');
+    link.setAttribute('href', 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(application)));
+    link.setAttribute('download', fileName);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
 }
 
 function validateApplication(application) {
