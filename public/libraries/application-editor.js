@@ -471,6 +471,9 @@ function generateApplicationJson() {
     currentApplication.pipelines = [];
     const pipelineIds = [];
     _.forEach(executions, (execution) => {
+        if (execution.metaData.parents && execution.metaData.parents.length === 0) {
+            delete execution.metaData.parents;
+        }
         currentApplication.executions.push(execution.metaData);
         _.forEach(execution.metaData.pipelineIds, (id) => {
             if(pipelineIds.indexOf(id) === -1) {
