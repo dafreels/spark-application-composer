@@ -164,8 +164,8 @@ function validateObject(schemaId, obj, callback) {
         success: function(data) {
             callback(null, data);
         },
-        error: function (req, status, error) {
-            callback({status: status, error: error});
+        error: function (req) {
+            callback(req.responseJSON.error);
         }
     });
 }

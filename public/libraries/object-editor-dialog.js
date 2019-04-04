@@ -110,9 +110,16 @@ class ObjectEditor {
         const parent =  this;
         return function() {
             const formData = parent.editObjectForm.alpaca().getValue();
-            validateObject(formData, parent.schemaId, function(err) {
-                if (err) {
-                    $('#object-validation-errors').text('Status: ' + err.status + ' Error: ' + err.error);
+            validateObject(parent.schemaId, formData, function(err) {
+                if (err && err.length > 0) {
+                    const validations = $('#object-validation-errors');
+                    validations.empty();
+                    // These are the failed validations
+                    const list = $('<ul>');
+                    list.appendTo(validations);
+                    _.forEach(err, function(validation) {
+                        $('<li>' + validation.message + '</li>').appendTo(list);
+                    });
                 } else {
                     if (parent.editObjectSaveFunction) {
                         parent.editObjectSaveFunction(formData, parent.schemaId);
