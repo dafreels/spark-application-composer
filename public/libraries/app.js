@@ -55,9 +55,10 @@ function generateStepContainers(containerId, parentContainer, stepSelectHandler,
             buttonSpan.appendTo(heading);
             button.appendTo(buttonSpan);
             button.click(function (evt) {
-                const icon = $(evt.target).find('i');
-                icon.toggleClass('glyphicon-menu-right');
-                icon.toggleClass('glyphicon-menu-down');
+                toggleContainerButton($(evt.target).find('i'));
+            });
+            button.find('i').click(function (evt) {
+                toggleContainerButton($(evt.target));
             });
             stepSection = $('<div id="' + categoryId + '" class="collapse" style="max-height: 250px; overflow: auto;">');
             stepSection.appendTo(panel);
@@ -72,6 +73,11 @@ function generateStepContainers(containerId, parentContainer, stepSelectHandler,
         stepField.appendTo(stepSection);
         stepField.click(stepSelectHandler);
     });
+}
+
+function toggleContainerButton(icon) {
+    icon.toggleClass('glyphicon-menu-right');
+    icon.toggleClass('glyphicon-menu-down');
 }
 
 // /**
