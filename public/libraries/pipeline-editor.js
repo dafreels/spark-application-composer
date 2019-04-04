@@ -387,11 +387,16 @@ function populatePipelineData(pipeline) {
     let pipelineStep;
     let childParams;
     let childX;
+    let displayName;
     // Add each step to the designer
     _.forEach(currentPipeline.steps, function (step) {
         if (!stepIdLookup[step.id]) {
+            displayName = step.displayName;
+            if (step.id) {
+                displayName = step.id + ' - (' + step.displayName + ')';
+            }
             // Add the steps to the designer
-            gstep = pipelineGraphEditor.addElementToCanvas(step.displayName, x, y, stepsModel.getStep(step.stepId));
+            gstep = pipelineGraphEditor.addElementToCanvas(displayName, x, y, stepsModel.getStep(step.stepId));
             diagramStepToStepMetaLookup[step.id] = gstep;
             gstep.attributes.metaData.pipelineStepMetaData = step;
             y += 100;
@@ -403,8 +408,11 @@ function populatePipelineData(pipeline) {
                 _.forEach(childParams, (param) => {
                     if (param.value) {
                         pipelineStep = cloneObject(_.find(currentPipeline.steps, step => step.id === param.value));
-                        // pipelineStep = getPipelineStep(currentPipeline.id, param.value);
-                        gstep = pipelineGraphEditor.addElementToCanvas(pipelineStep.displayName, childX, y, pipelineStep.stepId);
+                        displayName = pipelineStep.displayName;
+                        if (pipelineStep.id) {
+                            displayName = pipelineStep.id + ' - (' + pipelineStep.displayName + ')';
+                        }
+                        gstep = pipelineGraphEditor.addElementToCanvas(displayName, childX, y, pipelineStep.stepId);
                         diagramStepToStepMetaLookup[pipelineStep.id] = gstep;
                         gstep.attributes.metaData.pipelineStepMetaData = pipelineStep;
                         stepIdLookup[pipelineStep.id] = pipelineStep.stepId;

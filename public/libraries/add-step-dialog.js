@@ -25,7 +25,7 @@ function handleAddStep() {
     const idField = $('#add-step-id');
     // TODO Make sure the id isn't already being used in the pipeline
     const id = idField.val();
-    const step = pipelineGraphEditor.addElementToCanvas(draggingStep.name,
+    const step = pipelineGraphEditor.addElementToCanvas(id + ' - (' + draggingStep.name + ')',
         draggingStep.x - (stepSize.width / 2),
         draggingStep.y,
         stepsModel.getStep(draggingStep.stepMetaDataId));
