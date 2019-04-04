@@ -384,8 +384,12 @@ function handleSaveApplication() {
     const application = generateApplicationJson();
     const validations = validateApplication(application);
     if (validations.length === 0) {
-        saveApplication(application, function () {
-            loadApplicationsUI();
+        saveApplication(application, function (err) {
+            if (err) {
+                showGlobalErrorMessage('Failed to save application', err);
+            } else {
+                loadApplicationsUI();
+            }
         });
     } else {
         showValidationErrorDialog(validations);

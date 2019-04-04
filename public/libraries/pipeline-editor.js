@@ -735,14 +735,19 @@ function handleSave() {
         showValidationErrorDialog(errors);
     } else {
         // TODO Handle exceptions
-        savePipeline(pipeline, function() {
-            // Load the pipelines
-            const select = $('#pipelines');
-            select.empty();
-            select.append($("<option />").val('none').text(''));
-            savedPipelineName = pipeline.name;
-            // This is an async call to the server
-            loadPipelinesUI();
+        savePipeline(pipeline, function(err) {
+            if (err) {
+                showGlobalErrorMessage('Failed to save pipeline', err);
+            } else {
+                // Load the pipelines
+                const select = $('#pipelines');
+                select.empty();
+                select.append($("<option />").val('none').text(''));
+                savedPipelineName = pipeline.name;
+                // This is an async call to the server
+                loadPipelinesUI();
+            }
+
         });
     }
 }

@@ -18,10 +18,14 @@ function initializeStepsEditor() {
 function handleBulkAdd() {
     showCodeEditorDialog('[]', 'json',
         function(code) {
-            saveBulkSteps(JSON.parse(code), function() {
-                currentEditorStepId = null;
-                loadStepsUI();
-                clearStepForm(true);
+            saveBulkSteps(JSON.parse(code), function(err) {
+                if (err) {
+                    showAlertDialog('Status: ' + err.status + ' Error: ' + err.error);
+                } else {
+                    currentEditorStepId = null;
+                    loadStepsUI();
+                    clearStepForm(true);
+                }
             });
         });
 }
@@ -49,12 +53,16 @@ function saveStepChanges() {
                 }
             ]);
         } else {
-            saveStep(step, function () {
-                currentEditorStepId = null;
-                defaultValues = null;
-                saveStepName = step.displayName;
-                // This makes an asynchronous call to the server
-                loadStepsUI();
+            saveStep(step, function (err) {
+                if (err) {
+                    showGlobalErrorMessage('Failed to save step', err);
+                } else {
+                    currentEditorStepId = null;
+                    defaultValues = null;
+                    saveStepName = step.displayName;
+                    // This makes an asynchronous call to the server
+                    loadStepsUI();
+                }
             });
         }
     }
