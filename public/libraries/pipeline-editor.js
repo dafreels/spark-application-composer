@@ -26,6 +26,7 @@ function initializePipelineEditor() {
     $('#new-button').click(handleNew);
     $('#copy-button').click(handleCopy);
     $('#reset-button').click(handleReset);
+    $('#delete-button').click(handleDelete);
     $('#layout-pipeline-button').click(function() {
         pipelineGraphEditor.performAutoLayout();
     });
@@ -134,7 +135,6 @@ function handleReset() {
         showClearFormDialog(function() {
             const select = $('#pipelines');
             select.val('none');
-            $('#pipelineName').text('');
             clearPipelineDesigner();
         });
     } else {
@@ -143,13 +143,32 @@ function handleReset() {
 }
 
 /**
+ * Handles the deletion of a pipeline
+ */
+function handleDelete() {
+    if (currentPipeline && currentPipeline.id) {
+        showClearFormDialog(function() {
+            deletePipeline(currentPipeline.id, function(err) {
+                if (err) {
+                    console.log(err);
+                }
+                clearPipelineDesigner();
+                loadPipelinesUI();
+            });
+        }, null, 'Delete Pipeline?', 'Delete');
+    }
+}
+
+/**
  * Clears the canvas
  */
 function clearPipelineDesigner() {
+    $('#pipelineName').text('');
     pipelineGraphEditor.clear();
     currentPipeline = null;
     diagramStepToStepMetaLookup = {};
     clearPropertiesPanel();
+    $('#delete-button').addClass('disabled');
 }
 
 /**
@@ -420,6 +439,7 @@ function populatePipelineData(pipeline) {
 function loadPipeline() {
     const pipelineId = $("#pipelines").val();
     if (pipelineId !== 'none') {
+        $('#delete-button').removeClass('disabled');
         populatePipelineData(pipelinesModel.getPipeline(pipelineId));
     }
 }
@@ -629,13 +649,6 @@ function getType(value, defaultType) {
 function loadPipelineDesignerStepsUI() {
     var stepsContainer = $('#test-panel');
     stepsContainer.empty();
-    // _.forEach(getSteps(), (step) => {
-    //     // Build out the pipeline designer step control
-    //     $('<div id="' + step.id + '" class="step ' + step.type + '" draggable="true" ondragstart="dragStep(event)" ' +
-    //     'title="' + step.description + '" data-toggle="tooltip" data-placement="right">' + step.displayName + '</div>')
-    //         .appendTo(stepsContainer);
-    //     $('div #' + step.id).fitText(1.50);
-    // });
     generateStepContainers(pipelinesContainerId, stepsContainer, null, 'dragStep(event)');
 }
 

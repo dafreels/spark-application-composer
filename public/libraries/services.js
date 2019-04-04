@@ -70,6 +70,19 @@ function savePipeline(pipeline, callback) {
     });
 }
 
+function deletePipeline(id, callback) {
+    $.ajax({
+        type: 'DELETE',
+        url: '/api/v1/pipelines/' + id,
+        success: function(data) {
+            callback(null, data);
+        },
+        error: function (req, status, error) {
+            callback({status: status, error: error});
+        }
+    });
+}
+
 function saveBulkSteps(steps, callback) {
     let body = steps;
     if (_.isObject(steps)) {
