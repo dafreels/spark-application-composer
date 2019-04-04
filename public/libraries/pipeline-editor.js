@@ -150,10 +150,11 @@ function handleDelete() {
         showClearFormDialog(function() {
             deletePipeline(currentPipeline.id, function(err) {
                 if (err) {
-                    console.log(err);
+                    showGlobalErrorMessage('Failed to delete pipeline', err);
+                } else {
+                    clearPipelineDesigner();
+                    loadPipelinesUI();
                 }
-                clearPipelineDesigner();
-                loadPipelinesUI();
             });
         }, null, 'Delete Pipeline?', 'Delete');
     }

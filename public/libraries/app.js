@@ -80,20 +80,13 @@ function toggleContainerButton(icon) {
     icon.toggleClass('glyphicon-menu-down');
 }
 
-// /**
-//  * Determines the number of links already attached to the port.
-//  * @param cell The element.
-//  * @param portId The id of the port.
-//  * @param graph The graph where the links are stored
-//  * @returns {number} Number of links for the element and port.
-//  */
-// function getConnectedLinks(cell, portId, graph) {
-//     let source;
-//     return _.filter(graph.getConnectedLinks(cell), function (link) {
-//         source = link.get('source') || {};
-//         return source.id === cell.id && source.port === portId;
-//     }).length;
-// }
+function showGlobalErrorMessage(msg, error) {
+    let message = msg;
+    if (error) {
+        message = msg + ' (Status: ' + error.status + ' Error: ' + error.error + ')';
+    }
+    showAlertDialog(message);
+}
 
 function getCustomId(prefix) {
     return prefix +'_' + Math.floor(Math.random() * Math.floor(1000));
@@ -159,7 +152,7 @@ function handleLoadContent() {
         if (metadata.steps && metadata.steps.length > 0) {
             saveBulkSteps(metadata.steps, function (err) {
                 if(err) {
-                    console.log('Steps load received an error: ' + err);
+                    showGlobalErrorMessage('Steps load received an error', err);
                 }
                 loadStepsUI();
             });
@@ -167,7 +160,7 @@ function handleLoadContent() {
         if (metadata.pkgObjs && metadata.pkgObjs.length > 0) {
             saveSchemas(metadata.pkgObjs, function (err) {
                 if (err) {
-                    console.log('Schemas load received an error: ' + err);
+                    showGlobalErrorMessage('Schemas load received an error', err);
                 }
                 loadSchemasUI();
             });

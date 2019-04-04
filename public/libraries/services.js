@@ -44,7 +44,7 @@ function saveApplication(application, callback) {
             callback(null, data);
         },
         error: function (req, status, error) {
-            callback(error);
+            callback({status: status, error: error});
         }
     });
 }
@@ -65,7 +65,7 @@ function savePipeline(pipeline, callback) {
             callback(null, data);
         },
         error: function (req, status, error) {
-            callback(error);
+            callback({status: status, error: error});
         }
     });
 }
@@ -97,7 +97,7 @@ function saveBulkSteps(steps, callback) {
             callback(null, data);
         },
         error: function (req, status, error) {
-            callback(error);
+            callback({status: status, error: error});
         }
     });
 }
@@ -118,7 +118,7 @@ function saveStep(step, callback) {
             callback(null, data);
         },
         error: function (req, status, error) {
-            callback(error);
+            callback({status: status, error: error});
         }
     });
 }
@@ -146,7 +146,7 @@ function saveSchemas(schemas, callback) {
             callback(null, data);
         },
         error: function (req, status, error) {
-            callback(error);
+            callback({status: status, error: error});
         }
     });
 }
@@ -165,7 +165,7 @@ function validateObject(schemaId, obj, callback) {
             callback(null, data);
         },
         error: function (req, status, error) {
-            callback(error);
+            callback({status: status, error: error});
         }
     });
 }

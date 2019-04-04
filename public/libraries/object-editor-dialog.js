@@ -34,6 +34,7 @@ class ObjectEditor {
             $('#objectEditorSchema').val(this.schemaId).change();
             this.generateForm(schema.schema);
         }
+        $('#object-validation-errors').empty();
         $('#edit-object-form').modal('show');
     }
 
@@ -111,13 +112,13 @@ class ObjectEditor {
             const formData = parent.editObjectForm.alpaca().getValue();
             validateObject(formData, parent.schemaId, function(err) {
                 if (err) {
-                    // TODO Handle validation errors
-                    console.log(err);
+                    $('#object-validation-errors').text('Status: ' + err.status + ' Error: ' + err.error);
+                } else {
+                    if (parent.editObjectSaveFunction) {
+                        parent.editObjectSaveFunction(formData, parent.schemaId);
+                    }
+                    $('#edit-object-form').modal('hide');
                 }
-                if (parent.editObjectSaveFunction) {
-                    parent.editObjectSaveFunction(formData, parent.schemaId);
-                }
-                $('#edit-object-form').modal('hide');
             });
         };
     }
