@@ -44,7 +44,7 @@ function saveApplication(application, callback) {
             callback(null, data);
         },
         error: function (req, status, error) {
-            callback({status: status, error: error});
+            callback({status: status, error: error, response: req.responseJSON});
         }
     });
 }
@@ -65,7 +65,7 @@ function savePipeline(pipeline, callback) {
             callback(null, data);
         },
         error: function (req, status, error) {
-            callback({status: status, error: error});
+            callback({status: status, error: error, response: req.responseJSON});
         }
     });
 }
@@ -78,7 +78,7 @@ function deletePipeline(id, callback) {
             callback(null, data);
         },
         error: function (req, status, error) {
-            callback({status: status, error: error});
+            callback({status: status, error: error, response: req.responseJSON});
         }
     });
 }
@@ -97,7 +97,7 @@ function saveBulkSteps(steps, callback) {
             callback(null, data);
         },
         error: function (req, status, error) {
-            callback({status: status, error: error});
+            callback({status: status, error: error, response: req.responseJSON});
         }
     });
 }
@@ -118,7 +118,7 @@ function saveStep(step, callback) {
             callback(null, data);
         },
         error: function (req, status, error) {
-            callback({status: status, error: error});
+            callback({status: status, error: error, response: req.responseJSON});
         }
     });
 }
@@ -146,7 +146,7 @@ function saveSchemas(schemas, callback) {
             callback(null, data);
         },
         error: function (req, status, error) {
-            callback({status: status, error: error});
+            callback({status: status, error: error, response: req.responseJSON});
         }
     });
 }

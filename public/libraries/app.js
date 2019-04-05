@@ -82,10 +82,19 @@ function toggleContainerButton(icon) {
 
 function showGlobalErrorMessage(msg, error) {
     let message = msg;
+    let messages;
     if (error) {
         message = msg + ' (Status: ' + error.status + ' Error: ' + error.error + ')';
+        if (error.response && error.response.errors) {
+            messages = [];
+            _.forEach(error.response.errors, (err) => {
+                if (err.message) {
+                    messages.push(err.message);
+                }
+            });
+        }
     }
-    showAlertDialog(message);
+    showAlertDialog(message, messages);
 }
 
 function getCustomId(prefix) {
