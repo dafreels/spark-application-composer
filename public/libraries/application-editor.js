@@ -174,6 +174,9 @@ function handleKryoClassesChange() {
         currentApplication.sparkConf = {}
     }
     currentApplication.sparkConf.kryoClasses = $('#kyro-classes').tokenfield('getTokensList').split(',').map(token => token.trim());
+    if (currentApplication.sparkConf.kryoClasses.length === 0) {
+        delete currentApplication.sparkConf.kryoClasses;
+    }
 }
 
 function createStepOption(data) {
@@ -456,11 +459,20 @@ function generateApplicationJson() {
         }
     });
 
+    delete currentApplication._id;
+
+    if (!currentApplication.sparkConf) {
+        currentApplication.sparkConf = {};
+    }
+
     if (setOptions.length > 0) {
-        if (!currentApplication.sparkConf) {
-            currentApplication.sparkConf = {};
-        }
         currentApplication.sparkConf.setOptions = setOptions;
+    } else {
+        delete currentApplication.sparkConf.setOptions;
+    }
+
+    if (!currentApplication.sparkConf.setOptions && !currentApplication.sparkConf.kryoClasses) {
+        delete currentApplication.sparkConf;
     }
 
     currentApplication.globals = globals.getData();
