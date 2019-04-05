@@ -53,6 +53,8 @@ class ObjectEditor {
 
     generateOptions(schema, options, sourceData, targetData) {
         let obj;
+        if (!sourceData) sourceData = {};
+        if (!targetData) targetData = {};
         _.forEach(schema.properties, (property, key) => {
             obj = {
                 label: key
@@ -73,7 +75,7 @@ class ObjectEditor {
                         obj.tokenfield = {
                             tokens: sourceData[key]
                         };
-                        targetData[key] = sourceData[key].join();
+                        targetData[key] = sourceData[key] ? sourceData[key].join() : '';
                     } else {
                         obj.type = 'array';
                         obj.items = {fields: {}};
