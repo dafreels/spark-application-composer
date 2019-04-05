@@ -791,13 +791,15 @@ function renderPipelinesDesignerSelect() {
 /**
  * Loads the selected pipeline to the designer canvas
  */
-function verifyLoadPipeline() {
+function verifyLoadPipeline(evt) {
     if (currentPipeline || pipelineGraphEditor.isCanvasPopulated()) {
         showClearFormDialog(function() {
             clearPipelineDesigner();
             loadPipeline();
         }, cancelClearPipelines);
     } else {
+        // Prevent calling this function multiple times
+        evt.preventDefault();
         loadPipeline();
     }
 }

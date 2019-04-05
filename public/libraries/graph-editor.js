@@ -215,6 +215,7 @@ class GraphEditor {
      */
     clear() {
         this.graph.clear();
+        this.elements = {};
     }
 
     /**
