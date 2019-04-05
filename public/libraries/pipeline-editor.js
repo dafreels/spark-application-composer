@@ -602,6 +602,8 @@ function loadPropertiesPanel(metaData) {
         type = getType(value, param.type, param.type === 'script' ? 'script' : 'static');
         if (value && (type === 'global' || type === 'step' || type === 'secondary')) {
             value = value.substring(1);
+        } else if (value && type === 'object') {
+            value = JSON.stringify(value);
         }
         input = $('#' + param.name);
         input.val(value);

@@ -42,15 +42,16 @@ class ObjectEditor {
         form.alpaca('destroy');
         form.empty();
         const formSchema = cloneObject(schema);
-        const options = this.generateOptions(formSchema, {fields: {}});
+        const data = {};
+        const options = this.generateOptions(formSchema, {fields: {}}, this.currentObjectData, data);
         this.editObjectForm = form.alpaca({
             "schema": formSchema,
-            data: this.currentObjectData,
+            data: data,
             options: options
         });
     }
 
-    generateOptions(schema, options) {
+    generateOptions(schema, options, sourceData, targetData) {
         let obj;
         _.forEach(schema.properties, (property, key) => {
             obj = {
@@ -59,26 +60,41 @@ class ObjectEditor {
             switch (property.type) {
                 case 'boolean':
                     obj.type = 'checkbox';
+                    targetData[key] = sourceData[key];
                     break;
                 case 'integer':
                     obj.type = 'integer';
+                    targetData[key] = sourceData[key];
                     break;
                 case 'array':
                     if (schema.properties[key].items.type === 'string') {
                         obj.type = 'token';
                         obj.id = key;
+                        obj.tokenfield = {
+                            tokens: sourceData[key]
+                        };
+                        targetData[key] = sourceData[key].join();
                     } else {
                         obj.type = 'array';
                         obj.items = {fields: {}};
-                        this.generateOptions(schema.properties[key].items, obj.items);
+                        targetData[key] = [];
+                        let el;
+                        _.forEach(sourceData[key], (sourceEl) => {
+                            el = {};
+                            targetData[key].push(el);
+                            this.generateOptions(schema.properties[key].items, obj.items, sourceEl, el);
+                        });
                     }
                     break;
                 case 'object':
                     obj.type = 'object';
                     if (schema.properties[key].properties) {
                         obj.fields = {};
-                        this.generateOptions(schema.properties[key], obj);
+                        targetData[key] = {};
+                        this.generateOptions(schema.properties[key], obj, sourceData[key], targetData[key]);
                     } else {
+                        targetData[key] = [];
+                        _.forOwn(sourceData[key], (value, name) => targetData[key].push({name: name, value: value}));
                         schema.properties[key].type = 'array';
                         schema.properties[key].items = {
                             type: 'object',
@@ -108,6 +124,7 @@ class ObjectEditor {
                     break;
                 default:
                     obj.type = 'text';
+                    targetData[key] = sourceData[key];
                     break;
             }
             options.fields[key] = obj;
