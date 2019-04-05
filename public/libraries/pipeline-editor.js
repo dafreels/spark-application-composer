@@ -529,12 +529,14 @@ function loadPropertiesPanel(metaData) {
         $(parameterTypeOptions).appendTo(select);
         input.focusin(function () {
             let tempParam = _.find(pipelineMetaData.params, p => p.name === param.name);
+            const selectVal = $('#' + param.name + 'Type').val();
             if (!tempParam) {
                 tempParam = {
-                    name: param.name
+                    name: param.name,
+                    type: selectVal
                 };
+                pipelineMetaData.params.push(tempParam);
             }
-            const selectVal = $('#' + param.name + 'Type').val();
             if (selectVal === 'script') {
                 showCodeEditorDialog(tempParam.value || '', param.language || 'scala',
                     function (value, lang) {
@@ -544,10 +546,11 @@ function loadPropertiesPanel(metaData) {
                     });
                 $(this).prop('disabled', true);
             } else if (selectVal === 'object') {
-                objectEditorDialog.showObjectEditor(setStringValue(tempParam.value) || {},
+                const val = _.isString(tempParam.value) ? setStringValue(tempParam.value) : tempParam.value;
+                objectEditorDialog.showObjectEditor(val || {},
                     param.className,
                     function(value, schemaName) {
-                        $('#' + tempParam.name).val(value);
+                        $('#' + tempParam.name).val(JSON.stringify(value));
                         tempParam.value = value;
                         tempParam.className = schemaName;
                     });
@@ -567,7 +570,7 @@ function loadPropertiesPanel(metaData) {
     // Add the new form
     $('#step-parameters-form').append(stepForm);
     // Setup the form
-    let type = getType(pipelineMetaData.executeIfEmpty, 'static');
+    let type = getType(pipelineMetaData.executeIfEmpty, 'static','static');
     let value;
     input = $('#executeIfEmpty');
     if (type !== 'static' && type !== 'script') {
@@ -596,8 +599,8 @@ function loadPropertiesPanel(metaData) {
             pipelineStepParam.value = value;
         }
         // Handle script versus param.type
-        type = getType(value, param.type === 'script' ? 'script' : 'static');
-        if (type !== 'static' && type !== 'script') {
+        type = getType(value, param.type, param.type === 'script' ? 'script' : 'static');
+        if (value && (type === 'global' || type === 'step' || type === 'secondary')) {
             value = value.substring(1);
         }
         input = $('#' + param.name);
@@ -636,7 +639,7 @@ function buildParentIdCompletionArray(stepId) {
     return _.uniq(stepIds);
 }
 
-function getType(value, defaultType) {
+function getType(value, paramType, defaultType) {
     let type = defaultType;
     if (value && controlCharacters.indexOf(value[0]) !== -1) {
         switch (value[0]) {
@@ -650,6 +653,10 @@ function getType(value, defaultType) {
                 type = 'secondary';
                 break;
         }
+    }
+
+    if (paramType === 'object' && type === defaultType) {
+        type = paramType;
     }
 
     return type;
@@ -695,7 +702,7 @@ function handleValueChanges(input, select) {
             };
             pipelineStepMetadata.params.push(param);
         }
-        if (selectVal !== 'script') {
+        if (selectVal !== 'script'&& selectVal !== 'object') {
             param.value = value;
         }
     }

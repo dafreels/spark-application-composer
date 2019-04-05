@@ -203,7 +203,7 @@ class ObjectEditor {
                 case 'array':
                     targetData[key] = [];
                     if (_.isString(sourceData[key])) {
-                        targetData[key] = sourceData[key].split(',');
+                        targetData[key] = sourceData[key].split(',').map(key => key.trim());
                     } else {
                         let obj;
                         _.forEach(sourceData[key], (data) => {
