@@ -88,6 +88,11 @@
     color: #e4f1fb;
 }
 
+.step.branch.step-selected {
+    background: #F39814;
+    color: white;
+}
+
 .step-form {
     display: inline-flex;
     width: 100%;
@@ -187,47 +192,3 @@
     background: #F39814;
     color: white;
 }
-
-#step-selector .ui-selecting {
-    background: #FECA40;
-}
-
-#step-selector .ui-selected {
-    background: #F39814;
-    color: white;
-}
-
-#step-selector {
-    list-style-type: none;
-    margin: 0;
-    padding: 0;
-    width: 60%;
-    text-align: center;
-}
-
-#step-selector li {
-    border-radius: 4px;
-    background: #e4f1fb;
-    color: #2779aa;
-    padding: 10px;
-    text-align: center;
-    height: 50px;
-    border: 1px solid gray;
-    margin: 5px;
-}
-
-#step-selector li[stepType="branch"].ui-selected {
-    background: #F39814;
-    color: white;
-}
-
-#step-selector li[stepType="branch"] {
-    background: #2779aa;
-    color: #e4f1fb;
-}
-
-.step-selector-panel {
-    height: 300px;
-    overflow: auto;
-}
-/* End Steps Editor */
