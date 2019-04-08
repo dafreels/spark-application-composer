@@ -723,6 +723,17 @@ function handleSave() {
     let error;
     let currentStep;
     let stepParam;
+    // Check for multiple roots
+    const currentSteps = pipelineGraphEditor.getGraphMetaData();
+    if (_.filter(currentSteps, step => step.metaData.parents.length === 0).length > 1) {
+        error = {
+            header: 'Configuration',
+            messages: []
+        };
+        errors.push(error);
+        error.messages.push('Only one root step is allowed in a pipeline!');
+    }
+
     _.forEach(pipeline.steps, function(step) {
         currentStep = stepsModel.getStep(step.stepId);
         error = null;
@@ -753,6 +764,7 @@ function handleSave() {
                 select.empty();
                 select.append($("<option />").val('none').text(''));
                 savedPipelineName = pipeline.name;
+                clearPipelineDesigner();
                 // This is an async call to the server
                 loadPipelinesUI();
             }

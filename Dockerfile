@@ -32,6 +32,8 @@ RUN apk --no-cache add \
 
 COPY --from=build /opt/spark-application-composer/ /opt/spark-application-composer/
 
+RUN echo `date` > /opt/spark-application-composer/public/build.txt
+
 EXPOSE 8080
 ENV PORT 8080
 
