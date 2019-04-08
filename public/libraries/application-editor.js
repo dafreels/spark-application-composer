@@ -13,6 +13,10 @@ let graphEditor;
 // The metadata for the currently selected execution
 let executionMetaData;
 
+// Save state
+let saveApplicationId;
+let saveApplicationName;
+
 function initializeApplicationEditor() {
     const select = $('#applications');
     select.append($("<option />").val('none').text(''));
@@ -219,22 +223,22 @@ function handleRequiredParametersChange() {
  */
 
 function renderApplicationsSelect() {
-    const applications = $("#applications");
+    const applications = $('#applications');
     applications.empty();
-    applications.append($("<option />").val('none').text(''));
-    let applicationId;
-    const applicationName = (currentApplication && currentApplication.name) ? currentApplication.name : 'none';
+    applications.append($('<option />').val('none').text(''));
     _.forEach(applicationsModel.getApplications(), (application) => {
-        if (application.name === applicationName) {
-            applicationId = application.id;
+        if (application.name === saveApplicationName) {
+            saveApplicationId = application.id;
         }
         applications.append($("<option/>").val(application.id).text(application.name));
     });
     // Select the previously saved application
-    if (applicationId) {
+    if (saveApplicationId) {
         clearApplicationForm();
-        applications.val(applicationId);
-        populateApplicationForm(applicationId);
+        applications.val(saveApplicationId);
+        populateApplicationForm(saveApplicationId);
+        saveApplicationId = null;
+        saveApplicationName = null;
     }
 }
 
@@ -392,12 +396,13 @@ function handleSaveApplication() {
     const application = generateApplicationJson();
     const validations = validateApplication(application);
     if (validations.length === 0) {
+        saveApplicationId = application.id;
+        saveApplicationName = application.name;
         saveApplication(application, function (err) {
             if (err) {
                 showGlobalErrorMessage('Failed to save application', err);
             } else {
                 clearApplicationForm();
-                // TODO select the newly save application
                 loadApplicationsUI();
             }
         });
