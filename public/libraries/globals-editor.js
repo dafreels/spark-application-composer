@@ -13,11 +13,12 @@ class GlobalsEditor {
         }
     }
 
-    static addRemoveButton(formDiv) {
+    static addRemoveButton(formDiv, data, nameInput) {
         const button = $('<button class="btn btn-info" style="margin-left: 5px;" title="Remove Parameter">');
         button.appendTo(formDiv);
         $('<i class="glyphicon glyphicon-minus-sign"></i>').appendTo(button);
         button.click(function() {
+            delete data[nameInput.val()];
             formDiv.remove();
         });
     }
@@ -133,12 +134,15 @@ class GlobalsEditor {
 
         let currentName;
         nameInput.blur(function() {
+            if (currentName && currentName !== nameInput.val()) {
+                delete parent.data[currentName];
+            }
             currentName = nameInput.val();
-            GlobalsEditor.setFieldValue(currentName, valueInput.val(), parent.data);
+            GlobalsEditor.setFieldValue(nameInput.val(), valueInput.val(), parent.data);
         });
 
         valueInput.blur(function() {
-            GlobalsEditor.setFieldValue(currentName, valueInput.val(), parent.data);
+            GlobalsEditor.setFieldValue(nameInput.val(), valueInput.val(), parent.data);
         });
 
         GlobalsEditor.addRemoveButton(formDiv);
@@ -162,12 +166,15 @@ class GlobalsEditor {
 
         let currentName;
         nameInput.blur(function() {
+            if (currentName && currentName !== nameInput.val()) {
+                delete parent.data[currentName];
+            }
             currentName = nameInput.val();
             GlobalsEditor.setFieldValue(currentName, valueInput.val(), parent.data);
         });
 
         valueInput.blur(function() {
-            GlobalsEditor.setFieldValue(currentName, valueInput.val(), parent.data);
+            GlobalsEditor.setFieldValue(nameInput.val(), valueInput.val(), parent.data);
         });
 
         GlobalsEditor.addRemoveButton(formDiv);
@@ -207,18 +214,18 @@ class GlobalsEditor {
                 delete parent.data[currentName];
             }
             currentName = nameInput.val();
-            data[currentName] = $('input[name="' + radioId + '"]:checked').val();
+            parent.data[currentName] = $('input[name="' + radioId + '"]:checked').val() === 'true';
         });
 
         trueInput.change(function() {
-            parent.data[nameInput.val()] = $(this).val();
+            parent.data[nameInput.val()] = $(this).val() === 'true';
         });
 
         falseInput.change(function() {
-            parent.data[nameInput.val()] = $(this).val();
+            parent.data[nameInput.val()] = $(this).val() === 'true';
         });
 
-        GlobalsEditor.addRemoveButton(formDiv);
+        GlobalsEditor.addRemoveButton(formDiv, parent.data, nameInput);
 
         if (parent.data && propertyName) {
             currentName = propertyName;

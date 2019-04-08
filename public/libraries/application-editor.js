@@ -314,7 +314,7 @@ function populateApplicationForm(applicationId) {
             elements[execution.id] = graphEditor.addElementToCanvas(execution.id, 0, 0, execution);
             addedElements.push(execution.id);
             // Link to children
-            children = _.filter(currentApplication.executions, child => child.parents.indexOf(execution.id) !== -1);
+            children = _.filter(currentApplication.executions, child => child.parents && child.parents.indexOf(execution.id) !== -1);
             _.forEach(children, (child) => {
                 if (addedElements.indexOf(child.id) === -1) {
                     elements[child.id] = graphEditor.addElementToCanvas(child.id, 0, 0, child);
@@ -365,7 +365,10 @@ function loadExecutionEditorPanel(metaData) {
     executionClassOverrides.clear();
     executionClassOverrides.setValue(metaData);
     executionGlobals.clear();
-    executionGlobals.setValue(metaData.globals || {});
+    if (!metaData.globals) {
+        metaData.globals = {};
+    }
+    executionGlobals.setValue(metaData.globals);
 }
 
 function populateExecutionPipelineIds() {
