@@ -253,6 +253,7 @@ function handleSelectApplication() {
     if (currentApplication) {
         const previouslySelected = currentApplication.id || 'none';
         showClearFormDialog(function () {
+            clearApplicationForm();
             populateApplicationForm(selectedApplication);
         }, function () {
             $('#applications').val(previouslySelected);
@@ -260,6 +261,7 @@ function handleSelectApplication() {
         });
     } else {
         $('#export-application-button').removeClass('disabled');
+        clearApplicationForm();
         populateApplicationForm(selectedApplication);
     }
 }
@@ -394,6 +396,8 @@ function handleSaveApplication() {
             if (err) {
                 showGlobalErrorMessage('Failed to save application', err);
             } else {
+                clearApplicationForm();
+                // TODO select the newly save application
                 loadApplicationsUI();
             }
         });
