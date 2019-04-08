@@ -70,10 +70,8 @@ function handleElementRemove(evt) {
 }
 
 function handleNew() {
-    if (currentPipeline || pipelineGraphEditor.isCanvasPopulated()) {
+    if (pipelineNeedsSave()) {
         showClearFormDialog(function() {
-            const select = $('#pipelines');
-            select.val('none');
             clearPipelineDesigner();
             showNewDialog(setupNew);
         }, cancelClearPipelines);
@@ -81,6 +79,50 @@ function handleNew() {
         clearPipelineDesigner();
         showNewDialog(setupNew);
     }
+}
+
+function pipelineNeedsSave() {
+    if (currentPipeline && currentPipeline.id) {
+        const pipeline = generatePipeline();
+        const originalPipeline = pipelinesModel.getPipeline(pipeline.id);
+        if (pipeline.id !== originalPipeline.id) {
+            return true;
+        } else if (pipeline.name !== originalPipeline.name) {
+            return true;
+        } else if (pipeline.steps.length !== originalPipeline.steps.length) {
+            return true;
+        }
+        let needsChange = false;
+        let originalStep;
+        let originalParam;
+        _.forEach(pipeline.steps, (step, index) => {
+            originalStep = originalPipeline.steps[index];
+            if (step.id !== originalStep.id ||
+                step.stepId !== originalStep.stepId ||
+                step.executeIfEmpty !== originalStep.executeIfEmpty ||
+                step.params.length !== originalStep.params.length) {
+                needsChange = true;
+                return false;
+            } else {
+                _.forEach(step.params, (param, ind) => {
+                    originalParam = originalStep.params[ind];
+                    if (param.type !== originalParam.type ||
+                        param.name !== originalParam.name ||
+                        JSON.stringify(param.defaultValue) !== JSON.stringify(originalParam.defaultValue) ||
+                        JSON.stringify(param.value) !== JSON.stringify(originalParam.value)) {
+                        needsChange = true;
+                        return false;
+                    }
+                });
+                // Break from the outer loop
+                if (needsChange) {
+                    return false;
+                }
+            }
+        });
+        return needsChange;
+    }
+    return currentPipeline || pipelineGraphEditor.isCanvasPopulated();
 }
 
 function setupNew(name) {
@@ -103,7 +145,7 @@ function cancelClearPipelines() {
 }
 
 function handleCopy() {
-    if (currentPipeline || pipelineGraphEditor.isCanvasPopulated()) {
+    if (pipelineNeedsSave()) {
         showClearFormDialog(displayCopyPipelineDialog);
     } else {
         displayCopyPipelineDialog();
@@ -112,8 +154,6 @@ function handleCopy() {
 
 function displayCopyPipelineDialog() {
     showCopyPipelineDialog(function(name, pipelineId) {
-        const select = $('#pipelines');
-        select.val('none');
         $('#pipelineName').text('');
         clearPipelineDesigner();
         // Get a cloned copy of the data
@@ -131,10 +171,8 @@ function displayCopyPipelineDialog() {
  * Handles the reset button being clicked
  */
 function handleReset() {
-    if (currentPipeline || pipelineGraphEditor.isCanvasPopulated()) {
+    if (pipelineNeedsSave()) {
         showClearFormDialog(function() {
-            const select = $('#pipelines');
-            select.val('none');
             clearPipelineDesigner();
         });
     } else {
@@ -164,6 +202,8 @@ function handleDelete() {
  * Clears the canvas
  */
 function clearPipelineDesigner() {
+    const select = $('#pipelines');
+    select.val('none');
     $('#pipelineName').text('');
     pipelineGraphEditor.clear();
     currentPipeline = null;
@@ -804,7 +844,7 @@ function renderPipelinesDesignerSelect() {
  * Loads the selected pipeline to the designer canvas
  */
 function verifyLoadPipeline(evt) {
-    if (currentPipeline || pipelineGraphEditor.isCanvasPopulated()) {
+    if (pipelineNeedsSave()) {
         showClearFormDialog(function() {
             clearPipelineDesigner();
             loadPipeline();
