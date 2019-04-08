@@ -134,9 +134,7 @@ class GlobalsEditor {
 
         let currentName;
         nameInput.blur(function() {
-            if (currentName && currentName !== nameInput.val()) {
-                delete parent.data[currentName];
-            }
+            GlobalsEditor.handleNameChange(currentName, nameInput, parent.data);
             currentName = nameInput.val();
             GlobalsEditor.setFieldValue(nameInput.val(), valueInput.val(), parent.data);
         });
@@ -145,9 +143,10 @@ class GlobalsEditor {
             GlobalsEditor.setFieldValue(nameInput.val(), valueInput.val(), parent.data);
         });
 
-        GlobalsEditor.addRemoveButton(formDiv);
+        GlobalsEditor.addRemoveButton(formDiv, parent.data, nameInput);
 
         if (parent.data && propertyName) {
+            currentName = propertyName;
             nameInput.val(propertyName);
             valueInput.val(parent.data[propertyName]);
         }
@@ -166,9 +165,7 @@ class GlobalsEditor {
 
         let currentName;
         nameInput.blur(function() {
-            if (currentName && currentName !== nameInput.val()) {
-                delete parent.data[currentName];
-            }
+            GlobalsEditor.handleNameChange(currentName, nameInput, parent.data);
             currentName = nameInput.val();
             GlobalsEditor.setFieldValue(currentName, valueInput.val(), parent.data);
         });
@@ -177,9 +174,10 @@ class GlobalsEditor {
             GlobalsEditor.setFieldValue(nameInput.val(), valueInput.val(), parent.data);
         });
 
-        GlobalsEditor.addRemoveButton(formDiv);
+        GlobalsEditor.addRemoveButton(formDiv, parent.data, nameInput);
 
         if (parent.data && propertyName) {
+            currentName = propertyName;
             nameInput.val(propertyName);
             valueInput.val(parent.data[propertyName]);
         }
@@ -210,9 +208,7 @@ class GlobalsEditor {
 
         let currentName;
         nameInput.blur(function() {
-            if (currentName && currentName !== nameInput.val()) {
-                delete parent.data[currentName];
-            }
+            GlobalsEditor.handleNameChange(currentName, nameInput, parent.data);
             currentName = nameInput.val();
             parent.data[currentName] = $('input[name="' + radioId + '"]:checked').val() === 'true';
         });
@@ -245,6 +241,12 @@ class GlobalsEditor {
         $('<i class="glyphicon glyphicon-edit"></i>').appendTo(button);
         button.appendTo(formDiv);
 
+        let currentName;
+        nameInput.blur(function() {
+            GlobalsEditor.handleNameChange(currentName, nameInput, parent.data);
+            currentName = nameInput.val();
+        });
+
         if (code) {
             button.click(function() {
                 showCodeEditorDialog(JSON.stringify(parent.data[nameInput.val()], null, 4) || '', 'json', function(value) {
@@ -266,10 +268,19 @@ class GlobalsEditor {
             });
         }
 
-        GlobalsEditor.addRemoveButton(formDiv);
+        GlobalsEditor.addRemoveButton(formDiv, parent.data, nameInput);
 
         if (parent.data && propertyName) {
+            currentName = propertyName;
             nameInput.val(propertyName);
+        }
+    }
+
+    static handleNameChange(currentName, nameInput, data) {
+        if (currentName && currentName !== nameInput.val()) {
+            const value = data[currentName];
+            delete data[currentName];
+            data[nameInput.val()] = value;
         }
     }
 }
