@@ -4,10 +4,9 @@
     <link rel="stylesheet" type="text/css" href="css/joint.css"/>
     <link rel="stylesheet" type="text/css" href="css/app.css"/>
     <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css"/>
+    <link rel="stylesheet" type="text/css" href="css/bootstrap-drawer.min.css"/>
     <link rel="stylesheet" type="text/css" href="css/bootstrap-tokenfield.css"/>
     <link rel="stylesheet" type="text/css" href="css/alpaca.min.css"/>
-    <link rel="stylesheet" type="text/css" href="css/jquery-ui.css"/>
-    <link rel="stylesheet" type="text/css" href="css/jquery-ui.theme.css"/>
     <!-- dependencies -->
     <script src="libraries/aceeditor/1.4.3/ace.js" type="text/javascript" charset="utf-8"></script>
     <script src="libraries/jquery-3.3.1.js"></script>
@@ -17,9 +16,9 @@
     <script src="libraries/dagre/latest/dagre.min.js"></script>
     <script src="libraries/graphlib/latest/graphlib.min.js"></script>
     <script src="libraries/joint/2.2.1/joint.js"></script>
-    <script src="libraries/jquery-ui.js"></script>
     <script src="libraries/handlebars/4.0.5/handlebars.min.js"></script>
     <script src="libraries/bootstrap/3.4.1/bootstrap.min.js"></script>
+    <script src="libraries/bootstrap/drawer/drawer.min.js"></script>
     <script src="libraries/bootstrap/tokenfield/0.12.1/bootstrap-tokenfield.min.js"></script>
     <script src="libraries/alpacajs/1.5.24/alpaca.min.js"></script>
     <script src="libraries/applications-model.js"></script>
@@ -281,39 +280,46 @@
                         </div>
                     </div>
                     <div id="test-panel" class="panel panel-info"></div>
-                    <div id="step-properties" class="panel panel-info">
-                        <div class="panel-heading"><span>Step Data</span></div>
-                        <div class="panel-body">
-                            <div id="step-form">
-                                <div class="form-group">
-                                    <label>Id:</label>
-                                    <div id="pipelineStepId"></div>
-                                </div>
-                                <div class="form-group">
-                                    <label>Step Id:</label>
-                                    <div id="stepId"></div>
-                                </div>
-                                <div class="form-group">
-                                    <label>Name:</label>
-                                    <div id="displayName"></div>
-                                </div>
-                                <div class="form-group">
-                                    <label>Description:</label>
-                                    <div id="description"></div>
-                                </div>
-                                <div class="form-group">
-                                    <label>Type:</label>
-                                    <div id="type"></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div id="step-parameters-form" class="panel-body">
-                            <div></div>
-                        </div>
-                    </div>
                 </div>
                 <!-- TODO Add a slider to allow zoom on canvas -->
-                <div class="right">
+                <div class="right has-inner-drawer">
+                    <div id="step-editor-drawer" class="drawer drawer-inside dw-xs-5 fold" aria-labelledby="step-editor-drawer">
+                        <div class="drawer-contents">
+                            <div class="drawer-heading panel-body">
+                                <div class="pull-left"><h2 class="drawer-title">Step Data</h2></div>
+                                <div class="pull-right"><a href="#step-editor-drawer" data-toggle="drawer"
+                                aria-foldedopen="false" aria-controls="step-editor-drawer"
+                                                          class="btn btn-info btn-sm">Close</a></div>
+                            </div>
+                            <div class="panel-body">
+                                <div id="step-form">
+                                    <div class="form-group">
+                                        <label>Id:</label>
+                                        <div id="pipelineStepId"></div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Step Id:</label>
+                                        <div id="stepId"></div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Name:</label>
+                                        <div id="displayName"></div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Description:</label>
+                                        <div id="description"></div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Type:</label>
+                                        <div id="type"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="step-parameters-form" class="panel-body">
+                                <div></div>
+                            </div>
+                        </div>
+                    </div>
                     <div id="pipelineDesigner" class="joint-paper joint-theme-default"
                          style="height:100%; width: 100%; overflow: auto"
                          ondrop="dropStep(event)"

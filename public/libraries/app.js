@@ -5,6 +5,11 @@ const parameterTypeOptions = '<option value="static">Static</option>' +
     '<option value="script">Script</option>' +
     '<option value="object">Object</option>';
 
+const executeIfEmptyTypeOptions = '<option value="static">Static</option>' +
+    '<option value="global">Global</option>' +
+    '<option value="step">Step Response</option>' +
+    '<option value="secondary">Secondary Step Response</option>';
+
 const portTemplate = {
     magnet: true,
     label: {
@@ -63,7 +68,7 @@ function generateStepContainers(containerId, parentContainer, stepSelectHandler,
             stepSection = $('<div id="' + categoryId + '" class="collapse" style="max-height: 250px; overflow: auto;">');
             stepSection.appendTo(panel);
         }
-        stepField = $('<div id="' + containerId + '_' + step.id + '" class="step ' + step.type + '" stepType="'+ step.type +'" ' +
+        stepField = $('<div id="' + containerId + '_' + step.id + '" class="step ' + step.type + '" stepType="' + step.type + '" ' +
             'title="' + step.description + '" data-toggle="tooltip" data-placement="right">' + step.displayName + '</div>');
         if (dragHandler) {
             // draggable="true" ondragstart="dragStep(event)"
@@ -98,7 +103,7 @@ function showGlobalErrorMessage(msg, error) {
 }
 
 function getCustomId(prefix) {
-    return prefix +'_' + Math.floor(Math.random() * Math.floor(1000));
+    return prefix + '_' + Math.floor(Math.random() * Math.floor(1000));
 }
 
 function loadStepsUI() {
@@ -155,12 +160,12 @@ function loadSchemasUI() {
 }
 
 function handleLoadContent() {
-    showCodeEditorDialog('', 'json', function(value) {
+    showCodeEditorDialog('', 'json', function (value) {
         // TODO Wrap in a try and show an alert if the JSON is not valid
         const metadata = JSON.parse(value);
         if (metadata.steps && metadata.steps.length > 0) {
             saveBulkSteps(metadata.steps, function (err) {
-                if(err) {
+                if (err) {
                     showGlobalErrorMessage('Steps load received an error', err);
                 }
                 loadStepsUI();
@@ -279,6 +284,25 @@ function createCustomElement() {
                 xlinkShow: 'new',
                 cursor: 'pointer',
                 event: 'close:button:pointerdown',
+            },
+            editButton: {
+                r: 7,
+                fill: 'green',
+                transform: 'translate(15, 0)',
+                visibility: 'hidden'
+            },
+            editLabel: {
+                textVerticalAnchor: 'middle',
+                textAnchor: 'middle',
+                transform: 'translate(15, 0)',
+                text: 'e',
+                visibility: 'hidden',
+                fill: 'white'
+            },
+            editLink: {
+                xlinkShow: 'new',
+                cursor: 'pointer',
+                event: 'edit:button:pointerdown',
             }
         }
     }, {
@@ -299,6 +323,18 @@ function createCustomElement() {
                 {
                     tagName: 'text',
                     selector: 'closeLabel'
+                }]
+        }, {
+            tagName: 'a',
+            selector: 'editLink',
+            children: [{
+                tagName: 'circle',
+                selector: 'editButton',
+
+            },
+                {
+                    tagName: 'text',
+                    selector: 'editLabel'
                 }]
         }]
     });

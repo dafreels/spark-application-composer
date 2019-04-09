@@ -4,12 +4,14 @@ class GraphEditor {
                 createElementHandler,
                 removeElementHandler,
                 addPortHandler,
-                elementSelectHandler) {
+                elementSelectHandler,
+                editElementHandler) {
         const parent = this;
         this.createElementHandler = createElementHandler;
         this.removeHandler = removeElementHandler;
         this.addHandler = addPortHandler;
         this.elementSelectHandler = elementSelectHandler;
+        this.editElementHandler = editElementHandler;
         this.elements = {};
         this.currentHighlightedElement = null;
         this.graphElement = graphElement;
@@ -51,6 +53,11 @@ class GraphEditor {
         this.paper.on('add:button:pointerdown', function (evt) {
             if (parent.addHandler) {
                 parent.addHandler(evt);
+            }
+        });
+        this.paper.on('edit:button:pointerdown', function (evt) {
+            if (parent.editElementHandler) {
+                parent.editElementHandler(evt.model.attributes.metaData);
             }
         });
     }

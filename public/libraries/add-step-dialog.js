@@ -37,6 +37,7 @@ function handleAddStep() {
     idField.val('');
     draggingStep = null;
     $('#dialog-step-form').modal('hide');
+    $('#step-editor-drawer').drawer('show');
 }
 
 function showAddStepDialog(step) {

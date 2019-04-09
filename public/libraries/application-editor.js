@@ -258,6 +258,7 @@ function handleSelectApplication() {
         const previouslySelected = currentApplication.id || 'none';
         showClearFormDialog(function () {
             clearApplicationForm();
+            $("#applications").val(selectedApplication);
             populateApplicationForm(selectedApplication);
         }, function () {
             $('#applications').val(previouslySelected);
@@ -266,6 +267,7 @@ function handleSelectApplication() {
     } else {
         $('#export-application-button').removeClass('disabled');
         clearApplicationForm();
+        $("#applications").val(selectedApplication);
         populateApplicationForm(selectedApplication);
     }
 }
@@ -293,7 +295,7 @@ function populateApplicationForm(applicationId) {
     }
 
     currentApplication = applicationsModel.getApplication(applicationId);
-    var $applicationFormDiv = $('#application-form-div');
+    const $applicationFormDiv = $('#application-form-div');
     if ($applicationFormDiv.css('display') === 'none') {
         $applicationFormDiv.toggle();
     }

@@ -19,7 +19,12 @@ function initializePipelineEditor() {
         createStep,
         handleElementRemove,
         null,
-        loadPropertiesPanel);
+        null,
+        function(metaData) {
+            // Open the drawer
+            loadPropertiesPanel(metaData);
+            $('#step-editor-drawer').drawer('show');
+        });
 
     // Pipeline Designer
     $('#save-button').click(handleSave);
@@ -477,8 +482,6 @@ function populatePipelineData(pipeline) {
         }
     });
 
-    loadPropertiesPanel(diagramStepToStepMetaLookup[currentPipeline.steps[0].id].attributes.metaData);
-
     pipelineGraphEditor.performAutoLayout();
 }
 
@@ -497,6 +500,7 @@ function loadPipeline() {
  * Responsible for populating the step editor form when the user selects a step on the designer canvas
  * @param metaData The metadata from the selected step.
  */
+// TODO Reimplement suggestions for step and secondary steps
 function loadPropertiesPanel(metaData) {
     const stepMetaData = metaData.stepMetaData;
     const pipelineMetaData = metaData.pipelineStepMetaData;
@@ -509,63 +513,31 @@ function loadPropertiesPanel(metaData) {
     const stepIdCompletion = buildParentIdCompletionArray(pipelineMetaData.id);
     // load step form
     const stepForm = $('<div id="' + stepMetaData.id + '">');
-    const formDiv = $('<div class="form-group row">').appendTo(stepForm);
-    let label = $('<label class="col-sm-3">');
-    label.text('Execute If Empty:');
-    label.appendTo(formDiv);
+    let formDiv = $('<div class="form-group">').appendTo(stepForm);
+    // Execute if empty
+    $('<label>Execute If Empty:</label>').appendTo(formDiv);
     let input = $('<input id="executeIfEmpty" class="form-control"/>');
-    let inputDiv = $('<div class="col-sm-4">');
-    inputDiv.appendTo(formDiv);
-    input.appendTo(inputDiv);
+    input.appendTo(formDiv);
     let select = $('<select id="executeIfEmptyType" size="1" class="form-control">');
-    let selectDiv = $('<div class="col-sm-4" style="margin-left: 5px;">');
-    selectDiv.appendTo(formDiv);
-    select.appendTo(selectDiv);
-    $(parameterTypeOptions).appendTo(select);
-    input.focusin(function () {
-        // TODO Never thought about doing this
-        const selectVal = $('#executeIfEmptyType').val();
-        if (selectVal === 'script') {
-            showCodeEditorDialog(pipelineMetaData.executeIfEmpty, 'scala',
-                function (value) {
-                    pipelineMetaData.executeIfEmpty = value;
-                    input.val(value);
-                });
-            $(this).prop('disabled', true);
-        } else if (selectVal === 'object') {
-            // showObjectEditor(pipelineMetaData.executeIfEmpty || {},
-            //     null,
-            //     function(value, schemaName) {
-            //         defaultValues[formDiv.find('input[name="stepParamName"]').val()] = value;
-            //         defaultValueInput.val(JSON.stringify(value));
-            //         className.val(schemaName);
-            //     });
-        }
-    });
-    input.autocomplete({
-        source: function (request, response) {
-            const type = $('#executeIfEmptyType').val();
-            if (type === 'step' || type === 'secondary') {
-                response(_.filter(stepIdCompletion, s => _.startsWith(s.toLowerCase(), request.term.toLowerCase())));
-            }
-        }
-    });
+    select.appendTo(formDiv);
+    $(executeIfEmptyTypeOptions).appendTo(select);
+    // input.typeahead({
+    //     source: function (request) {
+    //         const type = $('#executeIfEmptyType').val();
+    //         if (type === 'step' || type === 'secondary') {
+    //             return _.filter(stepIdCompletion, s => _.startsWith(s.toLowerCase(), request.toLowerCase()));
+    //         }
+    //     },
+    //     showHintOnFocus: true
+    // });
 
     // Build out the parameters
-    let paramRow;
     _.forEach(stepMetaData.params, (param) => {
-        paramRow = $('<div class="form-group row">').appendTo(stepForm);
-        label = $('<label class="col-sm-3">');
-        label.text(param.name + ':');
-        label.appendTo(paramRow);
+        formDiv = $('<div class="form-group">').appendTo(stepForm);
+        $('<label>' + param.name + ':' + '</label>').appendTo(formDiv);
         input = $('<input id="' + param.name + '" class="form-control"/>');
-        inputDiv = $('<div class="col-sm-4">');
-        inputDiv.appendTo(paramRow);
-        input.appendTo(inputDiv);
-        select = $('<select id="' + param.name + 'Type" size="1" class="form-control">').appendTo(paramRow);
-        selectDiv = $('<div class="col-sm-4" style="margin-left: 5px;">');
-        selectDiv.appendTo(paramRow);
-        select.appendTo(selectDiv);
+        input.appendTo(formDiv);
+        select = $('<select id="' + param.name + 'Type" size="1" class="form-control">').appendTo(formDiv);
         $(parameterTypeOptions).appendTo(select);
         input.focusin(function () {
             let tempParam = _.find(pipelineMetaData.params, p => p.name === param.name);
@@ -596,14 +568,14 @@ function loadPropertiesPanel(metaData) {
                     });
             }
         });
-        input.autocomplete({
-            source: function (request, response) {
-                const type = $('#' + param.name + 'Type').val();
-                if (type === 'step' || type === 'secondary') {
-                    response(_.filter(stepIdCompletion, s => _.startsWith(s.toLowerCase(), request.term.toLowerCase())));
-                }
-            }
-        });
+        // input.autocomplete({
+        //     source: function (request, response) {
+        //         const type = $('#' + param.name + 'Type').val();
+        //         if (type === 'step' || type === 'secondary') {
+        //             response(_.filter(stepIdCompletion, s => _.startsWith(s.toLowerCase(), request.term.toLowerCase())));
+        //         }
+        //     }
+        // });
     });
     // Clear the old form
     $('#step-parameters-form div').remove();
