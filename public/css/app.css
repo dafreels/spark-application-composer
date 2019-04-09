@@ -165,27 +165,14 @@
 }
 
 /* Steps Editor */
-#edit-step-parameters div {
-    margin-right: -30px;
+.parameter-form {
+    border: 1px solid gray;
+    padding: 5px;
 }
 
 .cb-margin {
     margin-left: 20px;
     margin-right: -55px;
-}
-
-#edit-step-parameters span.ui-selectmenu-button.ui-button {
-    width: 100%;
-    margin-left: 8px;
-}
-
-#edit-step-parameters label {
-    font-size: 10px;
-}
-
-#edit-step-parameters input {
-    width: 100%;
-    font-size: 10px;
 }
 
 .step-selected {
