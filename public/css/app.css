@@ -197,10 +197,27 @@
 }
 
 /*
- * Drawer issue with drop down on application execution editor
+ * Pipeline Editor
+ */
+#step-parameters-form label {
+    margin-right: 8px;
+}
+
+#step-parameters-form span.twitter-typeahead {
+    width: 100%;
+}
+
+/*
+ * Drawer issues with drop down and type ahead
  */
 .drawer ul {
     display: none;
+}
+
+div.tt-menu {
+    width: 100%;
+    background-color: lightgray;
+    border-radius: 8px;
 }
 /*
  * End fix

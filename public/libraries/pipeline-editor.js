@@ -521,15 +521,20 @@ function loadPropertiesPanel(metaData) {
     let select = $('<select id="executeIfEmptyType" size="1" class="form-control">');
     select.appendTo(formDiv);
     $(executeIfEmptyTypeOptions).appendTo(select);
-    // input.typeahead({
-    //     source: function (request) {
-    //         const type = $('#executeIfEmptyType').val();
-    //         if (type === 'step' || type === 'secondary') {
-    //             return _.filter(stepIdCompletion, s => _.startsWith(s.toLowerCase(), request.toLowerCase()));
-    //         }
-    //     },
-    //     showHintOnFocus: true
-    // });
+    input.typeahead({
+            hint: true,
+            highlight: true,
+            minLength: 1
+        },
+        {
+            name: 'steps',
+            source: function (request, cb) {
+            const type = $('#executeIfEmptyType').val();
+            if (type === 'step' || type === 'secondary') {
+                cb(_.filter(stepIdCompletion, s => _.startsWith(s.toLowerCase(), request.toLowerCase())));
+            }
+        }
+    });
 
     // Build out the parameters
     _.forEach(stepMetaData.params, (param) => {
@@ -561,21 +566,27 @@ function loadPropertiesPanel(metaData) {
                 const val = _.isString(tempParam.value) ? setStringValue(tempParam.value) : tempParam.value;
                 objectEditorDialog.showObjectEditor(val || {},
                     param.className,
-                    function(value, schemaName) {
+                    function (value, schemaName) {
                         $('#' + tempParam.name).val(JSON.stringify(value));
                         tempParam.value = value;
                         tempParam.className = schemaName;
                     });
             }
         });
-        // input.autocomplete({
-        //     source: function (request, response) {
-        //         const type = $('#' + param.name + 'Type').val();
-        //         if (type === 'step' || type === 'secondary') {
-        //             response(_.filter(stepIdCompletion, s => _.startsWith(s.toLowerCase(), request.term.toLowerCase())));
-        //         }
-        //     }
-        // });
+        input.typeahead({
+                hint: true,
+                highlight: true,
+                minLength: 1
+            },
+            {
+                name: 'steps',
+                source: function (request, cb) {
+                    const type = $('#executeIfEmptyType').val();
+                    if (type === 'step' || type === 'secondary') {
+                        cb(_.filter(stepIdCompletion, s => _.startsWith(s.toLowerCase(), request.toLowerCase())));
+                    }
+                }
+            });
     });
     // Clear the old form
     $('#step-parameters-form div').remove();
