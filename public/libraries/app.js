@@ -384,13 +384,13 @@ function createExecutionShape() {
                 cursor: 'pointer',
                 event: 'close:button:pointerdown',
             },
-            editButton: {
+            addButton: {
                 r: 7,
                 fill: 'green',
                 transform: 'translate(15, 0)',
                 visibility: 'hidden'
             },
-            editLabel: {
+            addLabel: {
                 textVerticalAnchor: 'middle',
                 textAnchor: 'middle',
                 transform: 'translate(15, 0)',
@@ -398,10 +398,29 @@ function createExecutionShape() {
                 visibility: 'hidden',
                 fill: 'white'
             },
-            editLink: {
+            addLink: {
                 xlinkShow: 'new',
                 cursor: 'pointer',
                 event: 'add:button:pointerdown',
+            },
+            editButton: {
+                r: 7,
+                fill: 'green',
+                transform: 'translate(30, 0)',
+                visibility: 'hidden'
+            },
+            editLabel: {
+                textVerticalAnchor: 'middle',
+                textAnchor: 'middle',
+                transform: 'translate(30, 0)',
+                text: 'e',
+                visibility: 'hidden',
+                fill: 'white'
+            },
+            editLink: {
+                xlinkShow: 'new',
+                cursor: 'pointer',
+                event: 'edit:button:pointerdown',
             }
         }
     }, {
@@ -422,6 +441,18 @@ function createExecutionShape() {
                 {
                     tagName: 'text',
                     selector: 'closeLabel'
+                }]
+        }, {
+            tagName: 'a',
+            selector: 'addLink',
+            children: [{
+                tagName: 'circle',
+                selector: 'addButton',
+
+            },
+                {
+                    tagName: 'text',
+                    selector: 'addLabel'
                 }]
         }, {
             tagName: 'a',

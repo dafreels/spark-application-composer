@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
     <link rel="stylesheet" type="text/css" href="css/joint.css"/>
-    <link rel="stylesheet" type="text/css" href="css/app.css"/>
     <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css"/>
     <link rel="stylesheet" type="text/css" href="css/bootstrap-drawer.min.css"/>
     <link rel="stylesheet" type="text/css" href="css/bootstrap-tokenfield.css"/>
     <link rel="stylesheet" type="text/css" href="css/alpaca.min.css"/>
+    <link rel="stylesheet" type="text/css" href="css/app.css"/>
     <!-- dependencies -->
     <script src="libraries/aceeditor/1.4.3/ace.js" type="text/javascript" charset="utf-8"></script>
     <script src="libraries/jquery-3.3.1.js"></script>
@@ -192,52 +192,62 @@
                                     <i class="glyphicon glyphicon-th"></i>
                                 </button>
                             </div>
-                            <div class="panel-body">
-                                <div class="left">
-                                    <div class="form-group row"><label class="col-sm-6">Choose Pipelines:</label></div>
-                                    <div class="form-group row">
-                                        <div class="col-sm-3" style="height: 150px;">
-                                            <select id="available-pipelines" multiple class="form-control" style="height: 100%"></select>
+                            <div class="panel-body  has-inner-drawer">
+                                <!-- Start of the left container -->
+                                <div id="execution-editor-drawer" class="drawer drawer-inside dw-xs-5 fold" aria-labelledby="execution-editor-drawer">
+                                    <div class="drawer-contents">
+                                        <div class="drawer-heading panel-body">
+                                            <div class="pull-left"><h2 class="drawer-title">Execution Data</h2></div>
+                                            <div class="pull-right"><a href="#execution-editor-drawer" data-toggle="drawer"
+                                                                       aria-foldedopen="false" aria-controls="execution-editor-drawer"
+                                                                       class="btn btn-info btn-sm">Close</a></div>
                                         </div>
-                                        <div class="col-sm-2">
-                                            <div style="margin-bottom: 5px;">
-                                                <button id="move-pipeline-up-button"
-                                                        class="btn btn-info"
-                                                        title="Add Parameter">
-                                                    <i class="glyphicon glyphicon-arrow-up"></i>
-                                                </button>
+                                        <div class="form-group row"><label class="col-sm-6">Choose Pipelines:</label></div>
+                                        <div class="form-group row">
+                                            <div class="col-sm-3" style="height: 150px;">
+                                                <select id="available-pipelines" multiple class="form-control" style="height: 100%"></select>
                                             </div>
-                                            <div style="margin-bottom: 5px;">
-                                                <button id="add-pipeline-button"
-                                                        class="btn btn-info"
-                                                        title="Add Parameter">
-                                                    <i class="glyphicon glyphicon-arrow-right"></i>
-                                                </button>
+                                            <div class="col-sm-2">
+                                                <div style="margin-bottom: 5px;">
+                                                    <button id="move-pipeline-up-button"
+                                                            class="btn btn-info"
+                                                            title="Add Parameter">
+                                                        <i class="glyphicon glyphicon-arrow-up"></i>
+                                                    </button>
+                                                </div>
+                                                <div style="margin-bottom: 5px;">
+                                                    <button id="add-pipeline-button"
+                                                            class="btn btn-info"
+                                                            title="Add Parameter">
+                                                        <i class="glyphicon glyphicon-arrow-right"></i>
+                                                    </button>
+                                                </div>
+                                                <div style="margin-bottom: 5px;">
+                                                    <button id="remove-pipeline-button"
+                                                            class="btn btn-info"
+                                                            title="Add Parameter">
+                                                        <i class="glyphicon glyphicon-arrow-left"></i>
+                                                    </button>
+                                                </div>
+                                                <div>
+                                                    <button id="move-pipeline-down-button"
+                                                            class="btn btn-info"
+                                                            title="Add Parameter">
+                                                        <i class="glyphicon glyphicon-arrow-down"></i>
+                                                    </button>
+                                                </div>
                                             </div>
-                                            <div style="margin-bottom: 5px;">
-                                                <button id="remove-pipeline-button"
-                                                        class="btn btn-info"
-                                                        title="Add Parameter">
-                                                    <i class="glyphicon glyphicon-arrow-left"></i>
-                                                </button>
-                                            </div>
-                                            <div>
-                                                <button id="move-pipeline-down-button"
-                                                        class="btn btn-info"
-                                                        title="Add Parameter">
-                                                    <i class="glyphicon glyphicon-arrow-down"></i>
-                                                </button>
+                                            <div class="col-sm-3" style="height: 150px;">
+                                                <select id="selected-pipelines" multiple class="form-control" style="height: 100%"></select>
                                             </div>
                                         </div>
-                                        <div class="col-sm-3" style="height: 150px;">
-                                            <select id="selected-pipelines" multiple class="form-control" style="height: 100%"></select>
-                                        </div>
+                                        <div class="form-group row"><label class="col-sm-6">Override Classes:</label></div>
+                                        <div id="edit-execution-classes-form"></div>
+                                        <div class="form-group row"><label class="col-sm-6">Override Globals:</label></div>
+                                        <div id="edit-execution-globals-form"></div>
                                     </div>
-                                    <div class="form-group row"><label class="col-sm-6">Override Classes:</label></div>
-                                    <div id="edit-execution-classes-form"></div>
-                                    <div class="form-group row"><label class="col-sm-6">Override Globals:</label></div>
-                                    <div id="edit-execution-globals-form"></div>
                                 </div>
+                                <!-- End of the left container -->
                                 <div class="right">
                                     <div id="executionDesigner" class="joint-paper joint-theme-default"
                                          ondrop="dropStep(event)"

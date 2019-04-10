@@ -287,6 +287,10 @@ class GraphEditor {
                 close.editButton.setAttribute('visibility', 'visible');
                 close.editLabel.setAttribute('visibility', 'visible');
             }
+            if (close.addButton) {
+                close.addButton.setAttribute('visibility', 'visible');
+                close.addLabel.setAttribute('visibility', 'visible');
+            }
         }
     }
 
@@ -302,6 +306,10 @@ class GraphEditor {
             if (close.editButton) {
                 close.editButton.setAttribute('visibility', 'hidden');
                 close.editLabel.setAttribute('visibility', 'hidden');
+            }
+            if (close.addButton) {
+                close.addButton.setAttribute('visibility', 'hidden');
+                close.addLabel.setAttribute('visibility', 'hidden');
             }
         }
     }
@@ -339,6 +347,19 @@ class GraphEditor {
                             elements.populated = true;
                             elements.editButton = evt.el.children[i].children[0];
                             elements.editLabel = evt.el.children[i].children[1];
+                            break;
+                    }
+                } else if(evt.el.children[i].attributes['joint-selector'].value === 'addLink') {
+                    switch(evt.el.children[i].children[0].attributes['joint-selector'].value) {
+                        case 'addLabel':
+                            elements.populated = true;
+                            elements.addButton = evt.el.children[i].children[1];
+                            elements.addLabel = evt.el.children[i].children[0];
+                            break;
+                        case 'addButton':
+                            elements.populated = true;
+                            elements.addButton = evt.el.children[i].children[0];
+                            elements.addLabel = evt.el.children[i].children[1];
                             break;
                     }
                 }

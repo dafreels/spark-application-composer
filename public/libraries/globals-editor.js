@@ -14,8 +14,10 @@ class GlobalsEditor {
     }
 
     static addRemoveButton(formDiv, data, nameInput) {
+        const buttonDiv = $('<div class="pull-right">');
+        buttonDiv.prependTo(formDiv);
         const button = $('<button class="btn btn-info" style="margin-left: 5px;" title="Remove Parameter">');
-        button.appendTo(formDiv);
+        button.appendTo(buttonDiv);
         $('<i class="glyphicon glyphicon-minus-sign"></i>').appendTo(button);
         button.click(function() {
             delete data[nameInput.val()];
@@ -53,18 +55,15 @@ class GlobalsEditor {
     }
 
     buildNewDropDown() {
-        const formDiv = $('<div class="row">');
-        formDiv.appendTo(this.parent);
-
-        const dropDown = $('<div class="dropdown pull-right">');
-        dropDown.appendTo(formDiv);
+        const dropDown = $('<div class="dropdown pull-right" style="margin-bottom: 8px;">');
+        dropDown.appendTo(this.parent);
 
         const button = $('<button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" ' +
         'data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">New</button>');
         $('<span class="caret"></span>').appendTo(button);
         button.appendTo(dropDown);
 
-        const list = $('<ul class="dropdown-menu" aria-labelledby="dropdownMenu1">');
+        const list = $('<ul class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenu1">');
         list.appendTo(dropDown);
 
         // Add the new string link
@@ -122,15 +121,20 @@ class GlobalsEditor {
     }
 
     buildStringRow(parent, propertyName) {
-        const formDiv = $('<div class="form-group row">');
+        const formDiv = $('<div class="globals-parameter-form" style="clear:both;">');
         formDiv.appendTo(parent.parent);
-        $('<label class="col-sm-2">Name:</label>').appendTo(formDiv);
-        const nameInput = $('<input class="col-sm-2" type="text"/>');
-        nameInput.appendTo(formDiv);
-
-        $('<label class="col-sm-2">Value:</label>').appendTo(formDiv);
-        const valueInput = $('<input class="col-sm-4" type="text"/>');
-        valueInput.appendTo(formDiv);
+        // Name
+        let formGroup = $('<div class="form-group">');
+        formGroup.appendTo(formDiv);
+        $('<label>Name:</label>').appendTo(formGroup);
+        const nameInput = $('<input type="text"/>');
+        nameInput.appendTo(formGroup);
+        // Value
+        formGroup = $('<div class="form-group">');
+        formGroup.appendTo(formDiv);
+        $('<label>Value:</label>').appendTo(formGroup);
+        const valueInput = $('<input type="text"/>');
+        valueInput.appendTo(formGroup);
 
         let currentName;
         nameInput.blur(function() {
@@ -153,15 +157,20 @@ class GlobalsEditor {
     }
 
     buildNumberRow(parent, propertyName) {
-        const formDiv = $('<div class="form-group row">');
+        const formDiv = $('<div class="globals-parameter-form" style="clear:both;">');
         formDiv.appendTo(parent.parent);
-        $('<label class="col-sm-2">Name:</label>').appendTo(formDiv);
-        const nameInput = $('<input class="col-sm-2" type="text"/>');
-        nameInput.appendTo(formDiv);
-
-        $('<label class="col-sm-2">Value:</label>').appendTo(formDiv);
-        const valueInput = $('<input class="col-sm-4" type="number"/>');
-        valueInput.appendTo(formDiv);
+        // Name
+        let formGroup = $('<div class="form-group">');
+        formGroup.appendTo(formDiv);
+        $('<label>Name:</label>').appendTo(formGroup);
+        const nameInput = $('<input type="text"/>');
+        nameInput.appendTo(formGroup);
+        // Value
+        formGroup = $('<div class="form-group">');
+        formGroup.appendTo(formDiv);
+        $('<label>Value:</label>').appendTo(formGroup);
+        const valueInput = $('<input type="number"/>');
+        valueInput.appendTo(formGroup);
 
         let currentName;
         nameInput.blur(function() {
@@ -184,27 +193,30 @@ class GlobalsEditor {
     }
 
     buildBooleanRow(parent, propertyName) {
-        const formDiv = $('<div class="form-group row">');
+        const formDiv = $('<div class="globals-parameter-form" style="clear:both;">');
         formDiv.appendTo(parent.parent);
-        $('<label class="col-sm-2">Name:</label>').appendTo(formDiv);
-        const nameInput = $('<input class="col-sm-2" type="text"/>');
-        nameInput.appendTo(formDiv);
-
+        // Name
+        let formGroup = $('<div class="form-group">');
+        formGroup.appendTo(formDiv);
+        $('<label>Name:</label>').appendTo(formGroup);
+        const nameInput = $('<input type="text"/>');
+        nameInput.appendTo(formGroup);
+        // Value
+        formGroup = $('<div class="form-group">');
+        formGroup.appendTo(formDiv);
+        $('<label>Value:</label>').appendTo(formGroup);
         const radioId = getCustomId('globalsRadio');
-
-        const radioDiv = $('<div class="col-sm-4">');
-        radioDiv.appendTo(formDiv);
         const trueLabel = $('<label class="radio-inline">');
         const trueInput = $('<input name="' + radioId + '" type="radio" value="true"/>');
         trueInput.appendTo(trueLabel);
         trueLabel.append('True');
-        trueLabel.appendTo(radioDiv);
+        trueLabel.appendTo(formGroup);
 
         const falseLabel = $('<label class="radio-inline">');
         const falseInput = $('<input name="' + radioId + '" type="radio" value="false"/>');
         falseInput.appendTo(falseLabel);
         falseLabel.append('False');
-        falseLabel.appendTo(radioDiv);
+        falseLabel.appendTo(formGroup);
 
         let currentName;
         nameInput.blur(function() {
@@ -231,15 +243,18 @@ class GlobalsEditor {
     }
 
     buildEditorRow(parent, code, propertyName) {
-        const formDiv = $('<div class="row">');
+        const formDiv = $('<div class="globals-parameter-form" style="clear:both;">');
         formDiv.appendTo(parent.parent);
-        $('<label class="col-sm-2">Name:</label>').appendTo(formDiv);
-        const nameInput = $('<input class="col-sm-2" type="text"/>');
-        nameInput.appendTo(formDiv);
-        $('<span class="col-sm-4">').appendTo(formDiv);
-        const button = $('<button class="btn btn-info" title="Add Parameter">');
+        // Name
+        let formGroup = $('<div class="form-group">');
+        formGroup.appendTo(formDiv);
+        $('<label>Name:</label>').appendTo(formGroup);
+        const nameInput = $('<input type="text"/>');
+        nameInput.appendTo(formGroup);
+        // Edit Button
+        const button = $('<button class="btn btn-info" title="Edit">');
         $('<i class="glyphicon glyphicon-edit"></i>').appendTo(button);
-        button.appendTo(formDiv);
+        button.appendTo(formGroup);
 
         let currentName;
         nameInput.blur(function() {

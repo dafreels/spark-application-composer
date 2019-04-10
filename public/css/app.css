@@ -179,3 +179,29 @@
     background: #F39814;
     color: white;
 }
+
+/*
+ * Globals Editor
+ */
+.globals-parameter-form {
+    border: 1px solid gray;
+    padding: 5px;
+}
+
+.globals-parameter-form label {
+    margin-right: 8px;
+}
+
+.globals-parameter-form input {
+    margin-right: 8px;
+}
+
+/*
+ * Drawer issue with drop down on application execution editor
+ */
+.drawer ul {
+    display: none;
+}
+/*
+ * End fix
+ */

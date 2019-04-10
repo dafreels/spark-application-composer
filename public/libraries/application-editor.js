@@ -27,7 +27,12 @@ function initializeApplicationEditor() {
         createExecution,
         null,
         handleExecutionAddPort,
-        loadExecutionEditorPanel);
+        null,
+        function(metaData) {
+            // Open the drawer
+            loadExecutionEditorPanel(metaData);
+            $('#execution-editor-drawer').drawer('show');
+        });
     globals = new GlobalsEditor($('#globals'), {});
     classOverrides = new ClassOverridesEditor($('#application-setup-panel'), {});
 
@@ -338,6 +343,11 @@ function populateApplicationForm(applicationId) {
 }
 
 function clearApplicationForm() {
+    // Handle drawer being open since 'hide' does not work
+    const drawer = $('#execution-editor-drawer');
+    if (drawer.hasClass('open')) {
+        drawer.drawer('toggle');
+    }
     graphEditor.clear();
     currentApplication = null;
     executionMetaData = null;
