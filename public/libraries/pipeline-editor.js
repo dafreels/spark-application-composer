@@ -206,9 +206,11 @@ function handleDelete() {
 /**
  * Clears the canvas
  */
-function clearPipelineDesigner() {
-    const select = $('#pipelines');
-    select.val('none');
+function clearPipelineDesigner(clearDropdown = true) {
+    if (clearDropdown) {
+        const select = $('#pipelines');
+        select.val('none');
+    }
     $('#pipelineName').text('');
     pipelineGraphEditor.clear();
     currentPipeline = null;
@@ -835,6 +837,7 @@ function verifyLoadPipeline(evt) {
     } else {
         // Prevent calling this function multiple times
         evt.preventDefault();
+        clearPipelineDesigner(false);
         loadPipeline();
     }
 }
