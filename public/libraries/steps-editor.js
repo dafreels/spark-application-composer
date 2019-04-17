@@ -115,7 +115,8 @@ function populateStepForm(el) {
     $('#edit-displayName').val(currentStep.displayName);
     $('#edit-description').val(currentStep.description);
     $('#edit-category').val(currentStep.category);
-    $('#edit-engineMeta').val(currentStep.engineMeta.spark);
+    $('#edit-engineMeta-spark').val(currentStep.engineMeta.spark);
+    $('#edit-engineMeta-pkg').val(currentStep.engineMeta.pkg);
     $('#step-creationDate').text(currentStep.creationDate);
     $('#step-modifiedDate').text(currentStep.modifiedDate);
     $('#' + currentStep.type.toLowerCase() + 'Radio').click();
@@ -244,7 +245,8 @@ function generateStepJson() {
         type: $('input[name=stepTypeRadio]:checked').val(),
         category: $('#edit-category').val(),
         engineMeta: {
-            spark: $('#edit-engineMeta').val()
+            spark: $('#edit-engineMeta-spark').val(),
+            pkg: $('#edit-engineMeta-pkg').val()
         },
         params: [],
         creationDate: setStringValue($('#step-creationDate').text()),
@@ -333,7 +335,8 @@ function clearStepForm(clearSelection) {
     $('#edit-displayName').val('');
     $('#edit-description').val('');
     $('#edit-category').val('');
-    $('#edit-engineMeta').val('');
+    $('#edit-engineMeta-spark').val('');
+    $('#edit-engineMeta-pkg').val('');
     $('#step-creationDate').text('');
     $('#step-modifiedDate').text('');
     $('#pipelineRadio').removeAttr('checked').change();
@@ -368,6 +371,8 @@ function stepNeedsSave() {
         } else if (step.category !== originalStep.category) {
             return true;
         } else if (step.engineMeta.spark !== originalStep.engineMeta.spark) {
+            return true;
+        } else if (step.engineMeta.pkg !== originalStep.engineMeta.pkg) {
             return true;
         } else {
             if (step.params.length !== originalStep.params.length) {

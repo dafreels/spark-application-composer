@@ -265,13 +265,14 @@ function handleSelectApplication() {
             clearApplicationForm();
             $("#applications").val(selectedApplication);
             populateApplicationForm(selectedApplication);
+            $('#export-application-button').removeClass('disabled');
         }, function () {
             $('#applications').val(previouslySelected);
             $('#export-application-button').removeClass('disabled');
         });
     } else {
-        $('#export-application-button').removeClass('disabled');
         clearApplicationForm();
+        $('#export-application-button').removeClass('disabled');
         $("#applications").val(selectedApplication);
         populateApplicationForm(selectedApplication);
     }
