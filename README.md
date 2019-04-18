@@ -24,7 +24,14 @@ npm install
 There are two ways to run the project:
 
 ### File based
-This mode saves all of the data to the local filesystem.
+This mode saves all of the data to the local filesystem. This mode has **not** been tested much and should not be used 
+in production. Before starting the server, ensure that the data directory exists and includes these files: 
+* applications.json
+* package-objects.json
+* pipelines.json
+* steps.json
+
+The contents of each file should be and empty JSON array like this: *[]*.
 
 ```bash
 node server.js
