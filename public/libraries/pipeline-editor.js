@@ -692,7 +692,7 @@ function getType(value, paramType, defaultType) {
 function loadPipelineDesignerStepsUI() {
     var stepsContainer = $('#test-panel');
     stepsContainer.empty();
-    generateStepContainers(pipelinesContainerId, stepsContainer, null, 'dragStep(event)');
+    generateStepContainers(pipelinesContainerId, stepsContainer, null, 'dragStep(event)', stepsModel.getSteps(true));
 }
 
 /****************************************

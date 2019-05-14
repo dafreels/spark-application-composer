@@ -33,8 +33,8 @@ const pipelinesModel = new PipelinesModel(null);
 const schemasModel = new SchemasModel(null);
 let objectEditorDialog;
 
-function generateStepContainers(containerId, parentContainer, stepSelectHandler, dragHandler) {
-    const steps = _.sortBy(stepsModel.getSteps(), ['category']);
+function generateStepContainers(containerId, parentContainer, stepSelectHandler, dragHandler, stepData) {
+    const steps = _.sortBy(stepData, ['category']);
     let panel;
     let heading;
     let button;

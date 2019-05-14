@@ -423,7 +423,7 @@ function renderStepSelectionUI() {
     stepPanel.empty();
     generateStepContainers(stepContainerId, stepPanel, function (evt) {
         handleStepSelection($(evt.target));
-    });
+    }, null, stepsModel.getSteps());
     if (saveStepName) {
         clearStepForm(true);
         // Find and select the newly created step

@@ -24,7 +24,9 @@
                     "type": "string",
                     "enum": [
                         "Pipeline",
-                        "branch"
+                        "branch",
+                        "fork",
+                        "join"
                     ]
                 },
                 "params": {
