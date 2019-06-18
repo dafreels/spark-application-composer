@@ -7,6 +7,9 @@ class SchemasModel {
     setSchemas(schemas) {
         this.schemas = _.map(schemas, (schema) => {
             delete schema._id;
+            if (_.isString(schema.schema)) {
+                schema.schema = JSON.parse(schema.schema);
+            }
             return schema;
         });
     }

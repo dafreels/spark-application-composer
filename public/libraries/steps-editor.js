@@ -18,10 +18,14 @@ function initializeStepsEditor() {
 function handleBulkAdd() {
     showCodeEditorDialog('[]', 'json',
         function(code) {
-            saveBulkSteps(JSON.parse(code), function() {
-                currentEditorStepId = null;
-                loadStepsUI();
-                clearStepForm(true);
+            saveBulkSteps(JSON.parse(code), function(err) {
+                if (err) {
+                    showAlertDialog('Status: ' + err.status + ' Error: ' + err.error);
+                } else {
+                    currentEditorStepId = null;
+                    loadStepsUI();
+                    clearStepForm(true);
+                }
             });
         });
 }
@@ -49,12 +53,16 @@ function saveStepChanges() {
                 }
             ]);
         } else {
-            saveStep(step, function () {
-                currentEditorStepId = null;
-                defaultValues = null;
-                saveStepName = step.displayName;
-                // This makes an asynchronous call to the server
-                loadStepsUI();
+            saveStep(step, function (err) {
+                if (err) {
+                    showGlobalErrorMessage('Failed to save step', err);
+                } else {
+                    currentEditorStepId = null;
+                    defaultValues = null;
+                    saveStepName = step.displayName;
+                    // This makes an asynchronous call to the server
+                    loadStepsUI();
+                }
             });
         }
     }
@@ -107,7 +115,8 @@ function populateStepForm(el) {
     $('#edit-displayName').val(currentStep.displayName);
     $('#edit-description').val(currentStep.description);
     $('#edit-category').val(currentStep.category);
-    $('#edit-engineMeta').val(currentStep.engineMeta.spark);
+    $('#edit-engineMeta-spark').val(currentStep.engineMeta.spark);
+    $('#edit-engineMeta-pkg').val(currentStep.engineMeta.pkg);
     $('#step-creationDate').text(currentStep.creationDate);
     $('#step-modifiedDate').text(currentStep.modifiedDate);
     $('#' + currentStep.type.toLowerCase() + 'Radio').click();
@@ -116,13 +125,13 @@ function populateStepForm(el) {
     parametersDiv.empty();
     let formDiv;
     let select;
-    let requireButton;
+    let requireCB;
     _.forEach(currentStep.params, (param) => {
         formDiv = createParameterForm();
         formDiv.appendTo(parametersDiv);
         // Decorate the components
         select = formDiv.find('select');
-        requireButton = formDiv.find('#' + formDiv.attr('cbId'));
+        requireCB = formDiv.find('#' + formDiv.attr('cbId'));
         // Set the values
         defaultValues[param.name] = param.defaultValue;
         formDiv.find('input[name="stepParamName"]').val(param.name);
@@ -134,7 +143,7 @@ function populateStepForm(el) {
             select.val(param.type);
         }
         if (param.required) {
-            requireButton.button('toggle');
+            requireCB.attr('checked', true);
         }
     });
 }
@@ -145,13 +154,27 @@ function populateStepForm(el) {
  * @returns Create the parameter row that can be appended to the parameters form.
  */
 function createParameterForm() {
-    const formDiv = $('<div class="row">');
-    $('<div class="col col-sm-1"><label>Name:</label></div>').appendTo(formDiv);
-    $('<div class="col col-sm-3"><input name="stepParamName" type="text"/></div>').appendTo(formDiv);
+    const formDiv = $('<div class="parameter-form">');
+    // Remove button
+    const buttonDiv = $('<div class="pull-right">');
+    buttonDiv.appendTo(formDiv);
+    const button = $('<button class="btn btn-info" title="Remove Parameter">');
+    button.appendTo(buttonDiv);
+    $('<i class="glyphicon glyphicon-minus-sign"></i>').appendTo(button);
+    button.click(function() {
+        formDiv.remove();
+    });
+    // Name
+    let formGroup = $('<div class="form-group">');
+    formGroup.appendTo(formDiv);
+    $('<label>Name:</label>').appendTo(formGroup);
+    $('<input name="stepParamName" type="text" class="form-control"/>').appendTo(formGroup);
+    // Type
+    formGroup = $('<div class="form-group">');
+    formGroup.appendTo(formDiv);
+    $('<label>Type:</label>').appendTo(formGroup);
     const select = $('<select class="form-control param-select">');
-    let column = $('<div class="col col-sm-2">');
-    select.appendTo(column);
-    column.appendTo(formDiv);
+    select.appendTo(formGroup);
     $('<option value="text">Text</option>').appendTo(select);
     $('<option value="boolean">Boolean</option>').appendTo(select);
     $('<option value="integer">Integer</option>').appendTo(select);
@@ -161,21 +184,28 @@ function createParameterForm() {
     $('<option value="script-javascript">Javascript Script</option>').appendTo(select);
     $('<option value="result">Branch Result</option>').appendTo(select);
     $('<option value="object">Object</option>').appendTo(select);
-    const requiredButton = $('<button id="'+ getCustomId('cb') +'" type="button" class="btn btn-info" data-toggle="button" aria-pressed="false">Required</button>');
-    column = $('<div class="col col-sm-2 cb-margin">');
-    requiredButton.appendTo(column);
-    column.appendTo(formDiv);
-    $('<div class="col col-sm-1" style="margin-left: -20px;"><label>Default Value:</label></div>').appendTo(formDiv);
-    column = $('<div class="col col-sm-2">');
-    column.appendTo(formDiv);
-    const defaultValueInput = $('<input name="stepParamDefaultValue" type="text"/>');
-    defaultValueInput.appendTo(column);
-
-    $('<div class="col col-sm-1" style="margin-left: 5px;"><label>Class Name:</label></div>').appendTo(formDiv);
-    column = $('<div class="col col-sm-2">');
-    const className = $('<input name="stepParamClassName" type="text"/>');
-    className.appendTo(column);
-    column.appendTo(formDiv);
+    // Required
+    const cbId = getCustomId('cb');
+    formGroup = $('<div class="checkbox">');
+    formGroup.appendTo(formDiv);
+    const cbLabel = $('<label>');
+    cbLabel.appendTo(formGroup);
+    const requiredCB = $('<input type="checkbox" id="'+ cbId +'">');
+    requiredCB.appendTo(cbLabel);
+    cbLabel.append('Required');
+    // $('Required').appendTo(cbLabel);
+    // Default Value
+    formGroup = $('<div class="form-group">');
+    formGroup.appendTo(formDiv);
+    $('<label>Default Value:</label>').appendTo(formGroup);
+    const defaultValueInput = $('<input name="stepParamDefaultValue" type="text" class="form-control"/>');
+    defaultValueInput.appendTo(formGroup);
+    // Class Name
+    formGroup = $('<div class="form-group">');
+    formGroup.appendTo(formDiv);
+    $('<label>Class Name:</label>').appendTo(formGroup);
+    const className = $('<input name="stepParamClassName" type="text" class="form-control"/>');
+    className.appendTo(formGroup);
 
     defaultValueInput.focusin(function() {
         if (select.val().indexOf('script') === 0) {
@@ -199,15 +229,7 @@ function createParameterForm() {
         }
     });
 
-    column = $('<div class="col col-sm-1" style="margin-left: 5px; margin-bottom: 5px;">');
-    column.appendTo(formDiv);
-    const button = $('<button class="btn btn-info" title="Remove Parameter">');
-    button.appendTo(column);
-    $('<i class="glyphicon glyphicon-minus-sign"></i>').appendTo(button);
-    button.click(function() {
-        formDiv.remove();
-    });
-    formDiv.attr('cbId', requiredButton.attr('id'));
+    formDiv.attr('cbId', cbId);
     return formDiv;
 }
 
@@ -223,7 +245,8 @@ function generateStepJson() {
         type: $('input[name=stepTypeRadio]:checked').val(),
         category: $('#edit-category').val(),
         engineMeta: {
-            spark: $('#edit-engineMeta').val()
+            spark: $('#edit-engineMeta-spark').val(),
+            pkg: $('#edit-engineMeta-pkg').val()
         },
         params: [],
         creationDate: setStringValue($('#step-creationDate').text()),
@@ -234,7 +257,7 @@ function generateStepJson() {
     let param;
     let selectionType;
     let scriptLanguage;
-    $('#edit-step-parameters .row').each(function() {
+    $('#edit-step-parameters .parameter-form').each(function() {
         selectionType = $(this).find('select').val();
         if (selectionType.indexOf('script') === 0) {
             scriptLanguage = selectionType.split('-')[1];
@@ -245,7 +268,7 @@ function generateStepJson() {
         param = {
             type: selectionType,
             name: $(this).find('input[name="stepParamName"]').val(),
-            required: $(this).find('#' + $(this).attr('cbId')).attr('aria-pressed') === 'true',
+            required: $(this).find('#' + $(this).attr('cbId')).is(':checked'),
             language: scriptLanguage,
             className: setStringValue($(this).find('input[name="stepParamClassName"]').val())
         };
@@ -312,7 +335,8 @@ function clearStepForm(clearSelection) {
     $('#edit-displayName').val('');
     $('#edit-description').val('');
     $('#edit-category').val('');
-    $('#edit-engineMeta').val('');
+    $('#edit-engineMeta-spark').val('');
+    $('#edit-engineMeta-pkg').val('');
     $('#step-creationDate').text('');
     $('#step-modifiedDate').text('');
     $('#pipelineRadio').removeAttr('checked').change();
@@ -348,6 +372,8 @@ function stepNeedsSave() {
             return true;
         } else if (step.engineMeta.spark !== originalStep.engineMeta.spark) {
             return true;
+        } else if (step.engineMeta.pkg !== originalStep.engineMeta.pkg) {
+            return true;
         } else {
             if (step.params.length !== originalStep.params.length) {
                 return true;
@@ -356,19 +382,11 @@ function stepNeedsSave() {
             let param1;
             _.forEach(step.params, (param) => {
                 param1 = _.find(originalStep.params, p => p.name === param.name);
-                if (!param1) {
-                    diff = true;
-                    return false;
-                } else if (param.type !== param1.type) {
-                    diff = true;
-                    return false;
-                } else if (param.required !== param1.required) {
-                    diff = true;
-                    return false;
-                }  else if (param.language !== param1.language) {
-                    diff = true;
-                    return false;
-                } else if (param.className !== param1.className) {
+                if (!param1 ||
+                    param.type !== param1.type ||
+                    param.required !== param1.required ||
+                    param.language !== param1.language ||
+                    param.className !== param1.className) {
                     diff = true;
                     return false;
                 } else {
@@ -405,7 +423,7 @@ function renderStepSelectionUI() {
     stepPanel.empty();
     generateStepContainers(stepContainerId, stepPanel, function (evt) {
         handleStepSelection($(evt.target));
-    });
+    }, null, stepsModel.getSteps());
     if (saveStepName) {
         clearStepForm(true);
         // Find and select the newly created step

@@ -13,6 +13,10 @@ let graphEditor;
 // The metadata for the currently selected execution
 let executionMetaData;
 
+// Save state
+let saveApplicationId;
+let saveApplicationName;
+
 function initializeApplicationEditor() {
     const select = $('#applications');
     select.append($("<option />").val('none').text(''));
@@ -23,10 +27,16 @@ function initializeApplicationEditor() {
         createExecution,
         null,
         handleExecutionAddPort,
-        loadExecutionEditorPanel);
+        null,
+        function(metaData) {
+            // Open the drawer
+            loadExecutionEditorPanel(metaData);
+            $('#execution-editor-drawer').drawer('show');
+        });
     globals = new GlobalsEditor($('#globals'), {});
     classOverrides = new ClassOverridesEditor($('#application-setup-panel'), {});
 
+    $('#export-application-button').click(handleExportApplication);
     $('#new-application-button').click(handleNewApplication);
     $('#save-application-button').click(handleSaveApplication);
     $('#reset-application-button').click(handleClearApplicationForm);
@@ -173,6 +183,9 @@ function handleKryoClassesChange() {
         currentApplication.sparkConf = {}
     }
     currentApplication.sparkConf.kryoClasses = $('#kyro-classes').tokenfield('getTokensList').split(',').map(token => token.trim());
+    if (currentApplication.sparkConf.kryoClasses.length === 0) {
+        delete currentApplication.sparkConf.kryoClasses;
+    }
 }
 
 function createStepOption(data) {
@@ -215,22 +228,22 @@ function handleRequiredParametersChange() {
  */
 
 function renderApplicationsSelect() {
-    const applications = $("#applications");
+    const applications = $('#applications');
     applications.empty();
-    applications.append($("<option />").val('none').text(''));
-    let applicationId;
-    const applicationName = (currentApplication && currentApplication.name) ? currentApplication.name : 'none';
+    applications.append($('<option />').val('none').text(''));
     _.forEach(applicationsModel.getApplications(), (application) => {
-        if (application.name === applicationName) {
-            applicationId = application.id;
+        if (application.name === saveApplicationName) {
+            saveApplicationId = application.id;
         }
         applications.append($("<option/>").val(application.id).text(application.name));
     });
     // Select the previously saved application
-    if (applicationId) {
+    if (saveApplicationId) {
         clearApplicationForm();
-        applications.val(applicationId);
-        populateApplicationForm(applicationId);
+        applications.val(saveApplicationId);
+        populateApplicationForm(saveApplicationId);
+        saveApplicationId = null;
+        saveApplicationName = null;
     }
 }
 
@@ -249,11 +262,18 @@ function handleSelectApplication() {
     if (currentApplication) {
         const previouslySelected = currentApplication.id || 'none';
         showClearFormDialog(function () {
+            clearApplicationForm();
+            $("#applications").val(selectedApplication);
             populateApplicationForm(selectedApplication);
+            $('#export-application-button').removeClass('disabled');
         }, function () {
             $('#applications').val(previouslySelected);
+            $('#export-application-button').removeClass('disabled');
         });
     } else {
+        clearApplicationForm();
+        $('#export-application-button').removeClass('disabled');
+        $("#applications").val(selectedApplication);
         populateApplicationForm(selectedApplication);
     }
 }
@@ -262,6 +282,7 @@ function setupNewApplication(name) {
     currentApplication = {
         name: name
     };
+    $('#export-application-button').removeClass('disabled');
     $('#application-form-div').toggle();
     $('#applicationName').text(currentApplication.name);
 }
@@ -280,7 +301,7 @@ function populateApplicationForm(applicationId) {
     }
 
     currentApplication = applicationsModel.getApplication(applicationId);
-    var $applicationFormDiv = $('#application-form-div');
+    const $applicationFormDiv = $('#application-form-div');
     if ($applicationFormDiv.css('display') === 'none') {
         $applicationFormDiv.toggle();
     }
@@ -307,7 +328,7 @@ function populateApplicationForm(applicationId) {
             elements[execution.id] = graphEditor.addElementToCanvas(execution.id, 0, 0, execution);
             addedElements.push(execution.id);
             // Link to children
-            children = _.filter(currentApplication.executions, child => child.parents.indexOf(execution.id) !== -1);
+            children = _.filter(currentApplication.executions, child => child.parents && child.parents.indexOf(execution.id) !== -1);
             _.forEach(children, (child) => {
                 if (addedElements.indexOf(child.id) === -1) {
                     elements[child.id] = graphEditor.addElementToCanvas(child.id, 0, 0, child);
@@ -323,6 +344,11 @@ function populateApplicationForm(applicationId) {
 }
 
 function clearApplicationForm() {
+    // Handle drawer being open since 'hide' does not work
+    const drawer = $('#execution-editor-drawer');
+    if (drawer.hasClass('open')) {
+        drawer.drawer('toggle');
+    }
     graphEditor.clear();
     currentApplication = null;
     executionMetaData = null;
@@ -339,6 +365,7 @@ function clearApplicationForm() {
     $('#available-pipelines').empty();
     $('#selected-pipelines').empty();
     $('#application-form-div').toggle();
+    $('#export-application-button').addClass('disabled');
 }
 
 /*
@@ -357,7 +384,10 @@ function loadExecutionEditorPanel(metaData) {
     executionClassOverrides.clear();
     executionClassOverrides.setValue(metaData);
     executionGlobals.clear();
-    executionGlobals.setValue(metaData.globals || {});
+    if (!metaData.globals) {
+        metaData.globals = {};
+    }
+    executionGlobals.setValue(metaData.globals);
 }
 
 function populateExecutionPipelineIds() {
@@ -379,12 +409,36 @@ function handleSaveApplication() {
     const application = generateApplicationJson();
     const validations = validateApplication(application);
     if (validations.length === 0) {
-        saveApplication(application, function () {
-            loadApplicationsUI();
+        saveApplicationId = application.id;
+        saveApplicationName = application.name;
+        saveApplication(application, function (err) {
+            if (err) {
+                showGlobalErrorMessage('Failed to save application', err);
+            } else {
+                clearApplicationForm();
+                loadApplicationsUI();
+            }
         });
     } else {
         showValidationErrorDialog(validations);
     }
+}
+
+function handleExportApplication() {
+    const application = generateApplicationJson();
+    const fileName = application.name.replace(' ', '_') + '.json';
+    // Remove unused data
+    delete application._id;
+    delete application.id;
+    delete application.name;
+    delete application.creationDate;
+    delete application.modifiedDate;
+    const link = document.createElement('a');
+    link.setAttribute('href', 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(application)));
+    link.setAttribute('download', fileName);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
 }
 
 function validateApplication(application) {
@@ -430,11 +484,20 @@ function generateApplicationJson() {
         }
     });
 
+    delete currentApplication._id;
+
+    if (!currentApplication.sparkConf) {
+        currentApplication.sparkConf = {};
+    }
+
     if (setOptions.length > 0) {
-        if (!currentApplication.sparkConf) {
-            currentApplication.sparkConf = {};
-        }
         currentApplication.sparkConf.setOptions = setOptions;
+    } else {
+        delete currentApplication.sparkConf.setOptions;
+    }
+
+    if (!currentApplication.sparkConf.setOptions && !currentApplication.sparkConf.kryoClasses) {
+        delete currentApplication.sparkConf;
     }
 
     currentApplication.globals = globals.getData();
@@ -449,6 +512,9 @@ function generateApplicationJson() {
     currentApplication.pipelines = [];
     const pipelineIds = [];
     _.forEach(executions, (execution) => {
+        if (execution.metaData.parents && execution.metaData.parents.length === 0) {
+            delete execution.metaData.parents;
+        }
         currentApplication.executions.push(execution.metaData);
         _.forEach(execution.metaData.pipelineIds, (id) => {
             if(pipelineIds.indexOf(id) === -1) {

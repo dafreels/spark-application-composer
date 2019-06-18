@@ -21,13 +21,18 @@ RUN apk --no-cache add \
     npm install && \
     npm prune --production
 
+# Build the release image
 FROM alpine:latest as release
+
+WORKDIR /opt/spark-application-composer
 
 RUN apk --no-cache add \
     nodejs \
     npm
 
 COPY --from=build /opt/spark-application-composer/ /opt/spark-application-composer/
+
+RUN echo `date` > /opt/spark-application-composer/public/build.txt
 
 EXPOSE 8080
 ENV PORT 8080

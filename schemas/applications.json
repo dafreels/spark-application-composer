@@ -8,9 +8,6 @@
             "required": [
                 "id",
                 "name",
-                "sparkConf",
-                "stepPackages",
-                "globals",
                 "executions"
             ],
             "properties": {

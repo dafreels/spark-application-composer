@@ -21,8 +21,15 @@ function handleClearFormDialogCancel() {
     $('#dialog-confirm').modal('hide');
 }
 
-function showClearFormDialog(clearFunction, cancelFunction) {
+function showClearFormDialog(clearFunction, cancelFunction, title, buttonText) {
     clearFormDialogClearFunction = clearFunction;
     clearFormDialogCancelFunction = cancelFunction;
+    const label = $('#clearFormModalLabel');
+    label.empty();
+    label.text(title || 'Clear Form?');
+    const button = $('#clear-form-clear');
+    button.empty();
+    button.text(buttonText || 'Clear');
+
     $('#dialog-confirm').modal('show');
 }

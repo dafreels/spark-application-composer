@@ -5,8 +5,8 @@
     "author": "David Freels Sr, Ed Balogh",
     "license": "Apache-2.0",
     "repository": {
-        "type" : "git",
-        "url" : "https://github.com/dafreels/spark-application-composer.git"
+        "type": "git",
+        "url": "https://github.com/dafreels/spark-application-composer.git"
     },
     "main": "index.js",
     "scripts": {
@@ -21,6 +21,9 @@
         "ajv": "^6.10.0",
         "bluebird": "^3.5.3",
         "body-parser": "^1.18.3",
+        "construx": "^1.0.0",
+        "construx-copier": "^1.0.0",
+        "construx-less": "^1.0.0",
         "eslint": "^5.15.2",
         "express": "^4.12.2",
         "fs": "0.0.1-security",

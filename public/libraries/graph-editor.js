@@ -4,12 +4,14 @@ class GraphEditor {
                 createElementHandler,
                 removeElementHandler,
                 addPortHandler,
-                elementSelectHandler) {
+                elementSelectHandler,
+                editElementHandler) {
         const parent = this;
         this.createElementHandler = createElementHandler;
         this.removeHandler = removeElementHandler;
         this.addHandler = addPortHandler;
         this.elementSelectHandler = elementSelectHandler;
+        this.editElementHandler = editElementHandler;
         this.elements = {};
         this.currentHighlightedElement = null;
         this.graphElement = graphElement;
@@ -51,6 +53,11 @@ class GraphEditor {
         this.paper.on('add:button:pointerdown', function (evt) {
             if (parent.addHandler) {
                 parent.addHandler(evt);
+            }
+        });
+        this.paper.on('edit:button:pointerdown', function (evt) {
+            if (parent.editElementHandler) {
+                parent.editElementHandler(evt.model.attributes.metaData);
             }
         });
     }
@@ -98,6 +105,7 @@ class GraphEditor {
             edgeSep: 50,
             rankDir: "TB"
         });
+        this.adjustCanvas();
     }
 
     /**
@@ -134,7 +142,15 @@ class GraphEditor {
     addElementToCanvas(name, x, y, metadata) {
         const element = this.createElementHandler(name, x, y, metadata || {});
         this.elements[element.id] = element.addTo(this.graph);
+        this.adjustCanvas();
         return this.elements[element.id];
+    }
+
+    adjustCanvas() {
+        this.paper.fitToContent({
+            minWidth: 800,
+            minHeight: 800
+        });
     }
 
     /**
@@ -215,6 +231,7 @@ class GraphEditor {
      */
     clear() {
         this.graph.clear();
+        this.elements = {};
     }
 
     /**
@@ -279,6 +296,10 @@ class GraphEditor {
                 close.editButton.setAttribute('visibility', 'visible');
                 close.editLabel.setAttribute('visibility', 'visible');
             }
+            if (close.addButton) {
+                close.addButton.setAttribute('visibility', 'visible');
+                close.addLabel.setAttribute('visibility', 'visible');
+            }
         }
     }
 
@@ -294,6 +315,10 @@ class GraphEditor {
             if (close.editButton) {
                 close.editButton.setAttribute('visibility', 'hidden');
                 close.editLabel.setAttribute('visibility', 'hidden');
+            }
+            if (close.addButton) {
+                close.addButton.setAttribute('visibility', 'hidden');
+                close.addLabel.setAttribute('visibility', 'hidden');
             }
         }
     }
@@ -331,6 +356,19 @@ class GraphEditor {
                             elements.populated = true;
                             elements.editButton = evt.el.children[i].children[0];
                             elements.editLabel = evt.el.children[i].children[1];
+                            break;
+                    }
+                } else if(evt.el.children[i].attributes['joint-selector'].value === 'addLink') {
+                    switch(evt.el.children[i].children[0].attributes['joint-selector'].value) {
+                        case 'addLabel':
+                            elements.populated = true;
+                            elements.addButton = evt.el.children[i].children[1];
+                            elements.addLabel = evt.el.children[i].children[0];
+                            break;
+                        case 'addButton':
+                            elements.populated = true;
+                            elements.addButton = evt.el.children[i].children[0];
+                            elements.addLabel = evt.el.children[i].children[1];
                             break;
                     }
                 }

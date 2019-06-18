@@ -1,4 +1,3 @@
-
 class ObjectEditor {
     constructor() {
         $('#edit-object-form-save').click(this.handleObjectEditorSave());
@@ -9,6 +8,12 @@ class ObjectEditor {
         this.editObjectSaveFunction = null;
         this.editObjectCancelFunction = null;
         this.editObjectForm = null;
+
+        const parent = this;
+        $('#objectEditorSchema').change(function () {
+            parent.schemaId = $(this).val();
+            parent.generateForm(schemasModel.getSchema(parent.schemaId).schema);
+        });
     }
 
     showObjectEditor(data, schemaId, saveFunction, cancelFunction) {
@@ -28,6 +33,7 @@ class ObjectEditor {
             $('#objectEditorSchema').val(this.schemaId).change();
             this.generateForm(schema.schema);
         }
+        $('#object-validation-errors').empty();
         $('#edit-object-form').modal('show');
     }
 
@@ -35,42 +41,92 @@ class ObjectEditor {
         const form = $('#json-object-editor');
         form.alpaca('destroy');
         form.empty();
+        const formSchema = cloneObject(schema);
+        const data = {};
+        const options = this.generateOptions(formSchema, {fields: {}}, this.currentObjectData, data);
         this.editObjectForm = form.alpaca({
-            "schema": schema,
-            data: this.currentObjectData,
-            options: this.generateOptions(schema, { fields: {}})
+            "schema": formSchema,
+            data: data,
+            options: options
         });
     }
 
-    generateOptions(schema, options) {
+    generateOptions(schema, options, sourceData, targetData) {
         let obj;
+        if (!sourceData) sourceData = {};
+        if (!targetData) targetData = {};
         _.forEach(schema.properties, (property, key) => {
             obj = {
                 label: key
             };
-            switch(property.type) {
+            switch (property.type) {
                 case 'boolean':
                     obj.type = 'checkbox';
+                    targetData[key] = sourceData[key];
                     break;
                 case 'integer':
                     obj.type = 'integer';
+                    targetData[key] = sourceData[key];
                     break;
                 case 'array':
-                    // if (schema.properties[key].items.type === 'string') {
-                    //     obj.type = 'token';
-                    //     obj.id = key;
-                    // TODO capture that we have a token field so we can convert to an array on save
-                    // } else {
-                    obj.type = 'array';
-                    obj.items = { fields: {}};
-                    this.generateOptions(schema.properties[key].items, obj.items);
-                    // }
+                    if (schema.properties[key].items.type === 'string') {
+                        obj.type = 'token';
+                        obj.id = key;
+                        obj.tokenfield = {
+                            tokens: sourceData[key]
+                        };
+                        targetData[key] = sourceData[key] ? sourceData[key].join() : '';
+                    } else {
+                        obj.type = 'array';
+                        obj.items = {fields: {}};
+                        targetData[key] = [];
+                        let el;
+                        _.forEach(sourceData[key], (sourceEl) => {
+                            el = {};
+                            targetData[key].push(el);
+                            this.generateOptions(schema.properties[key].items, obj.items, sourceEl, el);
+                        });
+                    }
                     break;
                 case 'object':
                     obj.type = 'object';
+                    if (schema.properties[key].properties) {
+                        obj.fields = {};
+                        targetData[key] = {};
+                        this.generateOptions(schema.properties[key], obj, sourceData[key], targetData[key]);
+                    } else {
+                        targetData[key] = [];
+                        _.forOwn(sourceData[key], (value, name) => targetData[key].push({name: name, value: value}));
+                        schema.properties[key].type = 'array';
+                        schema.properties[key].items = {
+                            type: 'object',
+                            properties: {
+                                name: {
+                                    type: 'string'
+                                },
+                                value: {
+                                    type: 'string'
+                                }
+                            }
+                        };
+                        obj.type = "array";
+                        obj.items = {
+                            fields: {
+                                name: {
+                                    type: 'text',
+                                    label: 'Name'
+                                },
+                                value: {
+                                    type: 'text',
+                                    label: 'Value'
+                                }
+                            }
+                        };
+                    }
                     break;
                 default:
                     obj.type = 'text';
+                    targetData[key] = sourceData[key];
                     break;
             }
             options.fields[key] = obj;
@@ -83,14 +139,14 @@ class ObjectEditor {
         schemas.empty();
         $('<option value="none">').appendTo(schemas);
         _.forEach(schemasModel.getSchemas(), (schema) => {
-            $('<option value="'+ schema.id +'">' + schema.id + '</option>').appendTo(schemas);
+            $('<option value="' + schema.id + '">' + schema.id + '</option>').appendTo(schemas);
         });
         schemas.change(this.handleSchemaChange);
     }
 
     handleSchemaChange() {
         const parent = this;
-        return function() {
+        return function () {
             parent.schemaId = $(this).val();
             const schema = schemasModel.getSchema(parent.schemaId);
             if (schema) {
@@ -100,29 +156,95 @@ class ObjectEditor {
     }
 
     handleObjectEditorSave() {
-        const parent =  this;
-        return function() {
-            const formData = parent.editObjectForm.alpaca().getValue();
-            validateObject(formData, parent.schemaId, function(err) {
-                if (err) {
-                    // TODO Handle validation errors
-                    console.log(err);
+        const parent = this;
+        return function () {
+            const formData = parent.convertFormToJson();
+            validateObject(parent.schemaId, formData, function (err) {
+                if (err && err.length > 0) {
+                    const validations = $('#object-validation-errors');
+                    validations.empty();
+                    // These are the failed validations
+                    const list = $('<ul>');
+                    list.appendTo(validations);
+                    _.forEach(err, function (validation) {
+                        $('<li>' + validation.message + '</li>').appendTo(list);
+                    });
+                } else {
+                    if (parent.editObjectSaveFunction) {
+                        parent.editObjectSaveFunction(formData, parent.schemaId);
+                    }
+                    $('#edit-object-form').modal('hide');
                 }
-                if (parent.editObjectSaveFunction) {
-                    parent.editObjectSaveFunction(formData, parent.schemaId);
-                }
-                $('#edit-object-form').modal('hide');
             });
         };
     }
 
     handleObjectEditorCancel() {
-        const parent =  this;
-        return function() {
+        const parent = this;
+        return function () {
             if (parent.editObjectCancelFunction) {
                 parent.editObjectCancelFunction();
             }
             $('#edit-object-form').modal('hide');
         };
+    }
+
+    convertFormToJson() {
+        const formData = this.editObjectForm.alpaca().getValue();
+        const schema = schemasModel.getSchema(this.schemaId);
+        const jsonData = {};
+        // Perform conversions
+        ObjectEditor.convertData(formData, jsonData, schema.schema);
+        return jsonData;
+    }
+
+    static convertData(sourceData, targetData, schema) {
+        _.forEach(schema.properties, (property, key) => {
+            switch (property.type) {
+                case 'boolean':
+                    if (_.isBoolean(sourceData[key])) {
+                        targetData[key] = sourceData[key];
+                    } else if (_.isString(sourceData[key])) {
+                        targetData[key] = sourceData[key] === 'true';
+                    } else {
+                        targetData[key] = sourceData[key];
+                    }
+                    break;
+                case 'integer':
+                    if (_.isInteger(sourceData[key])) {
+                        targetData[key] = sourceData[key];
+                    } else if (_.isString(sourceData[key])) {
+                        targetData[key] = parseInt(sourceData[key]);
+                    } else {
+                        targetData[key] = sourceData[key];
+                    }
+                    break;
+                case 'array':
+                    targetData[key] = [];
+                    if (_.isString(sourceData[key])) {
+                        targetData[key] = sourceData[key].split(',').map(key => key.trim());
+                    } else {
+                        let obj;
+                        _.forEach(sourceData[key], (data) => {
+                            obj = {};
+                            targetData[key].push(obj);
+                            ObjectEditor.convertData(data, obj, schema.properties[key].items);
+                        });
+                    }
+                    break;
+                case 'object':
+                    targetData[key] = {};
+                    if (_.isArray(sourceData[key])) {
+                        _.forEach(sourceData[key], (data) => {
+                            targetData[key][data.name] = data.value;
+                        });
+                    } else {
+                        ObjectEditor.convertData(sourceData[key], targetData[key], schema.properties[key]);
+                    }
+                    break;
+                default:
+                    targetData[key] = sourceData[key];
+            }
+        });
     }
 }

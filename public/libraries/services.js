@@ -44,7 +44,7 @@ function saveApplication(application, callback) {
             callback(null, data);
         },
         error: function (req, status, error) {
-            callback(error);
+            callback({status: status, error: error, response: req.responseJSON});
         }
     });
 }
@@ -65,7 +65,20 @@ function savePipeline(pipeline, callback) {
             callback(null, data);
         },
         error: function (req, status, error) {
-            callback(error);
+            callback({status: status, error: error, response: req.responseJSON});
+        }
+    });
+}
+
+function deletePipeline(id, callback) {
+    $.ajax({
+        type: 'DELETE',
+        url: '/api/v1/pipelines/' + id,
+        success: function(data) {
+            callback(null, data);
+        },
+        error: function (req, status, error) {
+            callback({status: status, error: error, response: req.responseJSON});
         }
     });
 }
@@ -76,7 +89,7 @@ function saveBulkSteps(steps, callback) {
         body = JSON.stringify(steps);
     }
     $.ajax({
-        type: 'PUT',
+        type: 'POST',
         url: '/api/v1/steps/',
         contentType: "application/json",
         data: body,
@@ -84,7 +97,7 @@ function saveBulkSteps(steps, callback) {
             callback(null, data);
         },
         error: function (req, status, error) {
-            callback(error);
+            callback({status: status, error: error, response: req.responseJSON});
         }
     });
 }
@@ -105,7 +118,7 @@ function saveStep(step, callback) {
             callback(null, data);
         },
         error: function (req, status, error) {
-            callback(error);
+            callback({status: status, error: error, response: req.responseJSON});
         }
     });
 }
@@ -133,7 +146,7 @@ function saveSchemas(schemas, callback) {
             callback(null, data);
         },
         error: function (req, status, error) {
-            callback(error);
+            callback({status: status, error: error, response: req.responseJSON});
         }
     });
 }
@@ -151,8 +164,8 @@ function validateObject(schemaId, obj, callback) {
         success: function(data) {
             callback(null, data);
         },
-        error: function (req, status, error) {
-            callback(error);
+        error: function (req) {
+            callback(req.responseJSON.error);
         }
     });
 }

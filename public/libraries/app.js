@@ -5,6 +5,11 @@ const parameterTypeOptions = '<option value="static">Static</option>' +
     '<option value="script">Script</option>' +
     '<option value="object">Object</option>';
 
+const executeIfEmptyTypeOptions = '<option value="static">Static</option>' +
+    '<option value="global">Global</option>' +
+    '<option value="step">Step Response</option>' +
+    '<option value="secondary">Secondary Step Response</option>';
+
 const portTemplate = {
     magnet: true,
     label: {
@@ -28,8 +33,8 @@ const pipelinesModel = new PipelinesModel(null);
 const schemasModel = new SchemasModel(null);
 let objectEditorDialog;
 
-function generateStepContainers(containerId, parentContainer, stepSelectHandler, dragHandler) {
-    const steps = _.sortBy(stepsModel.getSteps(), ['category']);
+function generateStepContainers(containerId, parentContainer, stepSelectHandler, dragHandler, stepData) {
+    const steps = _.sortBy(stepData, ['category']);
     let panel;
     let heading;
     let button;
@@ -55,14 +60,15 @@ function generateStepContainers(containerId, parentContainer, stepSelectHandler,
             buttonSpan.appendTo(heading);
             button.appendTo(buttonSpan);
             button.click(function (evt) {
-                const icon = $(evt.target).find('i');
-                icon.toggleClass('glyphicon-menu-right');
-                icon.toggleClass('glyphicon-menu-down');
+                toggleContainerButton($(evt.target).find('i'));
+            });
+            button.find('i').click(function (evt) {
+                toggleContainerButton($(evt.target));
             });
             stepSection = $('<div id="' + categoryId + '" class="collapse" style="max-height: 250px; overflow: auto;">');
             stepSection.appendTo(panel);
         }
-        stepField = $('<div id="' + containerId + '_' + step.id + '" class="step ' + step.type + '" stepType="'+ step.type +'" ' +
+        stepField = $('<div id="' + containerId + '_' + step.id + '" class="step ' + step.type + '" stepType="' + step.type + '" ' +
             'title="' + step.description + '" data-toggle="tooltip" data-placement="right">' + step.displayName + '</div>');
         if (dragHandler) {
             // draggable="true" ondragstart="dragStep(event)"
@@ -74,23 +80,30 @@ function generateStepContainers(containerId, parentContainer, stepSelectHandler,
     });
 }
 
-// /**
-//  * Determines the number of links already attached to the port.
-//  * @param cell The element.
-//  * @param portId The id of the port.
-//  * @param graph The graph where the links are stored
-//  * @returns {number} Number of links for the element and port.
-//  */
-// function getConnectedLinks(cell, portId, graph) {
-//     let source;
-//     return _.filter(graph.getConnectedLinks(cell), function (link) {
-//         source = link.get('source') || {};
-//         return source.id === cell.id && source.port === portId;
-//     }).length;
-// }
+function toggleContainerButton(icon) {
+    icon.toggleClass('glyphicon-menu-right');
+    icon.toggleClass('glyphicon-menu-down');
+}
+
+function showGlobalErrorMessage(msg, error) {
+    let message = msg;
+    let messages;
+    if (error) {
+        message = msg + ' (Status: ' + error.status + ' Error: ' + error.error + ')';
+        if (error.response && error.response.errors) {
+            messages = [];
+            _.forEach(error.response.errors, (err) => {
+                if (err.message) {
+                    messages.push(err.message);
+                }
+            });
+        }
+    }
+    showAlertDialog(message, messages);
+}
 
 function getCustomId(prefix) {
-    return prefix +'_' + Math.floor(Math.random() * Math.floor(1000));
+    return prefix + '_' + Math.floor(Math.random() * Math.floor(1000));
 }
 
 function loadStepsUI() {
@@ -147,24 +160,21 @@ function loadSchemasUI() {
 }
 
 function handleLoadContent() {
-    showCodeEditorDialog('', 'json', function(value) {
+    showCodeEditorDialog('', 'json', function (value) {
         // TODO Wrap in a try and show an alert if the JSON is not valid
         const metadata = JSON.parse(value);
         if (metadata.steps && metadata.steps.length > 0) {
             saveBulkSteps(metadata.steps, function (err) {
-                if(err) {
-                    console.log('Steps load received an error: ' + err);
+                if (err) {
+                    showGlobalErrorMessage('Steps load received an error', err);
                 }
                 loadStepsUI();
             });
         }
         if (metadata.pkgObjs && metadata.pkgObjs.length > 0) {
-            const pkgObjs = [];
-            // Convert the string schema to a JSON object
-            _.forEach(metadata.pkgObjs, pkg => pkgObjs.push({id: pkg.id, schema: JSON.parse(pkg.schema)}));
-            saveSchemas(pkgObjs, function (err) {
+            saveSchemas(metadata.pkgObjs, function (err) {
                 if (err) {
-                    console.log('Schemas load received an error: ' + err);
+                    showGlobalErrorMessage('Schemas load received an error', err);
                 }
                 loadSchemasUI();
             });
@@ -274,6 +284,25 @@ function createCustomElement() {
                 xlinkShow: 'new',
                 cursor: 'pointer',
                 event: 'close:button:pointerdown',
+            },
+            editButton: {
+                r: 7,
+                fill: 'green',
+                transform: 'translate(15, 0)',
+                visibility: 'hidden'
+            },
+            editLabel: {
+                textVerticalAnchor: 'middle',
+                textAnchor: 'middle',
+                transform: 'translate(15, 0)',
+                text: 'e',
+                visibility: 'hidden',
+                fill: 'white'
+            },
+            editLink: {
+                xlinkShow: 'new',
+                cursor: 'pointer',
+                event: 'edit:button:pointerdown',
             }
         }
     }, {
@@ -294,6 +323,18 @@ function createCustomElement() {
                 {
                     tagName: 'text',
                     selector: 'closeLabel'
+                }]
+        }, {
+            tagName: 'a',
+            selector: 'editLink',
+            children: [{
+                tagName: 'circle',
+                selector: 'editButton',
+
+            },
+                {
+                    tagName: 'text',
+                    selector: 'editLabel'
                 }]
         }]
     });
@@ -343,13 +384,13 @@ function createExecutionShape() {
                 cursor: 'pointer',
                 event: 'close:button:pointerdown',
             },
-            editButton: {
+            addButton: {
                 r: 7,
                 fill: 'green',
                 transform: 'translate(15, 0)',
                 visibility: 'hidden'
             },
-            editLabel: {
+            addLabel: {
                 textVerticalAnchor: 'middle',
                 textAnchor: 'middle',
                 transform: 'translate(15, 0)',
@@ -357,10 +398,29 @@ function createExecutionShape() {
                 visibility: 'hidden',
                 fill: 'white'
             },
-            editLink: {
+            addLink: {
                 xlinkShow: 'new',
                 cursor: 'pointer',
                 event: 'add:button:pointerdown',
+            },
+            editButton: {
+                r: 7,
+                fill: 'green',
+                transform: 'translate(30, 0)',
+                visibility: 'hidden'
+            },
+            editLabel: {
+                textVerticalAnchor: 'middle',
+                textAnchor: 'middle',
+                transform: 'translate(30, 0)',
+                text: 'e',
+                visibility: 'hidden',
+                fill: 'white'
+            },
+            editLink: {
+                xlinkShow: 'new',
+                cursor: 'pointer',
+                event: 'edit:button:pointerdown',
             }
         }
     }, {
@@ -381,6 +441,18 @@ function createExecutionShape() {
                 {
                     tagName: 'text',
                     selector: 'closeLabel'
+                }]
+        }, {
+            tagName: 'a',
+            selector: 'addLink',
+            children: [{
+                tagName: 'circle',
+                selector: 'addButton',
+
+            },
+                {
+                    tagName: 'text',
+                    selector: 'addLabel'
                 }]
         }, {
             tagName: 'a',
