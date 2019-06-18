@@ -105,6 +105,7 @@ class GraphEditor {
             edgeSep: 50,
             rankDir: "TB"
         });
+        this.adjustCanvas();
     }
 
     /**
@@ -141,7 +142,15 @@ class GraphEditor {
     addElementToCanvas(name, x, y, metadata) {
         const element = this.createElementHandler(name, x, y, metadata || {});
         this.elements[element.id] = element.addTo(this.graph);
+        this.adjustCanvas();
         return this.elements[element.id];
+    }
+
+    adjustCanvas() {
+        this.paper.fitToContent({
+            minWidth: 800,
+            minHeight: 800
+        });
     }
 
     /**
