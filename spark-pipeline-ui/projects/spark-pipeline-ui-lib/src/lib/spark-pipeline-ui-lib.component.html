@@ -1,0 +1,564 @@
+
+<div id="tabs">
+    <nav class="navbar navbar-inverse">
+        <div class="container-fluid">
+            <ul class="nav navbar-nav">
+                <li role="presentation" class="active"><a href="#home" aria-controls="home" role="tab" data-toggle="tab">Home</a></li>
+                <li role="presentation"><a href="#tabs-1" aria-controls="tabs-1" role="tab" data-toggle="tab">Application Editor</a></li>
+                <li role="presentation"><a href="#tabs-2" aria-controls="tabs-2" role="tab" data-toggle="tab">Pipeline Editor</a></li>
+                <li role="presentation"><a href="#tabs-3" aria-controls="tabs-3" role="tab" data-toggle="tab">Step Editor</a></li>
+            </ul>
+            <div class="pull-right" style="margin-top: 8px">
+                <button id="load-content-button" class="btn btn-primary">Load Metadata</button>
+            </div>
+        </div>
+    </nav>
+    <div class="tab-content">
+        <div id="home" role="tabpanel" class="tab-pane active">
+                <div style="display: grid; grid-template-rows: 1fr 1fr; grid-template-columns: 1fr 1fr 1fr 1fr; grid-gap: 8px; margin: 0 10px 0 10px;">
+                    <div id="application-count-heading" class="panel panel-warning" style="margin-right: 8px">
+                        <div class="panel-heading"><h3>Applications</h3></div>
+                        <div class="panel-body">
+                            <h3 id="application-counts"></h3>
+                        </div>
+                    </div>
+                    <div id="pipeline-count-heading" class="panel panel-warning" style="margin-right: 8px">
+                        <div class="panel-heading"><h3>Pipelines</h3></div>
+                        <div class="panel-body">
+                            <h3 id="pipeline-counts"></h3>
+                        </div>
+                    </div>
+                    <div id="step-count-heading" class="panel panel-warning" style="margin-right: 8px">
+                        <div class="panel-heading"><h3>Steps</h3></div>
+                        <div class="panel-body">
+                            <h3 id="step-counts"></h3>
+                        </div>
+                    </div>
+                    <div id="schema-count-heading" class="panel panel-warning" style="margin-right: 8px">
+                        <div class="panel-heading"><h3>Object Schemas</h3></div>
+                        <div class="panel-body">
+                            <h3 id="schema-counts"></h3>
+                        </div>
+                    </div>
+                </div>
+        </div>
+        <div id="tabs-1" role="tabpanel" class="tab-pane">
+            <div style="height: 10%; width:99%; margin: 0 0 8px 5px;">
+                <div class="top-name">
+                    <label id="application-label">Application:</label><span id="applicationName"></span>
+                </div>
+                <div class="top-buttons form-inline">
+                    <select name="applications" id="applications" class="form-control"></select>
+                    <button id="export-application-button" class="btn btn-info disabled">Export</button>
+                    <button id="save-application-button" class="btn btn-info">Save</button>
+                    <button id="new-application-button" class="btn btn-info">New</button>
+                    <button id="reset-application-button" class="btn btn-info">Reset</button>
+                </div>
+            </div>
+            <div id="application-form-div" style="display: none">
+                <div id="application-edit-panel" class="panel-group" role="tablist" aria-multiselectable="true">
+                    <div class="panel panel-info">
+                        <div id="spark-conf-heading" class="panel-heading" role="tab">
+                            <h4 class="panel-title">
+                                <a role="button" data-toggle="collapse" data-parent="#application-edit-panel"
+                                    href="#spark-conf-settings" aria-expanded="true" aria-controls="spark-conf-settings">
+                                    SparkConf
+                                </a>
+                            </h4>
+                        </div>
+                        <div id="spark-conf-settings" class="panel-collapse collapse" role="tabpanel"
+                                aria-labelledby="spark-conf-heading">
+                            <div class="panel-body">
+                                <div style="margin-bottom: 8px">
+                                    <label for="kyro-classes">Kryo Classes</label>
+                                    <input id="kyro-classes" type="text"/>
+                                </div>
+                                <div style="height: 10%; width:100%; margin-bottom: 10px;">
+                                    <div class="step-parameters-name"><label>Parameters</label></div>
+                                    <div class="top-buttons">
+                                        <button id="add-spark-option-button"
+                                                class="btn btn-info"
+                                                title="Add option">
+                                            <i class="glyphicon glyphicon-plus-sign"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div id="spark-conf-options"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel panel-info">
+                        <div id="application-setup-heading" class="panel-heading" role="tab">
+                            <h4 class="panel-title">
+                                <a role="button" data-toggle="collapse" data-parent="#application-edit-panel"
+                                    href="#application-setup" aria-expanded="true" aria-controls="application-setup">
+                                    Application Setup
+                                </a>
+                            </h4>
+                        </div>
+                        <div id="application-setup" class="panel-collapse collapse" role="tabpanel"
+                                aria-labelledby="application-setup-heading">
+                            <div id="application-setup-panel" class="panel-body">
+                                <div>
+                                    <label for="step-packages">Step Packages</label>
+                                    <input id="step-packages" type="text"/>
+                                </div>
+                                <div>
+                                    <label for="required-parameters">Required Parameters</label>
+                                    <input id="required-parameters" type="text"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel panel-info">
+                        <div id="globals-heading" class="panel-heading" role="tab">
+                            <h4 class="panel-title">
+                                <a role="button" data-toggle="collapse" data-parent="#application-edit-panel"
+                                    href="#globals-settings" aria-expanded="true" aria-controls="globals-settings">
+                                    Globals
+                                </a>
+                            </h4>
+                        </div>
+                        <div id="globals-settings" class="panel-collapse collapse container-fluid" role="tabpanel"
+                                aria-labelledby="globals-heading">
+                            <div id="globals" class="panel-body"></div>
+                        </div>
+                    </div>
+                    <div class="panel panel-info">
+                        <div id="execution-heading" class="panel-heading" role="tab">
+                            <h4 class="panel-title">
+                                <a role="button" data-toggle="collapse" data-parent="#application-edit-panel"
+                                    href="#execution-settings" aria-expanded="true" aria-controls="execution-settings">
+                                    Executions
+                                </a>
+                            </h4>
+                        </div>
+                        <div id="execution-settings" class="panel-collapse collapse in" role="tabpanel"
+                                aria-labelledby="execution-heading">
+                            <div style="height: 25px;width: 100%;text-align: right;margin-right: 8px;">
+                                <button id="add-execution-button"
+                                        class="btn btn-info"
+                                        title="Add Execution">
+                                    <i class="glyphicon glyphicon-plus-sign"></i>
+                                </button>
+                                <button id="layout-executions-button"
+                                        class="btn btn-info"
+                                        title="Auto Layout Executions">
+                                    <i class="glyphicon glyphicon-th"></i>
+                                </button>
+                            </div>
+                            <div class="panel-body  has-inner-drawer">
+                                <!-- Start of the left container -->
+                                <div id="execution-editor-drawer" class="drawer drawer-inside dw-xs-5 fold" aria-labelledby="execution-editor-drawer">
+                                    <div class="drawer-contents">
+                                        <div class="drawer-heading panel-body">
+                                            <div class="pull-left"><h2 class="drawer-title">Execution Data</h2></div>
+                                            <div class="pull-right"><a href="#execution-editor-drawer" data-toggle="drawer"
+                                                                        aria-foldedopen="false" aria-controls="execution-editor-drawer"
+                                                                        class="btn btn-info btn-sm">Close</a></div>
+                                        </div>
+                                        <div class="form-group row"><label class="col-sm-6">Choose Pipelines:</label></div>
+                                        <div class="form-group row">
+                                            <div class="col-sm-3" style="height: 150px;">
+                                                <select id="available-pipelines" multiple class="form-control" style="height: 100%"></select>
+                                            </div>
+                                            <div class="col-sm-2">
+                                                <div style="margin-bottom: 5px;">
+                                                    <button id="move-pipeline-up-button"
+                                                            class="btn btn-info"
+                                                            title="Add Parameter">
+                                                        <i class="glyphicon glyphicon-arrow-up"></i>
+                                                    </button>
+                                                </div>
+                                                <div style="margin-bottom: 5px;">
+                                                    <button id="add-pipeline-button"
+                                                            class="btn btn-info"
+                                                            title="Add Parameter">
+                                                        <i class="glyphicon glyphicon-arrow-right"></i>
+                                                    </button>
+                                                </div>
+                                                <div style="margin-bottom: 5px;">
+                                                    <button id="remove-pipeline-button"
+                                                            class="btn btn-info"
+                                                            title="Add Parameter">
+                                                        <i class="glyphicon glyphicon-arrow-left"></i>
+                                                    </button>
+                                                </div>
+                                                <div>
+                                                    <button id="move-pipeline-down-button"
+                                                            class="btn btn-info"
+                                                            title="Add Parameter">
+                                                        <i class="glyphicon glyphicon-arrow-down"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-3" style="height: 150px;">
+                                                <select id="selected-pipelines" multiple class="form-control" style="height: 100%"></select>
+                                            </div>
+                                        </div>
+                                        <div class="form-group row"><label class="col-sm-6">Override Classes:</label></div>
+                                        <div id="edit-execution-classes-form"></div>
+                                        <div class="form-group row"><label class="col-sm-6">Override Globals:</label></div>
+                                        <div id="edit-execution-globals-form"></div>
+                                    </div>
+                                </div>
+                                <!-- End of the left container -->
+                                <div class="right">
+                                    <div id="executionDesigner" class="joint-paper joint-theme-default"
+                                            ondrop="dropStep(event)"
+                                            ondragover="allowStepDrop(event)"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="tabs-2" role="tabpanel" class="tab-pane">
+            <div>
+                <div style="height: 10%; width:99%;  margin: 0 0 8px 5px;">
+                    <div class="top-name">
+                        <label id="pipeline-label">Pipeline:</label><span id="pipelineName"></span>
+                    </div>
+                    <div class="top-buttons">
+                        <button id="layout-pipeline-button"
+                                class="btn btn-info"
+                                title="Auto Layout Pipeline">
+                            <i class="glyphicon glyphicon-th"></i>
+                        </button>
+                        <button id="save-button" class="btn btn-info">Save</button>
+                        <button id="new-button" class="btn btn-info">New</button>
+                        <button id="copy-button" class="btn btn-info">Copy</button>
+                        <button id="delete-button" class="btn btn-info disabled">Delete</button>
+                        <button id="reset-button" class="btn btn-info">Reset</button>
+                    </div>
+                </div>
+                <div class="left">
+                    <div class="panel panel-info">
+                        <div class="panel-heading"><span>Pipelines</span></div>
+                        <div class="panel-body">
+                            <div>
+                                <div class="form-group">
+                                    <select name="pipelines" id="pipelines" class="form-control"></select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="test-panel" class="panel panel-info"></div>
+                </div>
+                <!-- TODO Add a slider to allow zoom on canvas -->
+                <div class="right has-inner-drawer">
+                    <div id="step-editor-drawer" class="drawer drawer-inside dw-xs-5 fold" aria-labelledby="step-editor-drawer">
+                        <div class="drawer-contents">
+                            <div class="drawer-heading panel-body">
+                                <div class="pull-left"><h2 class="drawer-title">Step Data</h2></div>
+                                <div class="pull-right"><a href="#step-editor-drawer" data-toggle="drawer"
+                                aria-foldedopen="false" aria-controls="step-editor-drawer"
+                                                            class="btn btn-info btn-sm">Close</a></div>
+                            </div>
+                            <div class="panel-body">
+                                <div id="step-form">
+                                    <div class="form-group">
+                                        <label>Id:</label>
+                                        <div id="pipelineStepId"></div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Step Id:</label>
+                                        <div id="stepId"></div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Name:</label>
+                                        <div id="displayName"></div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Description:</label>
+                                        <div id="description"></div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Type:</label>
+                                        <div id="type"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="step-parameters-form" class="panel-body">
+                                <div></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="pipelineDesigner" class="joint-paper joint-theme-default"
+                            style="height:100%; width: 100%; overflow: auto"
+                            ondrop="dropStep(event)"
+                            ondragover="allowStepDrop(event)"></div>
+                </div>
+            </div>
+        </div>
+        <div id="tabs-3" role="tabpanel" class="tab-pane">
+            <div style="height: 10%; width:99%; margin: 0 0 8px 5px;">
+                <div class="top-buttons" style="width: 100%">
+                    <button id="bulk-step-button" class="btn btn-info">Add Bulk</button>
+                    <button id="save-step-button" class="btn btn-info">Save</button>
+                    <button id="new-step-button" class="btn btn-info">New</button>
+                    <button id="reset-step-button" class="btn btn-info">Reset</button>
+                </div>
+            </div>
+            <div id="main-steps-panel" class="left" style="overflow: auto"></div>
+            <div class="right">
+                <div id="edit-step-form" class="panel panel-body">
+                    <div class="step-form">
+                        <label>Id:</label>
+                        <div id="edit-stepId"></div>
+                    </div>
+                    <div class="step-form">
+                        <label>Name:</label><input id="edit-displayName"/>
+                    </div>
+                    <div class="step-form">
+                        <label>Description:</label><input id="edit-description"/>
+                    </div>
+                    <div class="step-form">
+                        <label>Category:</label><input id="edit-category"/>
+                    </div>
+                    <div class="step-form">
+                        <label>Engine Meta Command:</label><input id="edit-engineMeta-spark"/>
+                    </div>
+                    <div class="step-form">
+                        <label>Engine Meta Package:</label><input id="edit-engineMeta-pkg"/>
+                    </div>
+                    <div id="branch-type" class="step-form">
+                        <label>Type:</label>
+                        <div class="btn-group" data-toggle="buttons">
+                            <label class="btn btn-info">
+                                <input type="radio" name="stepTypeRadio" value="Pipeline" id="pipelineRadio"> Pipeline
+                            </label>
+                            <label class="btn btn-info">
+                                <input type="radio" name="stepTypeRadio" value="branch" id="branchRadio"> Branch
+                            </label>
+                        </div>
+                    </div>
+                    <div class="step-form">
+                        <label>Modified Date:</label>
+                        <div id="step-modifiedDate"></div>
+                    </div>
+                    <div class="step-form">
+                        <label>Creation Date:</label>
+                        <div id="step-creationDate"></div>
+                    </div>
+                    <!-- Dynamic parameters panel -->
+                    <div>
+                        <div style="height: 10%; width:100%; margin-bottom: 10px;">
+                            <div class="step-parameters-name"><label>Parameters</label></div>
+                            <div class="top-buttons">
+                                <button id="add-step-parameter-button"
+                                        class="btn btn-info"
+                                        title="Add Parameter">
+                                    <i class="glyphicon glyphicon-plus-sign"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="edit-step-parameters"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Modal dialog -->
+<div id="dialog-confirm" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="Clear Form?"
+        aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button id="clear-form-close" type="button" class="close" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h5 class="modal-title" id="clearFormModalLabel">Clear Form?</h5>
+            </div>
+            <div class="modal-body">
+                <p><span class="ui-icon ui-icon-alert" style="float:left; margin:5px 0 0 0;"></span>
+                These items will be permanently deleted and cannot be recovered. Are you sure?</p>
+            </div>
+            <div class="modal-footer">
+                <button id="clear-form-clear" type="button" class="btn btn-info">Clear</button>
+                <button id="clear-form-cancel" type="button" class="btn btn-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Add step dialog -->
+<div id="dialog-step-form" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="Add Step" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button id="add-step-form-close" type="button" class="close" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h5 class="modal-title" id="addStepModalLabel">Add Step</h5>
+            </div>
+            <div class="modal-body">
+                <p class="validateTips">Enter a unique id for this step.</p>
+                <form id="add-step-form">
+                    <fieldset>
+                        <label for="add-step-id">Name</label>
+                        <input type="text" name="name" id="add-step-id" value="" class="text ui-widget-content ui-corner-all">
+                    </fieldset>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button id="add-step-form-save" type="button" class="btn btn-info">Save</button>
+                <button id="add-step-form-cancel" type="button" class="btn btn-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Add pipeline dialog -->
+<div id="dialog-new-form" class="modal fade" style="z-index:2000;" tabindex="-1" role="dialog" aria-labelledby="New" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button id="new-form-close" type="button" class="close" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h5 class="modal-title" id="newModalLabel">New</h5>
+            </div>
+            <div class="modal-body">
+                <form id="add-new-form">
+                    <fieldset>
+                        <label for="add-new-id">Name</label>
+                        <input type="text" name="name" id="add-new-id" value=""
+                                class="text ui-widget-content ui-corner-all">
+                    </fieldset>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button id="new-form-save" type="button" class="btn btn-info">Save</button>
+                <button id="new-form-cancel" type="button" class="btn btn-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Object Editor dialog -->
+<div id="edit-object-form" class="modal fade" style="z-index:2000;" tabindex="-1" role="dialog" aria-labelledby="Edit Object"
+        aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button id="edit-object-form-close" type="button" class="close" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h5 class="modal-title" id="exampleModalLabel">Edit Object</h5>
+            </div>
+            <div class="modal-body">
+                <div id="schema-selection">
+                    <span>Schema:</span>
+                    <select id="objectEditorSchema"></select>
+                </div>
+                <div id="json-object-editor"></div>
+                <div id="object-validation-errors" style="color: red; font-weight: bold;"></div>
+            </div>
+            <div class="modal-footer">
+                <button id="edit-object-form-save" type="button" class="btn btn-info">Save</button>
+                <button id="edit-object-form-cancel" type="button" class="btn btn-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- validation save errors dialog -->
+<div id="dialog-validation-error" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="Validation Error!"
+        aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button id="validation-dialog-close" type="button" class="close" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h5 class="modal-title" id="validationModalLabel">Alert!</h5>
+            </div>
+            <div class="modal-body">
+                <span class="ui-icon ui-icon-alert"></span>
+                <span>There were errors with the changes. The following parameters are required:</span>
+                <div id="dialog-validation-error-field"></div>
+            </div>
+            <div class="modal-footer">
+                <button id="validation-dialog-ok" type="button" class="btn btn-info">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- alert dialog -->
+<div id="dialog-alert" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="Alert!" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button id="alert-dialog-close" type="button" class="close" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h5 class="modal-title" id="alertModalLabel">Alert!</h5>
+            </div>
+            <div class="modal-body">
+                <span class="ui-icon ui-icon-alert"></span>
+                <span id="dialog-alert-field"></span>
+            </div>
+            <div class="modal-footer">
+                <button id="alert-dialog-ok" type="button" class="btn btn-info">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Code Editor Dialog -->
+<div id="dialog-editor" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="Edit Copy" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button id="edit-code-form-close" type="button" class="close" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h5 class="modal-title" id="editCodeModalLabel">Edit Code</h5>
+            </div>
+            <div class="modal-body">
+                <div id="syntax-selection">
+                    <span>Syntax:</span>
+                    <select id="codeEditorSyntax">
+                        <option value="scala">Scala</option>
+                        <option value="javascript">Javascript</option>
+                        <option value="json">JSON</option>
+                        <option value="sql">SQL</option>
+                    </select>
+                </div>
+                <div id="code-editor"></div>
+            </div>
+            <div class="modal-footer">
+                <button id="edit-code-form-save" type="button" class="btn btn-info">Save</button>
+                <button id="edit-code-form-cancel" type="button" class="btn btn-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Copy pipeline dialog -->
+<div id="dialog-copy-pipeline-form" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="Copy Pipelne"
+        aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button id="copy-pipeline-form-close" type="button" class="close" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h5 class="modal-title" id="copyPipelineeModalLabel">Edit Object</h5>
+            </div>
+            <div class="modal-body">
+                <form id="copy-pipeline-form">
+                    <div class="form-group">
+                        <label for="copy-pipeline-id">Choose source pipeline</label>
+                        <select name="pipelines" id="source-pipelines"></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="copy-pipeline-id">Name</label>
+                        <input type="text" name="name" id="copy-pipeline-id" value="" class="text ui-widget-content ui-corner-all">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button id="copy-pipeline-form-save" type="button" class="btn btn-info">Save</button>
+                <button id="copy-pipeline-form-cancel" type="button" class="btn btn-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>

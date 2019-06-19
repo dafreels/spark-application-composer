@@ -1,0 +1,224 @@
+#pipelineDesigner {
+    background: #FFF;
+    width: auto;
+    display: inline-flex;
+    box-shadow: 0 3px 5px rgba(0, 0, 0, 0.3);
+    border-top: 1px solid #eee;
+}
+
+#pipelineName {
+    margin-left: 10px;
+}
+
+#pipeline-label {
+    font-weight: bold;
+}
+
+#applicationName {
+    margin-left: 10px;
+}
+
+.top-buttons {
+    text-align: right;
+    display: inline-block;
+    width: 50%;
+}
+
+.top-name {
+    text-align: left;
+    display: inline-block;
+    float: left;
+    width: 50%;
+    transform: translateY(35%);
+    font-weight: bold;
+    color: #2779aa;
+}
+
+.left {
+    width: 28%;
+    display: inline-block;
+    vertical-align: top;
+}
+
+.right {
+    width: 70%;
+    display: inline-block;
+}
+
+.settings-form label {
+    width: 20%;
+    display: inline-block;
+}
+
+.settings-form input {
+    margin-left: 10px;
+    width: 70%;
+    border-radius: 8px;
+    padding: 8px;
+}
+
+.step-panel {
+    height: 150px;
+    overflow: auto;
+}
+
+.step {
+    border-radius: 4px;
+    background: #e4f1fb;
+    color: #2779aa;
+    padding: 10px;
+    text-align: center;
+    height: 50px;
+    width: 90%;
+    border: 1px solid gray;
+    margin: 5px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+.step div:hover {
+    text-overflow: clip;
+    white-space: normal;
+    word-break: keep-all;
+}
+
+.step.branch {
+    background: #2779aa;
+    color: #e4f1fb;
+}
+
+.step.branch.step-selected {
+    background: #F39814;
+    color: white;
+}
+
+.step-form {
+    display: inline-flex;
+    width: 100%;
+    margin-bottom: 8px;
+}
+
+.step-form label {
+    width: 25%;
+    text-align: left;
+    font-size: 20px;
+}
+
+.step-form input {
+    width: 70%;
+    text-align: left;
+}
+
+.step-form div {
+    background: #e4f1fb;
+    color: #333333;
+    padding: 5px;
+    border-radius: 10px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    width: 70%;
+    text-align: left;
+}
+
+.step-form fieldset {
+    width: 30%;
+}
+
+.step-parameters-name {
+    text-align: left;
+    display: inline-block;
+    float: left;
+    width: 50%;
+    transform: translateY(25%);
+    font-weight: bold;
+    font-size: 15px;
+}
+
+#syntax-selection {
+    display: inline-block;
+    text-align: right;
+    width: 100%;
+    height: 10%;
+    margin-bottom: 10px;
+}
+
+#syntax-selection span {
+    font-weight: bold;
+    color: #2779aa;
+}
+
+#codeEditorSyntax {
+    margin-left: 8px;
+}
+
+#code-editor {
+    display: inline-block;
+    width: 100%;
+    height: 90%;
+}
+
+#dialog-validation-error-field {
+    width: 100%;
+    text-align: left;
+}
+
+/* Steps Editor */
+.parameter-form {
+    border: 1px solid gray;
+    padding: 5px;
+}
+
+.cb-margin {
+    margin-left: 20px;
+    margin-right: -55px;
+}
+
+.step-selected {
+    background: #F39814;
+    color: white;
+}
+
+/*
+ * Globals Editor
+ */
+.globals-parameter-form {
+    border: 1px solid gray;
+    padding: 5px;
+}
+
+.globals-parameter-form label {
+    margin-right: 8px;
+}
+
+.globals-parameter-form input {
+    margin-right: 8px;
+}
+
+/*
+ * Pipeline Editor
+ */
+#step-parameters-form label {
+    margin-right: 8px;
+}
+
+#step-parameters-form span.twitter-typeahead {
+    width: 100%;
+}
+
+/*
+ * Drawer issues with drop down and type ahead
+ */
+.drawer ul {
+    display: none;
+}
+
+div.tt-menu {
+    width: 100%;
+    background-color: lightgray;
+    border-radius: 8px;
+}
+/*
+ * End fix
+ */
