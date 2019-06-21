@@ -34,7 +34,7 @@ const schemasModel = new SchemasModel(null);
 let objectEditorDialog;
 
 function generateStepContainers(containerId, parentContainer, stepSelectHandler, dragHandler, stepData) {
-    const steps = _.sortBy(stepData, ['category']);
+    const steps = _.sortBy(stepData, ['category', 'displayName']);
     let panel;
     let heading;
     let button;

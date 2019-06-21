@@ -372,7 +372,7 @@ function generatePipeline() {
             let port;
             let param;
             _.forEach(links, function(link) {
-                port = value.getPort(link.get('source').port).attrs.text.text;
+                port = pipelineGraphEditor.getElement(link.get('source').id).getPort(link.get('source').port).attrs.text.text;
                 param = _.find(step.params, function(p) { return p.name === port }) || {};
                 param.value = pipelineGraphEditor.getElement(link.get('target').id).attributes.metaData.pipelineStepMetaData.id;
                 nextStepIds.push(param.value);
@@ -460,7 +460,7 @@ function populatePipelineData(pipeline) {
                         if (pipelineStep.id) {
                             displayName = pipelineStep.id + ' - (' + pipelineStep.displayName + ')';
                         }
-                        gstep = pipelineGraphEditor.addElementToCanvas(displayName, childX, y, pipelineStep.stepId);
+                        gstep = pipelineGraphEditor.addElementToCanvas(displayName, childX, y, stepsModel.getStep(pipelineStep.stepId));
                         diagramStepToStepMetaLookup[pipelineStep.id] = gstep;
                         gstep.attributes.metaData.pipelineStepMetaData = pipelineStep;
                         stepIdLookup[pipelineStep.id] = pipelineStep.stepId;
