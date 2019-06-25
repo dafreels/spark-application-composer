@@ -1,6 +1,7 @@
+const baseUrl = '';
 
 function loadSteps(callback) {
-    $.getJSON('/api/v1/steps')
+    $.getJSON(`${baseUrl}/api/v1/steps`)
         .done(function(data) {
             const steps = [];
             _.forEach(data.steps, function(step) {
@@ -13,7 +14,7 @@ function loadSteps(callback) {
 }
 
 function loadPipelines(callback) {
-    $.getJSON('/api/v1/pipelines')
+    $.getJSON(`${baseUrl}/api/v1/pipelines`)
         .done(function(data) {
             pipelinesModel.setPipelines(data.pipelines);
             callback(data.pipelines);
@@ -21,7 +22,7 @@ function loadPipelines(callback) {
 }
 
 function loadApplications(callback) {
-    $.getJSON('/api/v1/applications')
+    $.getJSON(`${baseUrl}/api/v1/applications`)
         .done(function(data) {
             applicationsModel.setApplications(data.applications);
             callback(data.applications);
@@ -30,10 +31,10 @@ function loadApplications(callback) {
 
 function saveApplication(application, callback) {
     let type = 'POST';
-    let url = '/api/v1/applications/';
+    let url = `${baseUrl}/api/v1/applications/`;
     if (application.id) {
         type = 'PUT';
-        url = '/api/v1/applications/' + application.id;
+        url = `${baseUrl}/api/v1/applications/` + application.id;
     }
     $.ajax({
         type: type,
@@ -51,10 +52,10 @@ function saveApplication(application, callback) {
 
 function savePipeline(pipeline, callback) {
     let type = 'POST';
-    let url = '/api/v1/pipelines/';
+    let url = `${baseUrl}/api/v1/pipelines/`;
     if (pipeline.id) {
         type = 'PUT';
-        url = '/api/v1/pipelines/' + pipeline.id;
+        url = `${baseUrl}/api/v1/pipelines/` + pipeline.id;
     }
     $.ajax({
         type: type,
@@ -73,7 +74,7 @@ function savePipeline(pipeline, callback) {
 function deletePipeline(id, callback) {
     $.ajax({
         type: 'DELETE',
-        url: '/api/v1/pipelines/' + id,
+        url: `${baseUrl}/api/v1/pipelines/` + id,
         success: function(data) {
             callback(null, data);
         },
@@ -90,7 +91,7 @@ function saveBulkSteps(steps, callback) {
     }
     $.ajax({
         type: 'POST',
-        url: '/api/v1/steps/',
+        url: `${baseUrl}/api/v1/steps/`,
         contentType: "application/json",
         data: body,
         success: function(data) {
@@ -104,10 +105,10 @@ function saveBulkSteps(steps, callback) {
 
 function saveStep(step, callback) {
     let type = 'POST';
-    let url = '/api/v1/steps/';
+    let url = `${baseUrl}/api/v1/steps/`;
     if (step.id) {
         type = 'PUT';
-        url = '/api/v1/steps/' + step.id;
+        url = `${baseUrl}/api/v1/steps/` + step.id;
     }
     $.ajax({
         type: type,
@@ -123,7 +124,7 @@ function saveStep(step, callback) {
     });
 }
 function loadSchemas(callback) {
-    $.getJSON('/api/v1/package-objects')
+    $.getJSON(`${baseUrl}/api/v1/package-objects`)
         .done(function(data) {
             schemasModel.setSchemas(data['package-objects']);
             if (callback) {
@@ -139,7 +140,7 @@ function saveSchemas(schemas, callback) {
     }
     $.ajax({
         type: 'POST',
-        url: '/api/v1/package-objects/',
+        url: `${baseUrl}/api/v1/package-objects/`,
         contentType: "application/json",
         data: body,
         success: function(data) {
@@ -158,7 +159,7 @@ function validateObject(schemaId, obj, callback) {
     }
     $.ajax({
         type: 'PATCH',
-        url: '/api/v1/package-objects/' + schemaId + '/validate-object',
+        url: `${baseUrl}/api/v1/package-objects/` + schemaId + '/validate-object',
         contentType: "application/json",
         data: body,
         success: function(data) {

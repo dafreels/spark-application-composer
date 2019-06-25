@@ -429,47 +429,10 @@ function populatePipelineData(pipeline) {
     $('#pipelineName').text(currentPipeline.name);
     const centerX = Math.round($('#pipelineDesigner').width() / 2);
     const x = centerX - Math.round(stepSize.width / 2);
-    let y = 50;
-    let gstep;
     let stepIdLookup = {}; // Only used to track the steps we have added to the designer canvas
-    let pipelineStep;
-    let childParams;
-    let childX;
-    let displayName;
     // Add each step to the designer
     _.forEach(currentPipeline.steps, function (step) {
-        if (!stepIdLookup[step.id]) {
-            displayName = step.displayName;
-            if (step.id) {
-                displayName = step.id + ' - (' + step.displayName + ')';
-            }
-            // Add the steps to the designer
-            gstep = pipelineGraphEditor.addElementToCanvas(displayName, x, y, stepsModel.getStep(step.stepId));
-            diagramStepToStepMetaLookup[step.id] = gstep;
-            gstep.attributes.metaData.pipelineStepMetaData = step;
-            y += 100;
-            stepIdLookup[step.id] = step.stepId;
-            if (step.type === 'branch') {
-                childParams = _.filter(step.params, p => p.type === 'result');
-                // place the children side by side
-                childX = centerX - Math.round(((childParams.length * stepSize.width) + (childParams.length * 10)) / 2);
-                _.forEach(childParams, (param) => {
-                    if (param.value) {
-                        pipelineStep = cloneObject(_.find(currentPipeline.steps, step => step.id === param.value));
-                        displayName = pipelineStep.displayName;
-                        if (pipelineStep.id) {
-                            displayName = pipelineStep.id + ' - (' + pipelineStep.displayName + ')';
-                        }
-                        gstep = pipelineGraphEditor.addElementToCanvas(displayName, childX, y, stepsModel.getStep(pipelineStep.stepId));
-                        diagramStepToStepMetaLookup[pipelineStep.id] = gstep;
-                        gstep.attributes.metaData.pipelineStepMetaData = pipelineStep;
-                        stepIdLookup[pipelineStep.id] = pipelineStep.stepId;
-                        childX += (stepSize.width + 10);
-                    }
-                });
-                y += 100;
-            }
-        }
+        addStepToCanvas(step, stepIdLookup, x);
     });
     // Create the links between steps
     _.forEach(currentPipeline.steps, (step) => {
@@ -485,6 +448,34 @@ function populatePipelineData(pipeline) {
     });
 
     pipelineGraphEditor.performAutoLayout();
+}
+
+function addStepToCanvas(step, stepIdLookup, x) {
+    let y = 50;
+    let gstep;
+    let pipelineStep;
+    let childParams;
+    let displayName;
+    if (!stepIdLookup[step.id]) {
+        displayName = step.displayName;
+        if (step.id) {
+            displayName = step.id + ' - (' + step.displayName + ')';
+        }
+        // Add the steps to the designer
+        gstep = pipelineGraphEditor.addElementToCanvas(displayName, x, y, stepsModel.getStep(step.stepId));
+        diagramStepToStepMetaLookup[step.id] = gstep;
+        gstep.attributes.metaData.pipelineStepMetaData = step;
+        stepIdLookup[step.id] = step.stepId;
+        if (step.type === 'branch') {
+            childParams = _.filter(step.params, p => p.type === 'result');
+            _.forEach(childParams, (param) => {
+                if (param.value) {
+                    pipelineStep = cloneObject(_.find(currentPipeline.steps, step => step.id === param.value));
+                    addStepToCanvas(step, stepIdLookup, x)
+                }
+            });
+        }
+    }
 }
 
 /**
