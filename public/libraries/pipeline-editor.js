@@ -390,11 +390,15 @@ function generatePipeline() {
     // Build out the remainder of the array
     let stepIds = getNextStepIds(pipelineSteps[0]);
     let nextIds;
+    const currentStepIds = [];
     do {
         nextIds = [];
         _.forEach(stepIds, function(id) {
-            pipelineSteps.push(steps[id]);
-            nextIds = _.union(nextIds, getNextStepIds(steps[id]))
+            if (currentStepIds.indexOf(id) === -1) {
+                pipelineSteps.push(steps[id]);
+                currentStepIds.push(id);
+                nextIds = _.union(nextIds, getNextStepIds(steps[id]))
+            }
         });
         stepIds = nextIds;
     } while(stepIds && stepIds.length > 0);
