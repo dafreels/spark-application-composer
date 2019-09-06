@@ -7,6 +7,7 @@ class GraphEditor {
                 elementSelectHandler,
                 editElementHandler) {
         const parent = this;
+        this.canvasAdjusted = true;
         this.createElementHandler = createElementHandler;
         this.removeHandler = removeElementHandler;
         this.addHandler = addPortHandler;
@@ -44,6 +45,14 @@ class GraphEditor {
         this.paper.on('cell:pointerclick', this.handleElementSelect());
         this.paper.on('cell:mouseover', GraphEditor.handleExecutionMouseOver);
         this.paper.on('cell:mouseout', GraphEditor.handleExecutionMouseOut);
+        this.graph.on('change:position', function() {
+            if (parent.canvasAdjusted) {
+                parent.canvasAdjusted = false;
+                setTimeout(() => {
+                    parent.finishAdjustCanvas();
+                }, 1000);
+            }
+        });
         this.paper.on('close:button:pointerdown', function (evt) {
             parent.removeElement(evt);
             if (parent.removeHandler) {
@@ -151,6 +160,11 @@ class GraphEditor {
             minWidth: 800,
             minHeight: 800
         });
+    }
+
+    finishAdjustCanvas() {
+        this.adjustCanvas();
+        this.canvasAdjusted = true;
     }
 
     /**
