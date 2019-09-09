@@ -779,12 +779,11 @@ function handleSave() {
             if (err) {
                 showGlobalErrorMessage('Failed to save pipeline', err);
             } else {
+                showSuccessAlert();
                 // Load the pipelines
                 const select = $('#pipelines');
                 select.empty();
-                select.append($("<option />").val('none').text(''));
                 savedPipelineName = pipeline.name;
-                clearPipelineDesigner();
                 // This is an async call to the server
                 loadPipelinesUI();
             }

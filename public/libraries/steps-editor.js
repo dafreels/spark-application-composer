@@ -57,6 +57,7 @@ function saveStepChanges() {
                 if (err) {
                     showGlobalErrorMessage('Failed to save step', err);
                 } else {
+                    showSuccessAlert();
                     currentEditorStepId = null;
                     defaultValues = null;
                     saveStepName = step.displayName;
