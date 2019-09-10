@@ -21,3 +21,10 @@ function showAlertDialog(message, messages) {
     }
     $('#dialog-alert').modal('show');
 }
+
+function showSuccessAlert() {
+    const message = 'Save Successful';
+    const messages = [];
+    showAlertDialog(message, messages);
+    setTimeout(() =>  $('#dialog-alert').modal('hide'), 2500);
+}

@@ -415,6 +415,7 @@ function handleSaveApplication() {
             if (err) {
                 showGlobalErrorMessage('Failed to save application', err);
             } else {
+                showSuccessAlert();
                 clearApplicationForm();
                 loadApplicationsUI();
             }
