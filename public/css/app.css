@@ -18,6 +18,11 @@
     margin-left: 10px;
 }
 
+#pipelineStepIdGroup {
+    display: flex;
+    justify-content: space-between;
+}
+
 .top-buttons {
     text-align: right;
     display: inline-block;

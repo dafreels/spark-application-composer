@@ -11,6 +11,8 @@ let savedPipelineName;
 
 let pipelineGraphEditor;
 
+let savedStepId = '';
+
 /**
  * Initialize the pipeline designer drawing canvas
  */
@@ -72,6 +74,12 @@ function dropStep(ev) {
 function handleElementRemove(evt) {
     const id = evt.model.attributes.metaData.pipelineStepMetaData.id;
     delete diagramStepToStepMetaLookup[id];
+}
+
+function renamePipelineStep(newId, oldId) {
+    diagramStepToStepMetaLookup[newId] = diagramStepToStepMetaLookup[oldId];
+    delete diagramStepToStepMetaLookup[oldId];
+    pipelineGraphEditor.renameElement(diagramStepToStepMetaLookup[newId], oldId, newId);
 }
 
 function handleNew() {
@@ -503,9 +511,32 @@ function loadPropertiesPanel(metaData) {
     const pipelineMetaData = metaData.pipelineStepMetaData;
     $('#step-form #pipelineStepId').text(pipelineMetaData.id);
     $('#step-form #stepId').text(stepMetaData.id);
+    $('#step-form #pipelineStepIdInput').val(pipelineMetaData.id);
+    $('#step-form #pipelineStepIdInput').css('display', 'none');
     $('#step-form #displayName').text(stepMetaData.displayName);
     $('#step-form #description').text(stepMetaData.description);
     $('#step-form #type').text(stepMetaData.type);
+
+    //setup the rename button
+    $('#step-form #pipelineStepIdRenameButton').unbind('click');
+    $('#step-form #pipelineStepIdRenameButton').click(() => {
+        const pipelineStepId = $('#step-form #pipelineStepId');
+        const pipelineStepIdInput = $('#step-form #pipelineStepIdInput');
+        const pipelineStepIdButton = $('#step-form #pipelineStepIdRenameButton');
+        if (pipelineStepIdInput.css('display') === 'none') {
+            pipelineStepIdInput.css('display', 'block');
+            pipelineStepId.css('display', 'none');
+            pipelineStepIdButton.text('Confirm');
+            savedStepId = pipelineStepIdInput.val();
+        } else {
+            pipelineStepIdInput.css('display', 'none');
+            pipelineStepId.css('display', 'block');
+            pipelineStepIdButton.text('Rename');
+            pipelineMetaData.id = pipelineStepIdInput.val();
+            pipelineStepId.text(pipelineMetaData.id);
+            renamePipelineStep(pipelineMetaData.id, savedStepId);
+        }
+    })
     // Get the parent step ids
     const stepIdCompletion = buildParentIdCompletionArray(pipelineMetaData.id);
     // load step form
