@@ -81,6 +81,11 @@ class GraphEditor {
         delete this.elements[element.model.id];
     }
 
+    renameElement(element, oldValue, newValue) {
+        element.attr('label/text', element.attr('label/text').replace(oldValue, newValue));
+        console.log(element);
+    }
+
     /**
      * Find the next Y coordinate based on the
      * @returns {number}
