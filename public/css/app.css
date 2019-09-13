@@ -185,6 +185,11 @@
     color: white;
 }
 
+.has-inner-drawer-with-auto-overflow {
+    position: relative;
+    overflow: auto;
+}
+
 /*
  * Globals Editor
  */
