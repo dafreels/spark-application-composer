@@ -163,7 +163,8 @@ class GraphEditor {
     adjustCanvas() {
         this.paper.fitToContent({
             minWidth: 800,
-            minHeight: 800
+            minHeight: 800,
+            allowNewOrigin: 'negative',
         });
     }
 
